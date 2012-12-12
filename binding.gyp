@@ -12,7 +12,7 @@
                 'scrypt-1.1.6/lib/scryptenc'
             ],
             'sources': [
-                'scrypt.cc',
+                'scrypt_crypto.cc',
                 'scrypt-1.1.6/lib/scryptenc/scryptenc.c',
                 'scrypt-1.1.6/lib/util/memlimit.c',
                 'scrypt-1.1.6/lib/scryptenc/scryptenc_cpuperf.c',
