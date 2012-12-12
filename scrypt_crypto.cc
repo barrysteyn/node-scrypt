@@ -2,7 +2,6 @@
 #include <v8.h>
 #include <string>
 #include "scrypt_crypto.h"
-#include <iostream>
 
 //Scrypt is a C library
 extern "C" {
@@ -32,9 +31,10 @@ struct Baton {
     size_t maxmem;
     double maxmemfrac;
     double maxtime;
+    size_t outbuflen;
 };
 
-
+//Scrypt error descriptions
 std::string ScryptErrorDescr(const int error) {
     switch(error) {
         case 0: 
@@ -75,6 +75,11 @@ std::string ScryptErrorDescr(const int error) {
  */
 int ValidateArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
     uint32_t callbackPosition = 0;
+
+    if (args.Length() < 4) {
+        message = "Wrong number of arguments: At least four arguments are needed - data, password, max_time and a callback function";
+        return 0;
+    }
 
     for (int i=0; i < args.Length(); i++) {
         if (args[i]->IsFunction()) {
@@ -162,11 +167,13 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
         message = "callback function not present";
         return 0;
     }
+
+    return 0;
 }
 
 /*
- * Encrypt: Function called from JavaScript land. Creates work request
- *          object and schedules it for execution
+ * Encryption: Function called from JavaScript land. Creates work request
+ *             object and schedules it for execution
  */
 Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     HandleScope scope;
@@ -176,13 +183,6 @@ Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     double maxtime = 0.0;
     std::string validateMessage;
     uint32_t callbackPosition;
-
-    if (args.Length() < 4) {
-        ThrowException(
-            Exception::TypeError(String::New("Wrong number of arguments: At least four arguments are needed - data, password, max_time and a callback function"))
-        );
-        return scope.Close(Undefined());
-    }
 
     //Validate arguments
     if (!(callbackPosition = ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
@@ -282,19 +282,109 @@ void EncryptAsyncAfter(uv_work_t* req) {
 }
 
 /*
- * Decrypt Functions
+ * Decryption: Function called from JavaScript land. Creates work request
+ *             object and schedules it for execution
  */
-Handle<Value> Decrypt(const Arguments& args) {
-  HandleScope scope;
-  return scope.Close(String::New("decrypt"));
+Handle<Value> DecryptAsyncBefore(const Arguments& args) {
+    HandleScope scope;
+    
+    size_t maxmem = defaults::maxmem;
+    double maxmemfrac = defaults::maxmemfrac;
+    double maxtime = 0.0;
+    std::string validateMessage;
+    uint32_t callbackPosition;
+
+    //Validate arguments
+    if (!(callbackPosition = ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );
+        return scope.Close(Undefined());
+    }
+
+    //Local variables
+    String::Utf8Value message(args[0]->ToString());
+    String::Utf8Value password(args[1]->ToString());
+    Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
+
+    //Asynchronous call baton that holds data passed to async function
+    Baton* baton = new Baton();
+    baton->message = std::string(*message, message.length());
+    baton->password = *password;
+    baton->maxtime = maxtime;
+    baton->maxmemfrac = maxmemfrac;
+    baton->maxmem = maxmem;
+    baton->callback = Persistent<Function>::New(callback);
+
+    //Asynchronous work request
+    uv_work_t *req = new uv_work_t();
+    req->data = baton;
+    
+    //Schedule work request
+    int status = uv_queue_work(uv_default_loop(), req, DecryptWork, DecryptAsyncAfter);
+    assert(status == 0); 
+    
+    return scope.Close(Undefined());   
 }
 
 /*
- * Hash Functions
+ * Decryption: Scrypt decryption performed here
  */
-Handle<Value> Hash(const Arguments& args) {
-  HandleScope scope;
-  return scope.Close(String::New("hash"));
+void DecryptWork(uv_work_t* req) {
+    Baton* baton = static_cast<Baton*>(req->data);
+    uint8_t outbuf[baton->message.length()];
+   
+    //perform scrypt encryption
+    baton->result = scryptdec_buf(
+        (const uint8_t*)baton->message.c_str(),
+        baton->message.length(),
+        outbuf,
+        &baton->outbuflen,
+        (const uint8_t*)baton->password.c_str(),
+        baton->password.length(),
+        baton->maxmem, baton->maxmemfrac, baton->maxtime
+    );
+
+    baton->output = std::string((const char*)outbuf, baton->message.length());
+}
+
+/*
+ * Decryption: Call back function for when work is finished
+ */
+void DecryptAsyncAfter(uv_work_t* req) {
+    HandleScope scope;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 3;
+        Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(String::New(baton->output.c_str(), baton->output.length())),
+            Local<Value>::New(Integer::New(baton->outbuflen))
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    //Clean up
+    baton->callback.Dispose();
+    delete baton;
+    delete req;
 }
 
 /*
@@ -305,9 +395,6 @@ void RegisterModule(Handle<Object> target) {
         FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
 
     target->Set(String::NewSymbol("decrypt"),
-        FunctionTemplate::New(Decrypt)->GetFunction());
-
-    target->Set(String::NewSymbol("hash"),
-        FunctionTemplate::New(Hash)->GetFunction());
+        FunctionTemplate::New(DecryptAsyncBefore)->GetFunction());
 }
 NODE_MODULE(scrypt_crypto, RegisterModule)
