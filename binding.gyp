@@ -1,7 +1,7 @@
 {
     'targets' : [
         {
-            'target_name': 'scrypt',
+            'target_name': 'scrypt_crypto',
             'defines': [
                 'HAVE_CONFIG_H'                
             ],

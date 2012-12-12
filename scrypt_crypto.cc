@@ -1,6 +1,8 @@
 #include <node.h>
 #include <v8.h>
 #include <string>
+#include "scrypt_crypto.h"
+#include <iostream>
 
 //Scrypt is a C library
 extern "C" {
@@ -22,18 +24,56 @@ struct Baton {
     //Asynch callback function
     Persistent<Function> callback;
 
-    //Error data
-    bool error;
-    std::string error_message;
-
-    //Custom data
-    int32_t test;
+    //Custom data for scrypt
+    int result;
+    std::string message;
+    std::string password;
+    std::string output;
+    size_t maxmem;
+    double maxmemfrac;
+    double maxtime;
 };
+
+
+std::string ScryptErrorDescr(const int error) {
+    switch(error) {
+        case 0: 
+            return std::string("success");
+        case 1: 
+            return std::string("getrlimit or sysctl(hw.usermem) failed");
+        case 2: 
+            return std::string("clock_getres or clock_gettime failed");
+        case 3: 
+            return std::string("error computing derived key");
+        case 4: 
+            return std::string("could not read salt from /dev/urandom");
+        case 5: 
+            return std::string("error in OpenSSL");
+        case 6: 
+            return std::string("malloc failed");
+        case 7: 
+            return std::string("data is not a valid scrypt-encrypted block");
+        case 8: 
+            return std::string("unrecognized scrypt format");
+        case 9:     
+            return std::string("decrypting file would take too much memory");
+        case 10: 
+            return std::string("decrypting file would take too long");
+        case 11: 
+            return std::string("password is incorrect");
+        case 12: 
+            return std::string("error writing output file");
+        case 13: 
+            return std::string("error reading input file");
+        default:
+            return std::string("error unkown");
+    }
+}
 
 /*
  * Validates JavaScript function arguments and sets maxmem, maxmemfrac and maxtime
  */
-int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
+int ValidateArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
     uint32_t callbackPosition = 0;
 
     for (int i=0; i < args.Length(); i++) {
@@ -43,12 +83,11 @@ int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, dou
             //once we have reached callback function, we will stop processing arguments.
             //but we need to be sure that the arguments we have processed so far is enough.
             if (i < 3) {
-                *message = "arguments missing before callback. make sure at least message, password and max_time have been set before callback";
+                message = "arguments missing before callback. make sure at least message, password and max_time have been set before callback";
                 return 0;
             }
 
             //Success
-            *message = NULL;
             return callbackPosition;
         }
 
@@ -56,12 +95,12 @@ int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, dou
             case 0:
                 //Check message is a string
                 if (!args[i]->IsString()) {
-                    *message = "message must be a string";
+                    message = "message must be a string";
                     return 0;
                 }
                 
                 if (args[i]->ToString()->Length() == 0) {
-                    *message = "message cannot be empty";
+                    message = "message cannot be empty";
                     return 0;
                 }
                 
@@ -70,12 +109,12 @@ int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, dou
             case 1:
                 //Check password is a string
                 if (!args[i]->IsString()) {
-                    *message = "password must be a string";
+                    message = "password must be a string";
                     return 0;
                 }
                
                 if (args[i]->ToString()->Length() == 0) {
-                    *message = "password cannot be empty";
+                    message = "password cannot be empty";
                     return 0;
                 }
                 
@@ -84,14 +123,14 @@ int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, dou
             case 2:
                 //Check max_time is a number
                 if (!args[i]->IsNumber()) {
-                    *message = "max_time argument must be a number";
+                    message = "max_time argument must be a number";
                     return 0;
                 }
 
                 //Check that maxtime is not less than or equal to zero (which would not make much sense)
                 maxtime = Local<Number>(args[i]->ToNumber())->Value();
                 if (maxtime <= 0) {
-                    *message = "max_time must be greater than 0";
+                    message = "max_time must be greater than 0";
                     return 0;
                 }
                 
@@ -120,22 +159,22 @@ int ValidateArguments(const Arguments& args, char** message, size_t& maxmem, dou
     }
   
     if (!callbackPosition) { 
-        *message = "callback function not present";
+        message = "callback function not present";
         return 0;
     }
 }
 
-
 /*
- * Encrypt Functions
+ * Encrypt: Function called from JavaScript land. Creates work request
+ *          object and schedules it for execution
  */
-Handle<Value> Encrypt(const Arguments& args) {
+Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     HandleScope scope;
 
     size_t maxmem = defaults::maxmem;
     double maxmemfrac = defaults::maxmemfrac;
     double maxtime = 0.0;
-    char* validateMessage;
+    std::string validateMessage;
     uint32_t callbackPosition;
 
     if (args.Length() < 4) {
@@ -146,9 +185,9 @@ Handle<Value> Encrypt(const Arguments& args) {
     }
 
     //Validate arguments
-    if (!(callbackPosition = ValidateArguments(args, &validateMessage, maxmem, maxmemfrac, maxtime))) {
+    if (!(callbackPosition = ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
         ThrowException(
-            Exception::TypeError(String::New(validateMessage))
+            Exception::TypeError(String::New(validateMessage.c_str()))
         );
         return scope.Close(Undefined());
     }
@@ -158,10 +197,13 @@ Handle<Value> Encrypt(const Arguments& args) {
     String::Utf8Value password(args[1]->ToString());
     Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
 
-    //Asynchronous call baton that holds data passed to asynch function
+    //Asynchronous call baton that holds data passed to async function
     Baton* baton = new Baton();
-    baton->error = false;
-    baton->test = 42;
+    baton->message = *message;
+    baton->password = *password;
+    baton->maxtime = maxtime;
+    baton->maxmemfrac = maxmemfrac;
+    baton->maxmem = maxmem;
     baton->callback = Persistent<Function>::New(callback);
 
     //Asynchronous work request
@@ -169,21 +211,74 @@ Handle<Value> Encrypt(const Arguments& args) {
     req->data = baton;
     
     //Schedule work request
-    int status = uv_queue_work(uv_default_loop(), req, AsyncWork, AsyncAfter);
+    int status = uv_queue_work(uv_default_loop(), req, EncryptWork, EncryptAsyncAfter);
     assert(status == 0); 
     
     return scope.Close(Undefined());   
+}
 
+/*
+ * Encryption: Scrypt encryption performed here
+ */
+void EncryptWork(uv_work_t* req) {
+    Baton* baton = static_cast<Baton*>(req->data);
+    uint32_t outbufSize = baton->message.length() + 128;
+    uint8_t outbuf[outbufSize];
     
-    uint8_t outbuf[message.length() + 128];
-    /*result = scryptenc_buf(
-                (uint8_t*)*message, 
-                message.length(), 
-                outbuf, 
-                (uint8_t*)*password,
-                password.length(),
-                maxmem, maxmemfrac, maxtime); 
-*/
+    //perform scrypt encryption
+    baton->result = scryptenc_buf(
+        (const uint8_t*)baton->message.c_str(),
+        baton->message.length(),
+        outbuf,
+        (const uint8_t*)baton->password.c_str(),
+        baton->password.length(),
+        baton->maxmem, baton->maxmemfrac, baton->maxtime
+    );
+
+    baton->output = std::string((const char*)outbuf, outbufSize);
+}
+
+/*
+ * Encryption: Call back function for when work is finished
+ */
+void EncryptAsyncAfter(uv_work_t* req) {
+    HandleScope scope;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //There has been an error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        //Prepare the parameters for the callback function
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        // Wrap the callback function call in a TryCatch so that we can call
+        // node's FatalException afterwards. This makes it possible to catch
+        // the exception from JavaScript land using the
+        // process.on('uncaughtException') event.
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(String::New(baton->output.c_str(), baton->output.length()))
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    //Clean up
+    baton->callback.Dispose();
+    delete baton;
+    delete req;
 }
 
 /*
@@ -207,7 +302,7 @@ Handle<Value> Hash(const Arguments& args) {
  */
 void RegisterModule(Handle<Object> target) {
     target->Set(String::NewSymbol("encrypt"),
-        FunctionTemplate::New(Encrypt)->GetFunction());
+        FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
 
     target->Set(String::NewSymbol("decrypt"),
         FunctionTemplate::New(Decrypt)->GetFunction());
@@ -215,4 +310,4 @@ void RegisterModule(Handle<Object> target) {
     target->Set(String::NewSymbol("hash"),
         FunctionTemplate::New(Hash)->GetFunction());
 }
-NODE_MODULE(scrypt-crypto, RegisterModule)
+NODE_MODULE(scrypt_crypto, RegisterModule)
