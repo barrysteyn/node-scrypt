@@ -1,14 +1,22 @@
 #include <node.h>
 #include <v8.h>
+
 #include <string>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+
 #include "scrypt_crypto.h"
+
+
 
 //Scrypt is a C library
 extern "C" {
-    #include "scryptenc.h"
+    #include "scrypt-1.1.6/lib/scryptenc/scryptenc.h"
 }
 
 using namespace v8;
+#include "util/base64.h"
 
 //Defaults parameters for Scrypt
 struct defaults {
@@ -235,7 +243,7 @@ void EncryptWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    baton->output = std::string((const char*)outbuf, outbufSize);
+    baton->output = scryptutil::base64_encode(outbuf, outbufSize);
 }
 
 /*
@@ -263,9 +271,10 @@ void EncryptAsyncAfter(uv_work_t* req) {
         }
     } else {
         const unsigned argc = 2;
+        //std::cout << baton->output; //Works
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
-            Local<Value>::New(String::New(baton->output.c_str(), baton->output.length()))
+            Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length()))
         };
 
         TryCatch try_catch;
@@ -332,12 +341,15 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
  */
 void DecryptWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
-    uint8_t outbuf[baton->message.length()];
+    
+    int throwaway;
+    unsigned const char* message = scryptutil::base64_decode(baton->message.c_str(), baton->message.length(), &throwaway);
+    uint8_t outbuf[throwaway];
    
     //perform scrypt encryption
     baton->result = scryptdec_buf(
-        (const uint8_t*)baton->message.c_str(),
-        baton->message.length(),
+        (const uint8_t*)message,
+        throwaway,
         outbuf,
         &baton->outbuflen,
         (const uint8_t*)baton->password.c_str(),
@@ -345,7 +357,7 @@ void DecryptWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    baton->output = std::string((const char*)outbuf, baton->message.length());
+    baton->output = std::string((const char*)outbuf, baton->outbuflen);
 }
 
 /*

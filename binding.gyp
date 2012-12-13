@@ -1,7 +1,8 @@
 {
     'targets' : [
         {
-            'target_name': 'scrypt_crypto',
+            'target_name': 'scrypt_lib',
+            'type': 'static_library',
             'defines': [
                 'HAVE_CONFIG_H'                
             ],
@@ -12,7 +13,6 @@
                 'scrypt-1.1.6/lib/scryptenc'
             ],
             'sources': [
-                'scrypt_crypto.cc',
                 'scrypt-1.1.6/lib/scryptenc/scryptenc.c',
                 'scrypt-1.1.6/lib/util/memlimit.c',
                 'scrypt-1.1.6/lib/scryptenc/scryptenc_cpuperf.c',
@@ -30,6 +30,20 @@
                     },
                 }]
             ],
+        },
+        {
+            'target_name': 'scrypt_utils',
+            'type': 'static_library',
+            'sources': [
+                'util/base64.cc'
+            ],
+        },
+        {
+            'target_name': 'scrypt_crypto',
+            'sources': [
+                'scrypt_crypto.cc',
+            ],
+            'dependencies': ['scrypt_lib','scrypt_utils'],
         },
     ],
 }
