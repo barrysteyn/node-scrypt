@@ -32,18 +32,12 @@
             ],
         },
         {
-            'target_name': 'scrypt_utils',
-            'type': 'static_library',
-            'sources': [
-                'util/base64.cc'
-            ],
-        },
-        {
             'target_name': 'scrypt_crypto',
             'sources': [
                 'scrypt_crypto.cc',
+                'util/base64.cc'
             ],
-            'dependencies': ['scrypt_lib','scrypt_utils'],
+            'dependencies': ['scrypt_lib'],
         },
     ],
 }
