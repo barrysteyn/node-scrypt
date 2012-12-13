@@ -1,0 +1,33 @@
+{
+    "name": "scrypt",
+    "description": "The scrypt crypto library for NodeJS",
+    "version": "1.0.0",
+    "keywords": [
+        "scrypt",
+        "password",
+        "auth",
+        "authentication",
+        "encryption",
+        "crypto"
+    ],
+    "author": {
+        "name": "Barry Steyn",
+        "email": "barry.steyn@gmail.com",
+        "url": "http://doctrina.org"
+    },
+    "engines" : {
+        "node": ">= 0.8.15"
+    },
+    "repository" : {
+        "type": "git",
+        "url": "https://github.com/barrysteyn/node-scrypt.git"
+    },
+    "licenses": [
+        {
+            "type": "MIT"
+        }
+    ],
+    "bugs": {
+        "url": "https://github.com/barrysteyn/node-scrypt/issues"
+    }
+}
