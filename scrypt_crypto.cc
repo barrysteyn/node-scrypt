@@ -241,7 +241,12 @@ void EncryptWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    baton->output = base64_encode(outbuf, outbufSize);
+    //Base64 encode else things don't work (such is crypto)
+    char* base64Encode = base64_encode(outbuf, outbufSize);
+    baton->output = base64Encode;
+
+    //Clean up
+    delete base64Encode;
 }
 
 /*
@@ -340,14 +345,14 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
 void DecryptWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
     
-    int throwaway;
-    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &throwaway);
-    uint8_t outbuf[throwaway];
+    int outlen;
+    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
+    uint8_t outbuf[outlen];
    
     //perform scrypt encryption
     baton->result = scryptdec_buf(
         (const uint8_t*)message,
-        throwaway,
+        outlen,
         outbuf,
         &baton->outbuflen,
         (const uint8_t*)baton->password.c_str(),
@@ -356,6 +361,9 @@ void DecryptWork(uv_work_t* req) {
     );
 
     baton->output = std::string((const char*)outbuf, baton->outbuflen);
+
+    //Clean up
+    delete message;
 }
 
 /*
