@@ -2,9 +2,6 @@
 #include <v8.h>
 
 #include <string>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
 
 #include "scrypt_crypto.h"
 #include "util/base64.h"
@@ -274,7 +271,6 @@ void EncryptAsyncAfter(uv_work_t* req) {
         }
     } else {
         const unsigned argc = 2;
-        //std::cout << baton->output; //Works
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
             Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length()))
