@@ -7,8 +7,7 @@
 #include <sstream>
 
 #include "scrypt_crypto.h"
-
-
+#include "util/base64.h"
 
 //Scrypt is a C library
 extern "C" {
@@ -16,7 +15,6 @@ extern "C" {
 }
 
 using namespace v8;
-#include "util/base64.h"
 
 //Defaults parameters for Scrypt
 struct defaults {
@@ -243,7 +241,7 @@ void EncryptWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    baton->output = scryptutil::base64_encode(outbuf, outbufSize);
+    baton->output = base64_encode(outbuf, outbufSize);
 }
 
 /*
@@ -343,7 +341,7 @@ void DecryptWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
     
     int throwaway;
-    unsigned const char* message = scryptutil::base64_decode(baton->message.c_str(), baton->message.length(), &throwaway);
+    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &throwaway);
     uint8_t outbuf[throwaway];
    
     //perform scrypt encryption

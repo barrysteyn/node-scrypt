@@ -3,8 +3,6 @@
 #include <cstdlib>
 #include "base64.h"
 
-using namespace scryptutil;
-
 static const char base64_chars[] = 
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
