@@ -1,7 +1,7 @@
 #Scrypt For NodeJS
-node-scrypt is a native node C++ wrapper for Colin Percival's scrypt encryption utility. It is designed to be fully asynchronous (in fact, there is no synchronous mode) due to the time input of scrypt.
+node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. It is fully asynchronous (in fact, there is no synchronous mode due to the time input of scrypt which would block the event loop).
 
-This is an implementation of the cryptographic *"atomics"*. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
+This library wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
 
 ##What Is It?
 Scrypt is an advanced crypto library used for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) for user authentication (i.e. password authenticator). More information can be found:
@@ -19,13 +19,13 @@ It is probably the most advanced means of performing authentication out there. T
 
 The *three tweakable* inputs mentioned above are as follows (Quoting from the author):
 
-###maxtime
+**maxtime**
 >maxtime will instruct scrypt to spend at most maxtime seconds computing the derived encryption key from the password; for encryption, this value will determine how secure the encrypted data is, while for decryption this value is used as an upper limit (if scrypt detects that it would take too long to decrypt the data, it will exit with an error message).
 
-###maxmemfrac
+**maxmemfrac**
 >maxmemfrac instructs scrypt to use at most the specified fraction of the available RAM for computing the derived encryption key. For encryption, increasing this value might increase the security of the encrypted data, depending on the maxtime value; for decryption, this value is used as an upper limit and may cause scrypt to exit with an error.
 
-###maxmem
+**maxmem**
 >maxmem instructs scrypt to use at most the specified number of bytes of RAM when computing the derived encryption key. 
 
 Here are some pros and cons for using it:
