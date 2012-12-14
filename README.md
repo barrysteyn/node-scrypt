@@ -1,8 +1,10 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt encryption utility. It is designed to be fully asynchronous (in fact, there is no synchronous mode) due to the time input of scrypt.
 
+This is an implementation of the cryptographic *"atomics"*. In other words, when performing authentication, use this library as an atomic, but you will have to come up with your own authentication scheme.
+
 ##What Is It?
-Scrypt is an advanced crypto library that is mainly used for user authentication. More information can be found:
+Scrypt is an advanced crypto library that is used as a[key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator) for user authentication. More information can be found:
 
 * [Tarsnap blurb about scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of scrypt) explains a bit about it.
 * [Academic paper explaining scrypt](http://www.tarsnap.com/scrypt/scrypt.pdf).
@@ -11,7 +13,7 @@ Scrypt is an advanced crypto library that is mainly used for user authentication
 For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
 
 ##Why Use It?
-When used for authentication, it is probably the most advanced library out there. This is quote taken from a comment in hacker news:
+It is probably the most advanced means of performing authentication out there. This is quote taken from a comment in hacker news:
 
 >Passwords hashed with scrypt with sufficiently-high strength values (there are 3 tweakable input numbers) are fundamentally impervious to being cracked. I use the word "fundamental" in the literal sense, here; even if you had the resources of a large country, you would not be able to design any hardware (whether it be GPU hardware, custom-designed hardware, or otherwise) which could crack these hashes. Ever. (For sufficiently-small definitions of "ever". At the very least "within your lifetime"; probably far longer.)
 
