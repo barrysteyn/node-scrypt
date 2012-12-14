@@ -1,9 +1,9 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. It is fully asynchronous (in fact, there is no synchronous mode due to the time input of scrypt which would block the event loop).
 
-This library wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
+node-scrypt wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
 
-##What Is It?
+##What Is Scrypt? 
 Scrypt is an advanced crypto library used for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) for user authentication (i.e. password authenticator). More information can be found:
 
 * [Tarsnap blurb about scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of scrypt) explains a bit about it.
@@ -12,7 +12,7 @@ Scrypt is an advanced crypto library used for [key derivation](http://en.wikiped
 
 For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
 
-##Why Use It?
+##Why Use Scrypt?
 It is probably the most advanced means of performing authentication out there. This is quote taken from a comment in hacker news:
 
 >Passwords hashed with scrypt with sufficiently-high strength values (there are 3 tweakable input numbers) are fundamentally impervious to being cracked. I use the word "fundamental" in the literal sense, here; even if you had the resources of a large country, you would not be able to design any hardware (whether it be GPU hardware, custom-designed hardware, or otherwise) which could crack these hashes. Ever. (For sufficiently-small definitions of "ever". At the very least "within your lifetime"; probably far longer.)
