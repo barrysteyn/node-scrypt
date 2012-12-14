@@ -13,13 +13,8 @@ extern "C" {
 
 using namespace v8;
 
-//Defaults parameters for Scrypt
-struct defaults {
-    static size_t maxmem;
-    static double maxmemfrac;
-};
-size_t defaults::maxmem = 0;
-double defaults::maxmemfrac = 0.5;
+const size_t maxmem_default = 0;
+const double maxmemfrac_default = 0.5;
 
 //Asynchronous work request data
 struct Baton {
@@ -150,7 +145,7 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
                     maxmem = Local<Number>(args[i]->ToNumber())->Value();
 
                     if (maxmem < 0)
-                        maxmem = defaults::maxmem;
+                        maxmem = maxmem_default;
                 }
                 break;
 
@@ -160,7 +155,7 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
                     maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
 
                     if (maxmemfrac <=0)
-                        maxmemfrac = defaults::maxmemfrac;
+                        maxmemfrac = maxmemfrac_default;
                 }                
                 break; 
         }
@@ -181,8 +176,8 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
 Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     HandleScope scope;
 
-    size_t maxmem = defaults::maxmem;
-    double maxmemfrac = defaults::maxmemfrac;
+    size_t maxmem = maxmem_default;
+    double maxmemfrac = maxmemfrac_default;
     double maxtime = 0.0;
     std::string validateMessage;
     uint32_t callbackPosition;
@@ -296,8 +291,8 @@ void EncryptAsyncAfter(uv_work_t* req) {
 Handle<Value> DecryptAsyncBefore(const Arguments& args) {
     HandleScope scope;
     
-    size_t maxmem = defaults::maxmem;
-    double maxmemfrac = defaults::maxmemfrac;
+    size_t maxmem = maxmem_default;
+    double maxmemfrac = maxmemfrac_default;
     double maxtime = 0.0;
     std::string validateMessage;
     uint32_t callbackPosition;
