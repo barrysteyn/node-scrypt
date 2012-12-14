@@ -1,7 +1,7 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt encryption utility. It is designed to be fully asynchronous (in fact, there is no synchronous mode) due to the time input of scrypt.
 
-This is an implementation of the cryptographic *"atomics"*. In other words, when performing authentication, use this library as an atomic, but you will have to come up with your own authentication scheme.
+This is an implementation of the cryptographic *"atomics"*. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
 
 ##What Is It?
 Scrypt is an advanced crypto library that is used as a[key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator) for user authentication. More information can be found:
