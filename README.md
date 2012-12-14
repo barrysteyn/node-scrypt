@@ -4,7 +4,7 @@ node-scrypt is a native node C++ wrapper for Colin Percival's scrypt encryption 
 This is an implementation of the cryptographic *"atomics"*. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
 
 ##What Is It?
-Scrypt is an advanced crypto library that is used as a[key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator) for user authentication. More information can be found:
+Scrypt is an advanced crypto library used for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) for user authentication (i.e. password authenticator). More information can be found:
 
 * [Tarsnap blurb about scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of scrypt) explains a bit about it.
 * [Academic paper explaining scrypt](http://www.tarsnap.com/scrypt/scrypt.pdf).
