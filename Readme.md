@@ -1,9 +1,9 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. It is fully asynchronous (in fact, there is no synchronous mode due to the time input of scrypt which would block the event loop).
 
-This library wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
+node-scrypt wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
 
-##What Is It?
+##What Is Scrypt? 
 Scrypt is an advanced crypto library used for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) for user authentication (i.e. password authenticator). More information can be found:
 
 * [Tarsnap blurb about scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of scrypt) explains a bit about it.
@@ -12,7 +12,7 @@ Scrypt is an advanced crypto library used for [key derivation](http://en.wikiped
 
 For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
 
-##Why Use It?
+##Why Use Scrypt?
 It is probably the most advanced means of performing authentication out there. This is quote taken from a comment in hacker news:
 
 >Passwords hashed with scrypt with sufficiently-high strength values (there are 3 tweakable input numbers) are fundamentally impervious to being cracked. I use the word "fundamental" in the literal sense, here; even if you had the resources of a large country, you would not be able to design any hardware (whether it be GPU hardware, custom-designed hardware, or otherwise) which could crack these hashes. Ever. (For sufficiently-small definitions of "ever". At the very least "within your lifetime"; probably far longer.)
@@ -54,7 +54,9 @@ As should be the case with any security tool, this library should be scrutinized
 #Installation Instructions
 As of now (Dec 2012), this library has been tested and works on Linux (Ubuntu to be exact).
 ##From NPM
-This will be ready within the next 24 hours.
+
+    npm install scrypt
+
 ##From Source
 You will need `node-gyp` to get this to work (install it if you don't have it: `npm install -g node-gyp`):
 
@@ -62,12 +64,10 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     cd node-scrypt
     node-gyp configure build
 
-The module can be found in the `build/Release` folder with the name `scrypt_crypto.node`.
-
 #Usage
 I will write an example application that uses scrypt for authentication in a few days time. What follows here is using scrypt to encrypt and decrypt data. Note that for the case of pure encryption and decryption, scrypt is not a good candidate (rather use [AES]()). Remember that scrypt is designed to be a key derivation function, and therefore being *slow* is an advantage.
 
-    var scrypt = require("./build/Release/scrypt_crypto");
+    var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
     var max_time = 1.0;
@@ -81,7 +81,7 @@ I will write an example application that uses scrypt for authentication in a few
 
 Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
     
-    var scrypt = require("./build/Release/scrypt_crypto");
+    var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
     var max_time = 1.0;
