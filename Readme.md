@@ -54,7 +54,9 @@ As should be the case with any security tool, this library should be scrutinized
 #Installation Instructions
 As of now (Dec 2012), this library has been tested and works on Linux (Ubuntu to be exact).
 ##From NPM
-This will be ready within the next 24 hours.
+
+    npm install scrypt
+
 ##From Source
 You will need `node-gyp` to get this to work (install it if you don't have it: `npm install -g node-gyp`):
 
