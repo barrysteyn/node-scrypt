@@ -64,8 +64,6 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     cd node-scrypt
     node-gyp configure build
 
-The module can be found in the `build/Release` folder with the name `scrypt_crypto.node`.
-
 #Usage
 I will write an example application that uses scrypt for authentication in a few days time. What follows here is using scrypt to encrypt and decrypt data. Note that for the case of pure encryption and decryption, scrypt is not a good candidate (rather use [AES]()). Remember that scrypt is designed to be a key derivation function, and therefore being *slow* is an advantage.
 
