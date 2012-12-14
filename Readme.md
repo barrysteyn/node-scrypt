@@ -67,7 +67,7 @@ The module can be found in the `build/Release` folder with the name `scrypt_cryp
 #Usage
 I will write an example application that uses scrypt for authentication in a few days time. What follows here is using scrypt to encrypt and decrypt data. Note that for the case of pure encryption and decryption, scrypt is not a good candidate (rather use [AES]()). Remember that scrypt is designed to be a key derivation function, and therefore being *slow* is an advantage.
 
-    var scrypt = require("./build/Release/scrypt_crypto");
+    var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
     var max_time = 1.0;
@@ -81,7 +81,7 @@ I will write an example application that uses scrypt for authentication in a few
 
 Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
     
-    var scrypt = require("./build/Release/scrypt_crypto");
+    var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
     var max_time = 1.0;
