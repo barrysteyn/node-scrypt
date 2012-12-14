@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "scrypt_crypto.h"
+#include "scrypt_node.h"
 #include "util/base64.h"
 
 //Scrypt is a C library
@@ -411,4 +411,4 @@ void RegisterModule(Handle<Object> target) {
     target->Set(String::NewSymbol("decrypt"),
         FunctionTemplate::New(DecryptAsyncBefore)->GetFunction());
 }
-NODE_MODULE(scrypt_crypto, RegisterModule)
+NODE_MODULE(scrypt, RegisterModule)

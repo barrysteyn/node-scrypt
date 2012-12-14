@@ -32,9 +32,9 @@
             ],
         },
         {
-            'target_name': 'scrypt_crypto',
+            'target_name': 'scrypt',
             'sources': [
-                'scrypt_crypto.cc',
+                'scrypt_node.cc',
                 'util/base64.cc'
             ],
             'dependencies': ['scrypt_lib'],
