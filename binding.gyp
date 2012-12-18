@@ -35,7 +35,7 @@
             'target_name': 'scrypt',
             'sources': [
                 'scrypt_node.cc',
-                'util/base64.cc'
+                'src/util/base64.cc'
             ],
             'dependencies': ['scrypt_lib'],
         },
