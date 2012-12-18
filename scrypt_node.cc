@@ -4,7 +4,7 @@
 #include <string>
 
 #include "scrypt_node.h"
-#include "util/base64.h"
+#include "src/util/base64.h"
 
 //Scrypt is a C library
 extern "C" {
@@ -71,7 +71,7 @@ std::string ScryptErrorDescr(const int error) {
 /*
  * Validates JavaScript function arguments and sets maxmem, maxmemfrac and maxtime
  */
-int ValidateArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
+int ValidateCryptoArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
     uint32_t callbackPosition = 0;
 
     if (args.Length() < 4) {
@@ -183,7 +183,7 @@ Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     uint32_t callbackPosition;
 
     //Validate arguments
-    if (!(callbackPosition = ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
+    if (!(callbackPosition = ValidateCryptoArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
@@ -298,7 +298,7 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
     uint32_t callbackPosition;
 
     //Validate arguments
-    if (!(callbackPosition = ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
+    if (!(callbackPosition = ValidateCryptoArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
