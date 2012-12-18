@@ -9,6 +9,7 @@
 //Scrypt is a C library
 extern "C" {
     #include "scrypt-1.1.6/lib/scryptenc/scryptenc.h"
+    #include "src/passwordhash/scrypthash.h"
 }
 
 using namespace v8;
