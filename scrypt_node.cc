@@ -70,7 +70,7 @@ std::string ScryptErrorDescr(const int error) {
 }
 
 /*
- * Validates JavaScript function arguments and sets maxmem, maxmemfrac and maxtime
+ * Validates JavaScript encryption and decryption function arguments and sets maxmem, maxmemfrac and maxtime
  */
 int ValidateCryptoArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
     uint32_t callbackPosition = 0;
@@ -168,6 +168,200 @@ int ValidateCryptoArguments(const Arguments& args, std::string& message, size_t&
     }
 
     return 0;
+}
+
+
+/*
+ * Validates JavaScript function arguments for password hash and sets maxmem, maxmemfrac and maxtime
+ */
+int ValidateHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
+    uint32_t callbackPosition = 0;
+
+    if (args.Length() < 3) {
+        message = "Wrong number of arguments: At least three arguments are needed -  password, max_time and a callback function";
+        return 0;
+    }
+
+    for (int i=0; i < args.Length(); i++) {
+        if (args[i]->IsFunction()) {
+            callbackPosition = i;
+
+            if (i < 2) {
+                message = "arguments missing before callback. make sure at least password and max_time have been set before callback";
+                return 0;
+            }
+
+            //Success
+            return callbackPosition;
+        }
+
+        switch(i) {
+            case 0:
+                //Check password is a string
+                if (!args[i]->IsString()) {
+                    message = "password must be a string";
+                    return 0;
+                }
+                
+                if (args[i]->ToString()->Length() == 0) {
+                    message = "password cannot be empty";
+                    return 0;
+                }
+                
+                break;
+
+            case 1:
+                //Check max_time is a number
+                if (!args[i]->IsNumber()) {
+                    message = "maxtime argument must be a number";
+                    return 0;
+                }
+
+                //Check that maxtime is not less than or equal to zero (which would not make much sense)
+                maxtime = Local<Number>(args[i]->ToNumber())->Value();
+                if (maxtime <= 0) {
+                    message = "maxtime must be greater than 0";
+                    return 0;
+                }
+                
+                break;   
+
+            case 2:
+                //Set mexmem if possible, else set it to default
+                if (args[i]->IsNumber()) {
+                    maxmem = Local<Number>(args[i]->ToNumber())->Value();
+
+                    if (maxmem < 0)
+                        maxmem = maxmem_default;
+                }
+                break;
+
+            case 3:
+                //Set mexmemfrac if possible, else set it to default
+                if (args[i]->IsNumber()) {
+                    maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
+
+                    if (maxmemfrac <=0)
+                        maxmemfrac = maxmemfrac_default;
+                }                
+                break; 
+        }
+    }
+  
+    if (!callbackPosition) { 
+        message = "callback function not present";
+        return 0;
+    }
+
+    return 0;
+}
+
+/*
+ * Password Hash: Function called from JavaScript land. Creates work request
+ *                object and schedules it for execution  
+ */
+Handle<Value> HashAsyncBefore(const Arguments& args) {
+    HandleScope scope;
+    size_t maxmem = maxmem_default;
+    double maxmemfrac = maxmemfrac_default;
+    double maxtime = 0.0;
+    std::string validateMessage;
+    uint32_t callbackPosition;
+    
+    //Validate arguments
+    if (!(callbackPosition = ValidateHashArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );
+        return scope.Close(Undefined());
+    }
+    
+    //Local variables
+    String::Utf8Value password(args[0]->ToString());
+    Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
+    
+    //Asynchronous call baton that holds data passed to async function
+    Baton* baton = new Baton();
+    baton->password = *password;
+    baton->maxtime = maxtime;
+    baton->maxmemfrac = maxmemfrac;
+    baton->maxmem = maxmem;
+    baton->callback = Persistent<Function>::New(callback);
+
+    //Asynchronous work request
+    uv_work_t *req = new uv_work_t();
+    req->data = baton;
+    
+    //Schedule work request
+    int status = uv_queue_work(uv_default_loop(), req, HashWork, HashAsyncAfter);
+    assert(status == 0); 
+    
+    return scope.Close(Undefined());   
+}
+
+/*
+ * Password Hash: Scrypt key derivation performed here
+ */
+void HashWork(uv_work_t* req) {
+    Baton* baton = static_cast<Baton*>(req->data);
+    uint8_t outbuf[96]; //Header size for password derivation is fixed
+    
+    //perform scrypt encryption
+    baton->result = HashPassword(
+        (const uint8_t*)baton->password.c_str(),
+        outbuf,
+        baton->maxmem, baton->maxmemfrac, baton->maxtime
+    );
+
+    //Base64 encode else things don't work (such is crypto)
+    char* base64Encode = base64_encode(outbuf, 96);
+    baton->output = base64Encode;
+
+    //Clean up
+    delete base64Encode;
+}
+
+/*
+ * Password Hash: Call back function for when work is finished
+ */
+void HashAsyncAfter(uv_work_t* req) {
+    HandleScope scope;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //There has been an error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        //Prepare the parameters for the callback function
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        // Wrap the callback function call in a TryCatch so that we can call
+        // node's FatalException afterwards. This makes it possible to catch
+        // the exception from JavaScript land using the
+        // process.on('uncaughtException') event.
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length()))
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    //Clean up
+    baton->callback.Dispose();
+    delete baton;
+    delete req;
 }
 
 /*
@@ -401,6 +595,9 @@ void DecryptAsyncAfter(uv_work_t* req) {
  * Module initialisation function
  */
 void RegisterModule(Handle<Object> target) {
+    target->Set(String::NewSymbol("passwordHash"),
+        FunctionTemplate::New(HashAsyncBefore)->GetFunction());
+
     target->Set(String::NewSymbol("encrypt"),
         FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
 
