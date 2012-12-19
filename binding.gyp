@@ -43,6 +43,7 @@
             'include_dirs' : [
                 'scrypt-1.1.6/lib/util',
                 'scrypt-1.1.6/lib/crypto',
+                'scrypt-1.1.6/lib/scryptenc',
                 'scrypt-1.1.6'
             ],
             'dependencies': ['scrypt_lib'],
