@@ -30,6 +30,15 @@ The *three tweakable* inputs mentioned above are as follows (Quoting from the au
 
 Here are some pros and cons for using it:
 
+###The Three Tweakable Inputs
+**Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* outputs for the internal scrypt cryptographic function. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) are as follows:
+
+1. **N** - general work factor, iteration count.
+2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
+3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
+
+Values for *maxtime*, *maxmemfrac* and *maxmem* are translated into the above values, which are then fed to the scrypt function. The translation function also takes into account the CPU and Memory capabilities of a machine. Therefore values of *N*,*r* and *p* may differ for different machines that have different specs.
+
 ###Pros
 
 * It is being actively used in production at [Tarsnap](http://www.tarsnap.com/).
@@ -65,7 +74,50 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     node-gyp configure build
 
 #Usage
-I will write an example application that uses scrypt for authentication in a few days time. What follows here is using scrypt to encrypt and decrypt data. Note that for the case of pure encryption and decryption, scrypt is not a good candidate (rather use [AES]()). Remember that scrypt is designed to be a key derivation function, and therefore being *slow* is an advantage.
+##Authentication
+For interactive authentication, set `maxtime` to *0.1* - 100 milliseconds. 
+   
+###To create a password hash
+ 
+    var scrypt = require("scrypt");
+    var hash;
+    var password = "This is a password";
+    var maxtime = 0.1;
+
+    scrypt.passwordHash(password, maxtime, function(err, pwdhash) {
+        if (!err)
+            hash = pwdhash; //This should now be stored in the database
+    });
+
+Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
+    
+    var scrypt = require("scrypt");
+    var hash;
+    var password = "This is a password";
+    var maxtime = 0.1;
+    var maxmem = 0, maxmemfrac = 0.5;
+
+    scrypt.passwordHash(password, maxtime, maxmem, maxmemfrac, function(err, pwdhash) {
+        if (!err)
+            hash = pwdhash; //This should now be stored in the database
+    });
+
+###To verify a password hash
+
+    var scrypt = require("scrypt");
+    var password = "This is a password";
+    var hash; //This should be obtained from the database
+
+    scrypt.verifyHash(hash, password, function(err, result) {
+        if (!err)
+            return result; //Will be True
+        
+        return False;    
+    });
+
+
+##Encryption and Decryption
+I suspect scrypt will be used mainly as a key derivation function, but I have also ported the scrypt encryption and decryption functions. Performing scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower.
 
     var scrypt = require("scrypt");
     var message = "Hello World";
@@ -95,8 +147,10 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
         });
     });
 
-#Still To Do
+#A Call For Help
 
-1. Finish writing testing scripts.
-2. Find collaborators to help port it to windows.
-3. Make an example password authentication script.
+I need help with the following please:
+
+1. Porting this to Windows and Mac.
+2. Scrutiny by cryptographers.
+3. Testing against bcrypt (from the scrypt paper, Colin Percival says it is much more secure, and provides proof - but I would like a back up of that fact).
