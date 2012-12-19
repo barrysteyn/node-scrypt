@@ -11,8 +11,6 @@
 #include <string.h>
 #include <openssl/aes.h>
 
-#define ENCBLOCK 65536
-
 /*
  * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables. 
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
