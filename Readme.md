@@ -28,16 +28,17 @@ The *three tweakable* inputs mentioned above are as follows (Quoting from the au
 **maxmem**
 >maxmem instructs scrypt to use at most the specified number of bytes of RAM when computing the derived encryption key. 
 
-Here are some pros and cons for using it:
-
 ###The Three Tweakable Inputs
-**Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* outputs for the internal scrypt cryptographic function. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) are as follows:
+**Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* inputs into a translation function that produces the inputs that the internal scrypt cryptographic function expects. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) are as follows:
 
 1. **N** - general work factor, iteration count.
 2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
 3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
 
-Values for *maxtime*, *maxmemfrac* and *maxmem* are translated into the above values, which are then fed to the scrypt function. The translation function also takes into account the CPU and Memory capabilities of a machine. Therefore values of *N*,*r* and *p* may differ for different machines that have different specs.
+Values for *maxtime*, *maxmemfrac* and *maxmem* are translated into the above values, which are then fed to the scrypt function. The translation function also takes into account the CPU and Memory capabilities of a machine. Therefore values of *N*, *r* and *p* may differ for different machines that have different specs.
+
+## Pros And Cons
+Here are some pros and cons for using it:
 
 ###Pros
 
