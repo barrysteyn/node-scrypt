@@ -257,6 +257,69 @@ int ValidateHashArguments(const Arguments& args, std::string& message, size_t& m
 }
 
 /*
+ * Validates JavaScript function arguments for verify password hash
+ */
+int ValidateVerifyArguments(const Arguments& args, std::string& message) {
+    uint32_t callbackPosition = 0;
+
+    if (args.Length() < 3) {
+        message = "Wrong number of arguments: At least three arguments are needed -  hash, password and a callback function";
+        return 0;
+    }
+
+    for (int i=0; i < args.Length(); i++) {
+        if (args[i]->IsFunction()) {
+            callbackPosition = i;
+
+            if (i < 2) {
+                message = "arguments missing before callback. make sure at least hash and password have been set before callback";
+                return 0;
+            }
+
+            //Success
+            return callbackPosition;
+        }
+
+        switch(i) {
+            case 0:
+                //Check hash is a string
+                if (!args[i]->IsString()) {
+                    message = "hash must be a string";
+                    return 0;
+                }
+                
+                if (args[i]->ToString()->Length() == 0) {
+                    message = "hash cannot be empty";
+                    return 0;
+                }
+                
+                break;
+            
+            case 1:
+                //Check hash is a string
+                if (!args[i]->IsString()) {
+                    message = "password must be a string";
+                    return 0;
+                }
+                
+                if (args[i]->ToString()->Length() == 0) {
+                    message = "password cannot be empty";
+                    return 0;
+                }
+                
+                break;
+        }
+    }
+  
+    if (!callbackPosition) { 
+        message = "callback function not present";
+        return 0;
+    }
+
+    return 0;
+}
+
+/*
  * Password Hash: Function called from JavaScript land. Creates work request
  *                object and schedules it for execution  
  */
@@ -365,6 +428,101 @@ void HashAsyncAfter(uv_work_t* req) {
 }
 
 /*
+ * Hash Verify: Function called from JavaScript land. Creates work request
+ *              object and schedules it for execution  
+ */
+Handle<Value> VerifyAsyncBefore(const Arguments& args) {
+    HandleScope scope;
+    int callbackPosition;
+    std::string validateMessage;
+
+    //Validate arguments
+    if (!(callbackPosition = ValidateVerifyArguments(args, validateMessage))) {
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );
+        return scope.Close(Undefined());
+    }
+
+    //Local variables
+    String::Utf8Value hash(args[0]->ToString());
+    String::Utf8Value password(args[1]->ToString());
+    Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
+    
+    //Asynchronous call baton that holds data passed to async function
+    Baton* baton = new Baton();
+    baton->message = *hash;
+    baton->password = *password;
+    baton->callback = Persistent<Function>::New(callback);
+
+    //Asynchronous work request
+    uv_work_t *req = new uv_work_t();
+    req->data = baton;
+    
+    //Schedule work request
+    int status = uv_queue_work(uv_default_loop(), req, VerifyWork, VerifyAsyncAfter);
+    assert(status == 0); 
+    
+    return scope.Close(Undefined());   
+}
+
+/*
+ * Verify: Scrypt password hash verification performed here
+ */
+void VerifyWork(uv_work_t* req) {
+    Baton* baton = static_cast<Baton*>(req->data);
+    int outlen;
+    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
+  
+    //perform scrypt encryption
+    baton->result = VerifyHash(
+        message,
+        (const uint8_t*)baton->password.c_str()
+    );
+
+    //Clean up
+    delete message;
+}
+
+/*
+ * Verify: Call back function for when work is finished
+ */
+void VerifyAsyncAfter(uv_work_t* req) {
+    HandleScope scope;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(Boolean::New(true))
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    //Clean up
+    baton->callback.Dispose();
+    delete baton;
+    delete req;
+}
+
+/*
  * Encryption: Function called from JavaScript land. Creates work request
  *             object and schedules it for execution
  */
@@ -409,6 +567,7 @@ Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     
     return scope.Close(Undefined());   
 }
+
 
 /*
  * Encryption: Scrypt encryption performed here
@@ -597,6 +756,9 @@ void DecryptAsyncAfter(uv_work_t* req) {
 void RegisterModule(Handle<Object> target) {
     target->Set(String::NewSymbol("passwordHash"),
         FunctionTemplate::New(HashAsyncBefore)->GetFunction());
+
+    target->Set(String::NewSymbol("verifyHash"),
+        FunctionTemplate::New(VerifyAsyncBefore)->GetFunction());
 
     target->Set(String::NewSymbol("encrypt"),
         FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
