@@ -167,18 +167,18 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
 * `verifyHash(hash, password, callback_function)` 
     * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
     * `password` - [REQUIRED] - a password string.
-        * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
            
 ##Encryption/Decryption
 
-*`encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
+* `encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
     * `message` - [REQUIRED] - the message data to be encrypted.
     * `password` - [REQUIRED] - a password string.
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
     * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
-*`decrypt(cipher, password, maxtime, maxmem, maxmemfrac, callback_function)`
+* `decrypt(cipher, password, maxtime, maxmem, maxmemfrac, callback_function)`
     * `cipher` - [REQUIRED] - the cipher to be decrypted.
     * `password` - [REQUIRED] - a password string.
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
