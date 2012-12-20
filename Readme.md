@@ -42,6 +42,7 @@ Here are some pros and cons for using it:
 
 ###Pros
 
+* The scrypt algorithm has been published by [IETF](http://en.wikipedia.org/wiki/IETF) as an [Internet Draft](http://en.wikipedia.org/wiki/Internet_Draft) and is thus on track to becoming a standard. See [here](https://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00) for the draft.
 * It is being actively used in production at [Tarsnap](http://www.tarsnap.com/).
 * It is much more secure than bcrypt.
 * It is designed to be future proof against attacks with future (and more advanced) hardware.
@@ -184,6 +185,7 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
 
 #Credits
 The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project. This includes the encryption/decryption functions which are basically just wrappers into this library.
