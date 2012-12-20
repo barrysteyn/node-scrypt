@@ -1,3 +1,30 @@
+/* 
+   scrypthash.c and scrypthash.h
+
+   Copyright (C) 2012 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+
+   This source code is provided 'as-is', without any express or implied
+   warranty. In no event will the author be held liable for any damages
+   arising from the use of this software.
+
+   Permission is granted to anyone to use this software for any purpose,
+   including commercial applications, and to alter it and redistribute it
+   freely, subject to the following restrictions:
+
+   1. The origin of this source code must not be misrepresented; you must not
+      claim that you wrote the original source code. If you use this source code
+      in a product, an acknowledgment in the product documentation would be
+      appreciated but is not required.
+
+   2. Altered source versions must be plainly marked as such, and must not be
+      misrepresented as being the original source code.
+
+   3. This notice may not be removed or altered from any source distribution.
+
+   Barry Steyn barry.steyn@gmail.com 
+
+*/
+
 #include "sha256.h"
 #include "sysendian.h"
 #include "crypto_scrypt.h"
@@ -9,7 +36,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
-#include <openssl/aes.h>
 
 /*
  * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables. 
@@ -17,6 +43,8 @@
  */
 static int
 pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_t * r, uint32_t * p) {
+    //Note: logN (as opposed to N) is calculated here. This is because it is compact (it can be represented by an int)
+    //      and it is easy (and quick) to convert to N by right shifting bits
     size_t memlimit;
     double opps;
     double opslimit;
@@ -44,10 +72,6 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_
     * limit requires that 4Nrp <= opslimit. If opslimit < memlimit/32,
     * opslimit imposes the stronger limit on N.
     */
-#ifdef DEBUG
-    fprintf(stderr, "Requiring 128Nr <= %zu, 4Nrp <= %f\n",
-    memlimit, opslimit);
-#endif
     if (opslimit < memlimit/32) {
         /* Set p = 1 and choose N based on the CPU limit. */
         *p = 1;
@@ -70,11 +94,6 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_
             maxrp = 0x3fffffff;
         *p = (uint32_t)(maxrp) / *r;
     }
-
-#ifdef DEBUG
-    fprintf(stderr, "N = %zu r = %d p = %d\n",
-    (size_t)(1) << *logN, (int)(*r), (int)(*p));
-#endif
 
     /* Success! */
     return (0);
@@ -132,12 +151,12 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double ma
     int logN;
     uint64_t N;
     uint32_t r, p;
-    uint8_t salt[32];
-    uint8_t dk[64];
-    uint8_t hbuf[32];
+    uint8_t dk[64],
+            salt[32],
+            hbuf[32];
+    uint8_t * key_hmac = &dk[32];
     SHA256_CTX ctx;
     HMAC_SHA256_CTX hctx;
-    uint8_t * key_hmac = &dk[32];
     int rc;
 
     /* Calculate logN, r, p */
@@ -178,16 +197,15 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double ma
 }
 
 /*
- * Verifies password hash
+ * Verifies password hash (also ensures hash integrity at same time)
  */
 int
 VerifyHash(const uint8_t header[96], const uint8_t* passwd) {
-    uint8_t dk[64];
-    uint8_t salt[32];
-    uint8_t hbuf[32];
     int N;
-    uint32_t r;
-    uint32_t p; 
+    uint32_t r, p; 
+    uint8_t dk[64],
+            salt[32],
+            hbuf[32];
     uint8_t * key_hmac = &dk[32];
     HMAC_SHA256_CTX hctx;
     SHA256_CTX ctx;
