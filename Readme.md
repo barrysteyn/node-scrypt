@@ -157,6 +157,7 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
 #Api
 
 ##Authentication
+
     * `passwordHash(password, maxtime, maxmem, maxmemfrac, callback_function)`
         * `password` - [REQUIRED] - a password string.
         * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
@@ -169,6 +170,7 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
         * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
            
 ##Encryption/Decryption
+
     *`encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
         * `message` - [REQUIRED] - the message data to be encrypted.
         * `password` - [REQUIRED] - a password string.
