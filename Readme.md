@@ -1,7 +1,7 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. It is fully asynchronous (in fact, there is no synchronous mode due to the time input of scrypt which would block the event loop).
 
-node-scrypt wraps scrypt's atomic key derivation operations. In other words, this library does not implement an authentication scheme, it merely implements the atomics that are necessary for it.
+node-scrypt wraps scrypt's atomic key derivation operations and provides implementation for a password hash and password verification scheme.
 
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) for user authentication (i.e. password authenticator). More information can be found:
@@ -13,7 +13,7 @@ Scrypt is an advanced crypto library used for [key derivation](http://en.wikiped
 For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
 
 ##Why Use Scrypt?
-It is probably the most advanced means of performing authentication out there. This is quote taken from a comment in hacker news:
+It is probably the most advanced means of performing authentication that is available. This is quote taken from a comment in hacker news:
 
 >Passwords hashed with scrypt with sufficiently-high strength values (there are 3 tweakable input numbers) are fundamentally impervious to being cracked. I use the word "fundamental" in the literal sense, here; even if you had the resources of a large country, you would not be able to design any hardware (whether it be GPU hardware, custom-designed hardware, or otherwise) which could crack these hashes. Ever. (For sufficiently-small definitions of "ever". At the very least "within your lifetime"; probably far longer.)
 
@@ -29,7 +29,7 @@ The *three tweakable* inputs mentioned above are as follows (Quoting from the au
 >maxmem instructs scrypt to use at most the specified number of bytes of RAM when computing the derived encryption key. 
 
 ###The Three Tweakable Inputs
-**Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* inputs into a translation function that produces the inputs that the internal scrypt cryptographic function expects. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) are as follows:
+**Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* inputs into a translation function that produces the inputs required for the internal scrypt cryptographic function. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf)) are as follows:
 
 1. **N** - general work factor, iteration count.
 2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
@@ -42,6 +42,7 @@ Here are some pros and cons for using it:
 
 ###Pros
 
+* The scrypt algorithm has been published by [IETF](http://en.wikipedia.org/wiki/IETF) as an [Internet Draft](http://en.wikipedia.org/wiki/Internet_Draft) and is thus on track to becoming a standard. See [here](https://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00) for the draft.
 * It is being actively used in production at [Tarsnap](http://www.tarsnap.com/).
 * It is much more secure than bcrypt.
 * It is designed to be future proof against attacks with future (and more advanced) hardware.
@@ -60,6 +61,12 @@ There is just one con: It is a relatively new library (only been around since 20
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
 
 #Dependencies
+There are no Node module dependencies, but the scrypt C library requires the following:
+
+* Openssl Library - this is linked with `lcrypto` in the makefile (binding.gyp).
+* Realtime Extensions Library - linked with `lrt`, used for translation of three tweakable inputs into scrypt inputs (see above for details).
+
+The above libraries are standard on Linux.
 
 #Installation Instructions
 As of now (Dec 2012), this library has been tested and works on Linux (Ubuntu to be exact).
@@ -76,7 +83,7 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
 
 #Usage
 ##Authentication
-For interactive authentication, set `maxtime` to *0.1* - 100 milliseconds. 
+For interactive authentication, set `maxtime` to `0.1` - 100 milliseconds. 
    
 ###To create a password hash
  
@@ -90,7 +97,7 @@ For interactive authentication, set `maxtime` to *0.1* - 100 milliseconds.
             hash = pwdhash; //This should now be stored in the database
     });
 
-Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
+Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
     
     var scrypt = require("scrypt");
     var hash;
@@ -123,30 +130,67 @@ I suspect scrypt will be used mainly as a key derivation function, but I have al
     var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
-    var max_time = 1.0;
+    var maxtime = 1.0;
 
-    scrypt.encrypt(message, password, max_time, function(err, cipher) {
+    scrypt.encrypt(message, password, maxtime, function(err, cipher) {
         console.log(cipher);
-        scrypt.decrypt(cipher, password, max_time, function(err, msg) {
+        scrypt.decrypt(cipher, password, maxtime, function(err, msg) {
             console.log(msg);
         });
     });
 
-Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
+Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
     
     var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
-    var max_time = 1.0;
+    var maxtime = 1.0;
     var maxmem = 1; //Defaults to 0 if not set
     var maxmemfrac = 1.5; //Defaults to 0.5 if not set
 
-    scrypt.encrypt(message, password, max_time, maxmem, maxmemfrac, function(err, cipher) {
+    scrypt.encrypt(message, password, maxtime, maxmem, maxmemfrac, function(err, cipher) {
         console.log(cipher);
-        scrypt.decrypt(cipher, password, max_time, maxmem, maxmemfrac, function(err, msg) {
+        scrypt.decrypt(cipher, password, maxtime, maxmem, maxmemfrac, function(err, msg) {
             console.log(msg);
         });
     });
+
+#Api
+
+##Authentication
+
+* `passwordHash(password, maxtime, maxmem, maxmemfrac, callback_function)`
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+* `verifyHash(hash, password, callback_function)` 
+    * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
+    * `password` - [REQUIRED] - a password string.
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+           
+##Encryption/Decryption
+
+* `encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
+    * `message` - [REQUIRED] - the message data to be encrypted.
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+* `decrypt(cipher, password, maxtime, maxmem, maxmemfrac, callback_function)`
+    * `cipher` - [REQUIRED] - the cipher to be decrypted.
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+    * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+
+#Credits
+The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project. This includes the encryption/decryption functions which are basically just wrappers into this library.
+
+The password hash and verify functions are also very heavily influenced by the scrypt source code, with most functionality being copied from various placed within scrypt.
 
 #A Call For Help
 
