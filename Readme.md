@@ -154,6 +154,40 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
         });
     });
 
+#Api
+
+##Authentication
+    * `passwordHash(password, maxtime, maxmem, maxmemfrac, callback_function)`
+        * `password` - [REQUIRED] - a password string.
+        * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
+        * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+        * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+        * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+    * `verifyHash(hash, password, callback_function)` 
+        * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
+        * `password` - [REQUIRED] - a password string.
+        * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+           
+##Encryption/Decryption
+    *`encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
+        * `message` - [REQUIRED] - the message data to be encrypted.
+        * `password` - [REQUIRED] - a password string.
+        * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+        * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+        * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+        * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+    *`decrypt(cipher, password, maxtime, maxmem, maxmemfrac, callback_function)`
+        * `cipher` - [REQUIRED] - the cipher to be decrypted.
+        * `password` - [REQUIRED] - a password string.
+        * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+        * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+        * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+
+#Credits
+The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project. This includes the encryption/decryption functions which are basically just wrappers into this library.
+
+The password hash and verify functions are also very heavily influenced by the scrypt source code, with most functionality being copied from various placed within scrypt.
+
 #A Call For Help
 
 I need help with the following please:
