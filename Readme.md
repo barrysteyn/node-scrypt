@@ -82,7 +82,7 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
 
 #Usage
 ##Authentication
-For interactive authentication, set `maxtime` to *0.1* - 100 milliseconds. 
+For interactive authentication, set `maxtime` to `0.1` - 100 milliseconds. 
    
 ###To create a password hash
  
@@ -96,7 +96,7 @@ For interactive authentication, set `maxtime` to *0.1* - 100 milliseconds.
             hash = pwdhash; //This should now be stored in the database
     });
 
-Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
+Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
     
     var scrypt = require("scrypt");
     var hash;
@@ -129,27 +129,27 @@ I suspect scrypt will be used mainly as a key derivation function, but I have al
     var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
-    var max_time = 1.0;
+    var maxtime = 1.0;
 
-    scrypt.encrypt(message, password, max_time, function(err, cipher) {
+    scrypt.encrypt(message, password, maxtime, function(err, cipher) {
         console.log(cipher);
-        scrypt.decrypt(cipher, password, max_time, function(err, msg) {
+        scrypt.decrypt(cipher, password, maxtime, function(err, msg) {
             console.log(msg);
         });
     });
 
-Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `max_time`  and before the callback function like so:
+Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
     
     var scrypt = require("scrypt");
     var message = "Hello World";
     var password = "Pass";
-    var max_time = 1.0;
+    var maxtime = 1.0;
     var maxmem = 1; //Defaults to 0 if not set
     var maxmemfrac = 1.5; //Defaults to 0.5 if not set
 
-    scrypt.encrypt(message, password, max_time, maxmem, maxmemfrac, function(err, cipher) {
+    scrypt.encrypt(message, password, maxtime, maxmem, maxmemfrac, function(err, cipher) {
         console.log(cipher);
-        scrypt.decrypt(cipher, password, max_time, maxmem, maxmemfrac, function(err, msg) {
+        scrypt.decrypt(cipher, password, maxtime, maxmem, maxmemfrac, function(err, msg) {
             console.log(msg);
         });
     });
