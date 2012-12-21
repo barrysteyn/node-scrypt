@@ -28,6 +28,13 @@ The *three tweakable* inputs mentioned above are as follows (Quoting from the au
 **maxmem**
 >maxmem instructs scrypt to use at most the specified number of bytes of RAM when computing the derived encryption key. 
 
+
+**A Note On How Memory Is Calculated**: `maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
+
+> the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
+
+Therefore at the very least, 1MiB of ram will be used.
+
 ###The Three Tweakable Inputs
 **Note**: This is a very important section to understand. The three tweakable inputs mentioned above are actually just *human understandable* inputs into a translation function that produces the inputs required for the internal scrypt cryptographic function. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf)) are as follows:
 
