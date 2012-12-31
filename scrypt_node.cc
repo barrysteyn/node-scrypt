@@ -494,8 +494,11 @@ void VerifyAsyncAfter(uv_work_t* req) {
     if (baton->result) { //error
         Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
 
-        const unsigned argc = 1;
-        Local<Value> argv[argc] = { err };
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = { 
+            err,
+            Local<Value>::New(Boolean::New(false))
+        };
 
         TryCatch try_catch;
         baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
