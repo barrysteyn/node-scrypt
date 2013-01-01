@@ -93,6 +93,14 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     cd node-scrypt
     node-gyp configure build
 
+#Testing
+To test, type:
+
+    node tests/scrypt-tests
+
+#Hash Info
+All scrypt output is encoded into Base64 using [René Nyffenegger](http://www.adp-gmbh.ch/) [library](http://www.adp-gmbh.ch/cpp/common/base64.html). The character sets that compromises all output are `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`.
+
 #Usage
 ##Authentication
 For interactive authentication, set `maxtime` to `0.1` - 100 milliseconds. 
