@@ -94,8 +94,19 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     node-gyp configure build
 
 #Testing
-To test, type:
+Testing is accomplished with the [node tap module](https://github.com/isaacs/node-tap).
+##If installed via NPM
+To test, go to the folder where scrypt was installed, and type:
 
+    cd node_modules/scrypt
+    npm install
+    node tests/scrypt-tests
+
+##If installed via source
+Go to the folder where scrypt was installed and type:
+    
+    cd node-scrypt
+    npm install
     node tests/scrypt-tests
 
 #Hash Info
