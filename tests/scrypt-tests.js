@@ -193,10 +193,18 @@ test("Encryption/Decryption - Encrypting a message (This test will take "+maxtim
 
 test("Encryption/Decryption - Decrypting a message results in the same message used as input to encryption (Testing consistency property of cryptography)", function(t) {
 	scrypt.encrypt(message, password, maxtime_crypto, function(err, cipher) {
-		t.notOk(err,'No error producing cipher');
 		scrypt.decrypt(cipher, password, maxtime_crypto, function(err, decipher_message) {
 			t.notOk(err,'No error decrypting');
 			t.equal(message, decipher_message,"Consistency property is working as expected");
+			t.end();
+		})
+	});
+});
+
+test("Encryption/Decryption - Decrypting does not work if given incorrect password", function(t) {
+	scrypt.encrypt(message, password, maxtime_crypto, function(err, cipher) {
+		scrypt.decrypt(cipher, password+'rubbush', maxtime_crypto, function(err, decipher_message) {
+			t.ok(err,'An error was correctly generated due to an incorrect password');
 			t.end();
 		})
 	});
