@@ -17,6 +17,15 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 
 For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
 
+###The Three Essential Properties Of Password Key Derivation
+Password key derivation requires three properties:
+
+* The password must not be stored in plaintext. (Therefore it is hashed).
+* The password hash must be salted. (Rainbow table attack is very difficult to pull off).
+* The salted hash function must not be fast. (If someone does get hold of the salted hashes, it will take a long time to brute force).
+
+This scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power.
+
 ##Why Use Scrypt?
 It is probably the most advanced key derivation function available. This is is quote taken from a comment in hacker news:
 
@@ -25,7 +34,7 @@ It is probably the most advanced key derivation function available. This is is q
 The *three tweakable* inputs mentioned above are as follows (Quoting from the author):
 
 **maxtime**
->maxtime will instruct scrypt to spend at most maxtime seconds computing the derived encryption key from the password; for encryption, this value will determine how secure the encrypted data is, while for decryption this value is used as an upper limit (if scrypt detects that it would take too long to decrypt the data, it will exit with an error message).
+>maxtime will instruct scrypt to spend at most maxtime seconds computing the derived encryption key from the password; [If using scrypt] for encryption, this value will determine how secure the encrypted data is, while for decryption this value is used as an upper limit (if scrypt detects that it would take too long to decrypt the data, it will exit with an error message).
 
 **maxmemfrac**
 >maxmemfrac instructs scrypt to use at most the specified fraction of the available RAM for computing the derived encryption key. For encryption, increasing this value might increase the security of the encrypted data, depending on the maxtime value; for decryption, this value is used as an upper limit and may cause scrypt to exit with an error.
@@ -67,7 +76,7 @@ I will end this section with a quote from Colin Percival (author of scrypt):
 > We estimate that on modern (2009) hardware, if 5 seconds are spent computing a derived key, the cost of a hardware brute-force attack against scrypt is roughly 4000 times greater than the cost of a similar attack against bcrypt (to find the same password), and 20000 times greater than a similar attack against PBKDF2.
 
 ###Cons
-There is just one con: It is a relatively new library (only been around since 2009). Cryptographers don't really like new libraries for production deployment as it has not been *battle tested*. That being said, it is being actively used in [Tarsnap](http://www.tarsnap.com/) (as mentioned above) and the author is very active.
+There is just one con I can think of: It is a relatively new library (only been around since 2009). Cryptographers don't really like new libraries for production deployment as it has not been *battle tested*. That being said, it is being actively used in [Tarsnap](http://www.tarsnap.com/) (as mentioned above) and the author is very active.
 
 #Security Issues/Concerns
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
@@ -226,11 +235,3 @@ The password hash and verify functions are also very heavily influenced by the s
 #Contributors
 
 * [René Nyffenegger](http://www.adp-gmbh.ch/) - produced original Base64 encoding code.
-
-#A Call For Help
-
-I need help with the following please:
-
-1. Porting this to Windows and Mac.
-2. Scrutiny by cryptographers.
-3. Testing against bcrypt (from the scrypt paper, Colin Percival says it is much more secure, and provides proof - but I would like a back up of that fact).
