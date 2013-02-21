@@ -46,15 +46,28 @@
                 'scrypt-1.1.6/lib/scryptenc',
                 'scrypt-1.1.6'
             ],
-            'dependencies': ['scrypt_lib'],
+        },
+        {
+            'target_name': 'scrypt_node_boilerplate',
+            'type': 'static_library',
+            'defines': [
+                'HAVE_CONFIG_H'                
+            ],
+            'sources': [
+                'src/node/scrypt_node_async.cc',
+                'src/util/base64.cc',
+            ],
+            'include_dirs' : [
+                'src/util',
+                'src/passwordhash',
+            ],
         },
         {
             'target_name': 'scrypt',
             'sources': [
                 'scrypt_node.cc',
-                'src/util/base64.cc'
             ],
-            'dependencies': ['scrypt_lib','scrypt_passwordhash'],
+            'dependencies': ['scrypt_lib','scrypt_passwordhash','scrypt_node_boilerplate'],
         },
     ],
 }
