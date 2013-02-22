@@ -30,6 +30,7 @@ Barry Steyn barry.steyn@gmail.com
 #include <string>
 
 #include "scrypt_node_sync.h"
+#include "scrypt_common.h"
 #include "base64.h"
 
 //Scrypt is a C library
@@ -37,9 +38,6 @@ extern "C" {
     #include "../../scrypt-1.1.6/lib/scryptenc/scryptenc.h"
     #include "scrypthash.h"
 }
-
-//Forward declaration
-std::string ScryptErrorDescr(const int error);
 
 using namespace v8;
 
@@ -320,4 +318,52 @@ Handle<Value> VerifySync(const Arguments& args) {
     } else {
         return scope.Close(Local<Value>::New(Boolean::New(true)));
     }
+}
+
+Handle<Value> EncryptSync(const Arguments& args) {
+    HandleScope scope;
+
+    size_t maxmem = maxmem_default;
+    double maxmemfrac = maxmemfrac_default;
+    double maxtime = 0.0;
+    std::string validateMessage;
+    int result;
+
+    //Validate arguments
+    if (ValidateCryptoSyncArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );  
+        return scope.Close(Undefined());
+    }   
+
+    //Local variables
+    String::Utf8Value message(args[0]->ToString());
+    String::Utf8Value password(args[1]->ToString());
+    uint32_t outbufSize = message.length() + 128;
+    uint8_t outbuf[outbufSize];
+
+    //perform scrypt encryption
+    result = scryptenc_buf(
+        (const uint8_t*)*message,
+        message.length(),
+        outbuf,
+        (const uint8_t*)*password,
+        password.length(),
+        maxmem, maxmemfrac, maxtime
+    );
+
+    if (result) { //There has been an error
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );  
+        return scope.Close(Undefined());
+    } else {
+        //Base64 encode else things don't work (such is crypto)
+        char* base64Encode = base64_encode(outbuf, outbufSize);
+        Local<String> cipher = String::New((const char*)base64Encode, outbufSize);
+        delete base64Encode;
+
+        return scope.Close(Local<Value>::New(cipher));
+    }   
 }
