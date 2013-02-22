@@ -1,12 +1,5 @@
 #Scrypt For NodeJS
-node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. It is fully asynchronous (in fact, there is no synchronous mode due to the time input of scrypt which would block the event loop).
-
-node-scrypt wraps scrypt's C reference implementation and provides implementation for the following:
-
-* Password hash.
-* Password hash verification.
-* Encryption.
-* Decryption.
+node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility.
 
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found:
@@ -280,7 +273,7 @@ Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If the
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
-* `verifyHash(hash, password)`
+* `verifyHashSync(hash, password)`
     * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
     * `password` - [REQUIRED] - a password string.
            
