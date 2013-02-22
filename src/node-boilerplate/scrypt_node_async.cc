@@ -688,7 +688,7 @@ void DecryptWork(uv_work_t* req) {
     unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
     uint8_t outbuf[outlen];
    
-    //perform scrypt encryption
+    //perform scrypt decryption
     baton->result = scryptdec_buf(
         (const uint8_t*)message,
         outlen,

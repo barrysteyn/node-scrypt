@@ -59,5 +59,8 @@ void RegisterModule(Handle<Object> target) {
 
     target->Set(String::NewSymbol("encryptSync"),
         FunctionTemplate::New(EncryptSync)->GetFunction());
+
+    target->Set(String::NewSymbol("decryptSync"),
+        FunctionTemplate::New(DecryptSync)->GetFunction());
 }
 NODE_MODULE(scrypt, RegisterModule)
