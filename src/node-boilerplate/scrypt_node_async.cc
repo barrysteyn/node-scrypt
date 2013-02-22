@@ -30,6 +30,7 @@ Barry Steyn barry.steyn@gmail.com
 #include <string>
 
 #include "scrypt_node_async.h"
+#include "scrypt_common.h"
 #include "base64.h"
 
 //Scrypt is a C library
@@ -37,9 +38,6 @@ extern "C" {
     #include "../../scrypt-1.1.6/lib/scryptenc/scryptenc.h"
     #include "scrypthash.h"
 }
-
-//Forward declaration
-std::string ScryptErrorDescr(const int error);
 
 using namespace v8;
 
