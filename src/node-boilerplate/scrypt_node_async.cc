@@ -38,6 +38,9 @@ extern "C" {
     #include "scrypthash.h"
 }
 
+//Forward declaration
+std::string ScryptErrorDescr(const int error);
+
 using namespace v8;
 
 const size_t maxmem_default = 0;
@@ -58,42 +61,6 @@ struct Baton {
     double maxtime;
     size_t outbuflen;
 };
-
-//Scrypt error descriptions
-std::string ScryptErrorDescr(const int error) {
-    switch(error) {
-        case 0: 
-            return std::string("success");
-        case 1: 
-            return std::string("getrlimit or sysctl(hw.usermem) failed");
-        case 2: 
-            return std::string("clock_getres or clock_gettime failed");
-        case 3: 
-            return std::string("error computing derived key");
-        case 4: 
-            return std::string("could not read salt from /dev/urandom");
-        case 5: 
-            return std::string("error in OpenSSL");
-        case 6: 
-            return std::string("malloc failed");
-        case 7: 
-            return std::string("data is not a valid scrypt-encrypted block");
-        case 8: 
-            return std::string("unrecognized scrypt format");
-        case 9:     
-            return std::string("decrypting file would take too much memory");
-        case 10: 
-            return std::string("decrypting file would take too long");
-        case 11: 
-            return std::string("password is incorrect");
-        case 12: 
-            return std::string("error writing output file");
-        case 13: 
-            return std::string("error reading input file");
-        default:
-            return std::string("error unkown");
-    }
-}
 
 /*
  * Validates JavaScript encryption and decryption function arguments and sets maxmem, maxmemfrac and maxtime
@@ -346,54 +313,6 @@ int ValidateVerifyArguments(const Arguments& args, std::string& message) {
 }
 
 /*
- * Password Hash: Function called from JavaScript land. Creates work request
- *                object and schedules it for execution  
- */
-Handle<Value> HashSync(const Arguments& args) {
-    HandleScope scope;
-    size_t maxmem = maxmem_default;
-    double maxmemfrac = maxmemfrac_default;
-    double maxtime = 0.0;
-    std::string validateMessage;
-    uint8_t outbuf[96]; //Header size for password derivation is fixed
-    int result;
-    std::string output;
-    
-    //Validate arguments
-    /*if (ValidateHashArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
-        ThrowException(
-            Exception::TypeError(String::New(validateMessage.c_str()))
-        );
-        return scope.Close(Undefined());
-    }*/
-    
-    //Local variables
-    String::Utf8Value password(args[0]->ToString());
-    
-    //perform scrypt password hash
-    result = HashPassword(
-        (const uint8_t*)*password,
-        outbuf,
-        maxmem, maxmemfrac, maxtime
-    );
-
-    if (result) { //There has been an error
-        ThrowException(
-            Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
-        );
-        return scope.Close(Undefined());
-    } else {
-        //Base64 encode else things don't work (such is crypto)
-        char* base64Encode = base64_encode(outbuf, 96);
-        output = base64Encode; //Deep copy
-        delete base64Encode;
-       
-        Local<String> passwordHash = String::New((const char*)output.c_str(), output.length()); 
-        return scope.Close(passwordHash);
-    }
-}
-
-/*
  * Password Hash: Asynchronous function called from JavaScript land. Creates work request
  *                object and schedules it for execution  
  */
@@ -548,7 +467,7 @@ void VerifyWork(uv_work_t* req) {
     int outlen;
     unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
   
-    //perform scrypt encryption
+    //perform work
     baton->result = VerifyHash(
         message,
         (const uint8_t*)baton->password.c_str()
