@@ -236,8 +236,7 @@ int ValidateVerifySyncArguments(const Arguments& args, std::string& message) {
 }
 
 /*
- * Password Hash: Function called from JavaScript land. Creates work request
- *                object and schedules it for execution  
+ * Password Hash: Function called from JavaScript land.
  */
 Handle<Value> HashSync(const Arguments& args) {
     HandleScope scope;
@@ -284,8 +283,7 @@ Handle<Value> HashSync(const Arguments& args) {
 }
 
 /*
- * Hash Verify: Function called from JavaScript land. Creates work request
- *              object and schedules it for execution  
+ * Hash Verify: Function called from JavaScript land.
  */
 Handle<Value> VerifySync(const Arguments& args) {
     HandleScope scope;
@@ -320,6 +318,9 @@ Handle<Value> VerifySync(const Arguments& args) {
     }
 }
 
+/*
+ * Encryption: Function called from JavaScript land.
+ */
 Handle<Value> EncryptSync(const Arguments& args) {
     HandleScope scope;
 
@@ -355,15 +356,70 @@ Handle<Value> EncryptSync(const Arguments& args) {
 
     if (result) { //There has been an error
         ThrowException(
-            Exception::TypeError(String::New(validateMessage.c_str()))
+            Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
         );  
         return scope.Close(Undefined());
     } else {
         //Base64 encode else things don't work (such is crypto)
         char* base64Encode = base64_encode(outbuf, outbufSize);
-        Local<String> cipher = String::New((const char*)base64Encode, outbufSize);
+        std::string cipher = base64Encode;
         delete base64Encode;
 
-        return scope.Close(Local<Value>::New(cipher));
+        return scope.Close(Local<Value>::New(String::New((const char*)cipher.c_str(), cipher.length())));
+    }   
+}
+
+
+/*
+ * Decryption: Function called from JavaScript land.
+ */
+Handle<Value> DecryptSync(const Arguments& args) {
+    HandleScope scope;
+
+    size_t maxmem = maxmem_default;
+    double maxmemfrac = maxmemfrac_default;
+    double maxtime = 0.0;
+    std::string validateMessage;
+    int result,
+        outlen;
+    size_t outbuflen;
+
+    //Validate arguments
+    if (ValidateCryptoSyncArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
+        ThrowException(
+            Exception::TypeError(String::New(validateMessage.c_str()))
+        );  
+        return scope.Close(Undefined());
+    }   
+
+    //Local variables
+    String::Utf8Value message(args[0]->ToString());
+    String::Utf8Value password(args[1]->ToString());
+
+    unsigned const char* cipher = base64_decode(*message, message.length(), &outlen);
+    uint8_t outbuf[outlen];
+
+    //Scrypt decryption done here
+    result = scryptdec_buf(
+        (const uint8_t*)cipher,
+        outlen,
+        outbuf,
+        &outbuflen,
+        (const uint8_t*)*password,
+        password.length(),
+        maxmem, maxmemfrac, maxtime
+    );
+    
+    //clean up
+    delete cipher;
+    
+    if (result) { //There has been an error
+        ThrowException(
+            Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
+        );  
+        return scope.Close(Undefined());
+    } else {
+        Local<String> plainText = String::New((const char*)outbuf, outbuflen);
+        return scope.Close(Local<Value>::New(plainText));
     }   
 }
