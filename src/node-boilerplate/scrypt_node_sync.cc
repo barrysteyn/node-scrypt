@@ -130,7 +130,7 @@ int ValidateCryptoSyncArguments(const Arguments& args, std::string& message, siz
  */
 int ValidateHashSyncArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime) {
     if (args.Length() < 2) {
-        message = "Wrong number of arguments: At least two arguments are needed -  password and max_time";
+        message = "Wrong number of arguments: At least two arguments are needed - password and max_time";
         return 1;
     }
 
