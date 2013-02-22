@@ -33,10 +33,16 @@ using namespace v8;
 /*
  * Forward declarations
  */
+
+//Asynchronous
 Handle<Value> HashAsyncBefore(const Arguments& args);
 Handle<Value> VerifyAsyncBefore(const Arguments& args);
 Handle<Value> EncryptAsyncBefore(const Arguments& args);
 Handle<Value> DecryptAsyncBefore(const Arguments& args);
+
+//Synchronous
+Handle<Value> HashSync(const Arguments& args);
+Handle<Value> VerifySync(const Arguments& args);
 
 /*
  * Module initialisation function
@@ -54,5 +60,12 @@ void RegisterModule(Handle<Object> target) {
 
     target->Set(String::NewSymbol("decrypt"),
         FunctionTemplate::New(DecryptAsyncBefore)->GetFunction());
+    
+    //Synchronous
+    target->Set(String::NewSymbol("passwordHashSync"),
+        FunctionTemplate::New(HashSync)->GetFunction());
+    
+    target->Set(String::NewSymbol("verifyHashSync"),
+        FunctionTemplate::New(VerifySync)->GetFunction());
 }
 NODE_MODULE(scrypt, RegisterModule)
