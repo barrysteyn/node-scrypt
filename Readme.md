@@ -280,7 +280,7 @@ Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If the
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
-* `verifyHash(hash, password)`
+* `verifyHashSync(hash, password)`
     * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
     * `password` - [REQUIRED] - a password string.
            
