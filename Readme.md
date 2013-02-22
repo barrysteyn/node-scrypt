@@ -30,10 +30,10 @@ This scrypt library automatically handles the above properties. The last item se
 This library implements node modules for the following:
 
  * **Scrypt password key derivation**
-  ** All three essential properties of password key derivation are implemented (as described above).
-  ** Both *asynchronous* and *synchronous* versions are available.
+    * All three essential properties of password key derivation are implemented (as described above).
+    * Both *asynchronous* and *synchronous* versions are available.
  * **Scrypt encryption**
-  ** Both *asynchronous* and *synchronous* versions are available.
+    * Both *asynchronous* and *synchronous* versions are available.
 
 I suspect scrypt will be used mainly as a password key derivation function (its author's intended use), but I have also ported the scrypt encryption and decryption functions as implementations for them were available from the author. Performing scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower. It is also the basis for the key derivation functions.
 
