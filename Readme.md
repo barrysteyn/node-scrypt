@@ -301,6 +301,7 @@ Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If the
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
     * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+
 ###Synchronous
 * `encryptSync(message, password, maxtime, maxmem, maxmemfrac)`
     * `message` - [REQUIRED] - the message data to be encrypted.
