@@ -26,6 +26,17 @@ Password key derivation requires three properties:
 
 This scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power.
 
+### What This Library Provides
+This library implements node modules for the following:
+
+ * **Scrypt password key derivation**
+  ** All three essential properties of password key derivation are implemented (as described above).
+  ** Both *asynchronous* and *synchronous* versions are available.
+ * **Scrypt encryption**
+  ** Both *asynchronous* and *synchronous* versions are available.
+
+I suspect scrypt will be used mainly as a password key derivation function (its author's intended use), but I have also ported the scrypt encryption and decryption functions as implementations for them were available from the author. Performing scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower. It is also the basis for the key derivation functions.
+
 ##Why Use Scrypt?
 It is probably the most advanced key derivation function available. This is is quote taken from a comment in hacker news:
 
@@ -122,32 +133,34 @@ Go to the folder where scrypt was installed and type:
 All scrypt output is encoded into Base64 using [René Nyffenegger](http://www.adp-gmbh.ch/) [library](http://www.adp-gmbh.ch/cpp/common/base64.html). The character sets that compromises all output are `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`.
 
 #Usage
-##Authentication
+There are both asynchronous and synchronous functions available. It is highly recommended not to use the synchronous version unless necessary due to the fact that Node's event loop will be blocked for the duration of these purposefully slow functions.
+
+##Asynchronous Authentication
 For interactive authentication, set `maxtime` to `0.1` - 100 milliseconds. 
    
 ###To create a password hash
  
     var scrypt = require("scrypt");
-    var hash;
     var password = "This is a password";
     var maxtime = 0.1;
 
     scrypt.passwordHash(password, maxtime, function(err, pwdhash) {
-        if (!err)
-            hash = pwdhash; //This should now be stored in the database
+        if (!err) {
+            //pwdhash should now be stored in the database
+        }
     });
 
-Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
+Note: `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
     
     var scrypt = require("scrypt");
-    var hash;
     var password = "This is a password";
     var maxtime = 0.1;
     var maxmem = 0, maxmemfrac = 0.5;
 
     scrypt.passwordHash(password, maxtime, maxmem, maxmemfrac, function(err, pwdhash) {
-        if (!err)
-            hash = pwdhash; //This should now be stored in the database
+        if (!err) {
+            //pwdhash should now be stored in the database
+        }
     });
 
 ###To verify a password hash
@@ -163,9 +176,37 @@ Note `maxmem` and `maxmemfrac` can also be passed to hash function. If they are 
         return False;    
     });
 
+##Synchronous Authentication
+Again, for interactive authentication, set `maxtime` to `0.1` - 100 milliseconds. 
+   
+###To create a password hash
+ 
+    var scrypt = require("scrypt");
+    var password = "This is a password";
+    var maxtime = 0.1;
 
-##Encryption and Decryption
-I suspect scrypt will be used mainly as a key derivation function, but I have also ported the scrypt encryption and decryption functions. Performing scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower.
+    var hash = scrypt.passwordHashSync(password, maxtime);
+
+Note: `maxmem` and `maxmemfrac` can also be passed to hash function. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
+    
+    var scrypt = require("scrypt");
+    var password = "This is a password";
+    var maxtime = 0.1;
+    var maxmem = 0, maxmemfrac = 0.5;
+
+    var hash = scrypt.passwordHashSync(password, maxtime, maxmem, maxmemfrac);
+
+###To verify a password hash
+
+    var scrypt = require("scrypt");
+    var password = "This is a password";
+    var hash; //This should be obtained from the database
+
+    var result = scrypt.verifyHashSync(hash, password);
+
+Note: There is no error description for the synchronous version. Therefore, if an error occurs, it will just return its result as `false`.
+
+##Asynchronous Encryption and Decryption
 
     var scrypt = require("scrypt");
     var message = "Hello World";
@@ -195,10 +236,33 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
         });
     });
 
+##Synchronous Encryption and Decryption
+
+    var scrypt = require("scrypt");
+    var message = "Hello World";
+    var password = "Pass";
+    var maxtime = 1.0;
+
+    var cipher = scrypt.encryptSync(message, password, maxtime);
+    var plainText = scrypt.decryptSync(cipher, password, maxtime);
+
+Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If they are not passed, then `maxmem` defaults to `0` and `maxmemfrac` defaults to `0.5`. If these values are to be passed, then they must be passed after `maxtime`  and before the callback function like so:
+    
+    var scrypt = require("scrypt");
+    var message = "Hello World";
+    var password = "Pass";
+    var maxtime = 1.0;
+    var maxmem = 1; //Defaults to 0 if not set
+    var maxmemfrac = 1.5; //Defaults to 0.5 if not set
+
+    var cipher = scrypt.encryptSync(message, password, maxtime, maxmem, maxmemfrac);
+    var plainText = scrypt.decrypt(cipher, password, maxtime, maxmem, maxmemfrac);
+
 #Api
 
 ##Authentication
 
+###Asynchronous
 * `passwordHash(password, maxtime, maxmem, maxmemfrac, callback_function)`
     * `password` - [REQUIRED] - a password string.
     * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
@@ -209,9 +273,20 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
     * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
     * `password` - [REQUIRED] - a password string.
     * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+
+###Synchronous
+* `passwordHashSync(password, maxtime, maxmem, maxmemfrac)`
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. Use 0.1 (100 milliseconds) for interactive logins.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+* `verifyHash(hash, password)`
+    * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
+    * `password` - [REQUIRED] - a password string.
            
 ##Encryption/Decryption
 
+###Asynchronous
 * `encrypt(message, password, maxtime, maxmem, maxmemfrac, callback_function)`
     * `message` - [REQUIRED] - the message data to be encrypted.
     * `password` - [REQUIRED] - a password string.
@@ -226,6 +301,19 @@ Note that `maxmem` and `maxmemfrac` can also be passed to the functions. If they
     * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
     * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
     * `callback_function` - [REQUIRED] - a callback function that will handle processing when result is ready.
+###Synchronous
+* `encryptSync(message, password, maxtime, maxmem, maxmemfrac)`
+    * `message` - [REQUIRED] - the message data to be encrypted.
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
+* `decryptSync(cipher, password, maxtime, maxmem, maxmemfrac)`
+    * `cipher` - [REQUIRED] - the cipher to be decrypted.
+    * `password` - [REQUIRED] - a password string.
+    * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt.
+    * `maxmem` - [OPTIONAL] - instructs scrypt to use the specified number of bytes of RAM (default 0).
+    * `maxmemfrac` - [OPTIONAL] - instructs scrypt to use the specified fracion of RAM (defaults 0.5).
 
 #Credits
 The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project. This includes the encryption/decryption functions which are basically just wrappers into this library.
