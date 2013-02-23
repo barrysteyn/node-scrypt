@@ -363,7 +363,7 @@ Handle<Value> EncryptSync(const Arguments& args) {
         //Base64 encode else things don't work (such is crypto)
         char* base64Encode = base64_encode(outbuf, outbufSize);
         std::string cipher = base64Encode;
-        delete base64Encode;
+        delete base64Encode; //Deleting this variable means that it can't be returned. Hence std::string cipher above
 
         return scope.Close(Local<Value>::New(String::New((const char*)cipher.c_str(), cipher.length())));
     }   
