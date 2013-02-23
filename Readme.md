@@ -249,7 +249,7 @@ Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If the
     var maxmemfrac = 1.5; //Defaults to 0.5 if not set
 
     var cipher = scrypt.encryptSync(message, password, maxtime, maxmem, maxmemfrac);
-    var plainText = scrypt.decrypt(cipher, password, maxtime, maxmem, maxmemfrac);
+    var plainText = scrypt.decryptSync(cipher, password, maxtime, maxmem, maxmemfrac);
 
 #Api
 
