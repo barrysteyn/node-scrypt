@@ -245,7 +245,6 @@ Handle<Value> HashSync(const Arguments& args) {
     double maxtime = 0.0;
     std::string validateMessage;
     uint8_t outbuf[96]; //Header size for password derivation is fixed
-    int result;
     std::string output;
     
     //Validate arguments
@@ -256,11 +255,11 @@ Handle<Value> HashSync(const Arguments& args) {
         return scope.Close(Undefined());
     }
     
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value password(args[0]->ToString());
     
     //perform scrypt password hash
-    result = HashPassword(
+    int result = HashPassword(
         (const uint8_t*)*password,
         outbuf,
         maxmem, maxmemfrac, maxtime
@@ -272,12 +271,12 @@ Handle<Value> HashSync(const Arguments& args) {
         );
         return scope.Close(Undefined());
     } else {
-        //Base64 encode else things don't work (such is crypto)
-        char* base64Encode = base64_encode(outbuf, 96);
-        output = base64Encode; //Deep copy
-        delete base64Encode;
+        //Base64 encode for storage
+        int base64EncodedLength = calcBase64EncodedLength(96);
+        char base64Encode[base64EncodedLength + 1];
+        base64_encode(outbuf, 96, base64Encode);
        
-        Local<String> passwordHash = String::New((const char*)output.c_str(), output.length()); 
+        Local<String> passwordHash = String::New((const char*)base64Encode, base64EncodedLength); 
         return scope.Close(passwordHash);
     }
 }
@@ -288,9 +287,6 @@ Handle<Value> HashSync(const Arguments& args) {
 Handle<Value> VerifySync(const Arguments& args) {
     HandleScope scope;
     std::string validateMessage;
-    int verifyHashResult;
-    int outlen;
-    unsigned const char* passwordHash;
 
     //Validate arguments
     if (ValidateVerifySyncArguments(args, validateMessage)) {
@@ -300,18 +296,23 @@ Handle<Value> VerifySync(const Arguments& args) {
         return scope.Close(Undefined());
     }
 
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value hash(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
-    passwordHash = base64_decode(*hash, hash.length(), &outlen);
+
+
+    //Hashed password was encoded to base64, so we need to decode it now
+    int base64DecodedLength = calcBase64DecodedLength(*hash);
+    unsigned char passwordHash[base64DecodedLength];
+    base64_decode(*hash, hash.length(), passwordHash);
     
     //perform scrypt password verify
-    verifyHashResult = VerifyHash(
+    int result = VerifyHash(
         passwordHash,
         (const uint8_t*)*password
     );
 
-    if (verifyHashResult) { //Password did not verify
+    if (result) { //Password did not verify
         return scope.Close(Local<Value>::New(Boolean::New(false)));
     } else {
         return scope.Close(Local<Value>::New(Boolean::New(true)));
@@ -338,9 +339,11 @@ Handle<Value> EncryptSync(const Arguments& args) {
         return scope.Close(Undefined());
     }   
 
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value message(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
+
+    //There is 128 byte header added that stores the hashed password
     uint32_t outbufSize = message.length() + 128;
     uint8_t outbuf[outbufSize];
 
@@ -354,18 +357,17 @@ Handle<Value> EncryptSync(const Arguments& args) {
         maxmem, maxmemfrac, maxtime
     );
 
-    if (result) { //There has been an error
+    if (result) { //Scrypt error
         ThrowException(
             Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
         );  
         return scope.Close(Undefined());
     } else {
-        //Base64 encode else things don't work (such is crypto)
-        char* base64Encode = base64_encode(outbuf, outbufSize);
-        std::string cipher = base64Encode;
-        delete base64Encode; //Deleting this variable means that it can't be returned. Hence std::string cipher above
+        int base64EncodedLength = calcBase64EncodedLength(outbufSize);
+        char base64Encode[base64EncodedLength + 1]; //+1 added for ending null char '\0'
+        base64_encode(outbuf, outbufSize, base64Encode);
 
-        return scope.Close(Local<Value>::New(String::New((const char*)cipher.c_str(), cipher.length())));
+        return scope.Close(Local<Value>::New(String::New((const char*)base64Encode, base64EncodedLength)));
     }   
 }
 
@@ -380,8 +382,6 @@ Handle<Value> DecryptSync(const Arguments& args) {
     double maxmemfrac = maxmemfrac_default;
     double maxtime = 0.0;
     std::string validateMessage;
-    int result,
-        outlen;
     size_t outbuflen;
 
     //Validate arguments
@@ -392,17 +392,20 @@ Handle<Value> DecryptSync(const Arguments& args) {
         return scope.Close(Undefined());
     }   
 
-    //Local variables
+    //Arguments passed from JavaScript land
     String::Utf8Value message(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
 
-    unsigned const char* cipher = base64_decode(*message, message.length(), &outlen);
-    uint8_t outbuf[outlen];
+    //When encrypting, output was encoded in base64. So now we need to decode to get to the original
+    int base64DecodedLength = calcBase64DecodedLength(*message);
+    unsigned char cipher[base64DecodedLength];
+    base64_decode(*message, message.length(), cipher);
+    uint8_t outbuf[base64DecodedLength];
 
     //Scrypt decryption done here
-    result = scryptdec_buf(
+    int result = scryptdec_buf(
         (const uint8_t*)cipher,
-        outlen,
+        (size_t)base64DecodedLength,
         outbuf,
         &outbuflen,
         (const uint8_t*)*password,
@@ -410,10 +413,7 @@ Handle<Value> DecryptSync(const Arguments& args) {
         maxmem, maxmemfrac, maxtime
     );
     
-    //clean up
-    delete cipher;
-    
-    if (result) { //There has been an error
+    if (result) { //There has been a srypt error
         ThrowException(
             Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
         );  

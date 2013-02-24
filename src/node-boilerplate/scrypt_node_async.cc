@@ -330,7 +330,7 @@ Handle<Value> HashAsyncBefore(const Arguments& args) {
         return scope.Close(Undefined());
     }
     
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value password(args[0]->ToString());
     Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
     
@@ -360,19 +360,18 @@ void HashWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
     uint8_t outbuf[96]; //Header size for password derivation is fixed
     
-    //perform scrypt encryption
+    //perform scrypt password hash
     baton->result = HashPassword(
         (const uint8_t*)baton->password.c_str(),
         outbuf,
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    //Base64 encode else things don't work (such is crypto)
-    char* base64Encode = base64_encode(outbuf, 96);
+    //Base64 encode for storage
+    int base64EncodedLength = calcBase64EncodedLength(96);
+    char base64Encode[base64EncodedLength + 1];
+    base64_encode(outbuf, 96, base64Encode);
     baton->output = base64Encode;
-
-    //Clean up
-    delete base64Encode;
 }
 
 /*
@@ -435,7 +434,7 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
         return scope.Close(Undefined());
     }
 
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value hash(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
     Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
@@ -462,17 +461,17 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
  */
 void VerifyWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
-    int outlen;
-    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
-  
+    
+    //Hashed password was encoded to base64, so we need to decode it now
+    int base64DecodedLength = calcBase64DecodedLength(baton->message.c_str());
+    unsigned char passwordHash[base64DecodedLength];
+    base64_decode(baton->message.c_str(), baton->message.length(), passwordHash);
+ 
     //perform work
     baton->result = VerifyHash(
-        message,
+        passwordHash,
         (const uint8_t*)baton->password.c_str()
     );
-
-    //Clean up
-    delete message;
 }
 
 /*
@@ -537,7 +536,7 @@ Handle<Value> EncryptAsyncBefore(const Arguments& args) {
         return scope.Close(Undefined());
     }
 
-    //Local variables
+    //Arguments from JavaScript land
     String::Utf8Value message(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
     Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
@@ -581,12 +580,11 @@ void EncryptWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
 
-    //Base64 encode else things don't work (such is crypto)
-    char* base64Encode = base64_encode(outbuf, outbufSize);
+    //Encode to base64 for storage purposes
+    int base64EncodedLength = calcBase64EncodedLength(outbufSize);
+    char base64Encode[base64EncodedLength + 1]; //+1 added for ending null char '\0'
+    base64_encode(outbuf, outbufSize, base64Encode);
     baton->output = base64Encode;
-
-    //Clean up
-    delete base64Encode;
 }
 
 /*
@@ -645,7 +643,7 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
     std::string validateMessage;
     uint32_t callbackPosition;
 
-    //Validate arguments
+    //Arguments from JavaScript land
     if (!(callbackPosition = ValidateCryptoArguments(args, validateMessage, maxmem, maxmemfrac, maxtime))) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
@@ -683,15 +681,17 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
  */
 void DecryptWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
-    
-    int outlen;
-    unsigned const char* message = base64_decode(baton->message.c_str(), baton->message.length(), &outlen);
-    uint8_t outbuf[outlen];
+   
+    //When encrypting, output was encoded in base64. So now we need to decode to get to the original
+    int base64DecodedLength = calcBase64DecodedLength(baton->message.c_str());
+    unsigned char cipher[base64DecodedLength];
+    base64_decode(baton->message.c_str(), baton->message.length(), cipher);
+    uint8_t outbuf[base64DecodedLength];
    
     //perform scrypt decryption
     baton->result = scryptdec_buf(
-        (const uint8_t*)message,
-        outlen,
+        (const uint8_t*)cipher,
+        (size_t) base64DecodedLength,
         outbuf,
         &baton->outbuflen,
         (const uint8_t*)baton->password.c_str(),
@@ -700,9 +700,6 @@ void DecryptWork(uv_work_t* req) {
     );
 
     baton->output = std::string((const char*)outbuf, baton->outbuflen);
-
-    //Clean up
-    delete message;
 }
 
 /*
