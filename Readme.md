@@ -2,25 +2,25 @@
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility.
 
 ##What Is Scrypt? 
-Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found:
+Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
 
 * [Tarsnap blurb about scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of scrypt) explains a bit about it.
 * [Academic paper explaining scrypt](http://www.tarsnap.com/scrypt/scrypt.pdf).
 * [Wikipedia Article on scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
-For additional interest, also read the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function) article on wikipedia.
+For additional interest, read the article on wikipedias about the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function).
 
 ###The Three Essential Properties Of Password Key Derivation
 Password key derivation requires three properties:
 
 * The password must not be stored in plaintext. (Therefore it is hashed).
-* The password hash must be salted. (Rainbow table attack is very difficult to pull off).
-* The salted hash function must not be fast. (If someone does get hold of the salted hashes, it will take a long time to brute force).
+* The password hash must be salted. (Making rainbow table attack is very difficult to pull off).
+* The salted hash function must not be fast. (If someone does get hold of the salted hashes, their only option will be brute force which will be very slow).
 
-This scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power.
+This scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power now or in the future.
 
-### What This Library Provides
-This library implements node modules for the following:
+### What This Module Provides
+This module implements the following:
 
  * **Scrypt password key derivation**
     * All three essential properties of password key derivation are implemented (as described above).
