@@ -139,7 +139,7 @@ int ValidateCryptoArguments(const Arguments& args, std::string& message, size_t&
                     if (maxmemArg < 0)
                         maxmem = maxmem_default;
                     else
-                        maxmem = maxmemArg;
+                        maxmem = (size_t)maxmemArg;
                 }
                 break;
 
@@ -227,7 +227,7 @@ int ValidateHashArguments(const Arguments& args, std::string& message, size_t& m
                     if (maxmemArg < 0)
                         maxmem = maxmem_default;
                     else
-                        maxmem = maxmemArg;
+                        maxmem = (size_t)maxmemArg;
                 }
                 break;
 
