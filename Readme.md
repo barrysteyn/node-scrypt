@@ -85,13 +85,13 @@ There is just one con I can think of: It is a relatively new library (only been 
 #Security Issues/Concerns
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
 
-#Dependencies
-There are no Node module dependencies, but the scrypt C library requires the following:
+#Platforms
+This library works on the following platforms:
+ 
+ * Linux
+ * MAC OS
 
-* Openssl Library - this is linked with `lcrypto` in the makefile (binding.gyp).
-* Realtime Extensions Library - linked with `lrt`, used for translation of three tweakable inputs into scrypt inputs (see above for details).
-
-The above libraries are standard on Linux.
+Windows support is coming very soon.
 
 #Installation Instructions
 As of now (Dec 2012), this library has been tested and works on Linux (Ubuntu to be exact).
