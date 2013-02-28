@@ -3,9 +3,6 @@
         {
             'target_name': 'scrypt_lib',
             'type': 'static_library',
-            'defines': [
-                'HAVE_CONFIG_H'                
-            ],
             'include_dirs' : [
                 'scrypt-1.1.6',
                 'scrypt-1.1.6/lib/util',
@@ -28,6 +25,12 @@
                             '-lrt' #RealTime library
                         ],
                     },
+                    'defines': [
+                        'HAVE_CONFIG_H'                
+                    ],
+                    'cflags' : [
+                        '-O2'
+                    ]
                 }]
             ],
         },
