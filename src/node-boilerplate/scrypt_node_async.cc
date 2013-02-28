@@ -35,7 +35,7 @@ Barry Steyn barry.steyn@gmail.com
 
 //Scrypt is a C library
 extern "C" {
-    #include "../../scrypt-1.1.6/lib/scryptenc/scryptenc.h"
+    #include "../../scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.h"
     #include "scrypthash.h"
 }
 
