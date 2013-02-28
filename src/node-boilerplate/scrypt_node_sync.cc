@@ -1,5 +1,5 @@
 /*
-scrypt_node_sync.cc and scrypt_node_sync.h
+scrypt_node_sync.cc 
 
 Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -329,7 +329,6 @@ Handle<Value> EncryptSync(const Arguments& args) {
     double maxmemfrac = maxmemfrac_default;
     double maxtime = 0.0;
     std::string validateMessage;
-    int result;
 
     //Validate arguments
     if (ValidateCryptoSyncArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
@@ -348,7 +347,7 @@ Handle<Value> EncryptSync(const Arguments& args) {
     uint8_t outbuf[outbufSize];
 
     //perform scrypt encryption
-    result = scryptenc_buf(
+    int result = scryptenc_buf(
         (const uint8_t*)*message,
         message.length(),
         outbuf,
