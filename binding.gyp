@@ -3,6 +3,9 @@
         {
             'target_name': 'scrypt_lib',
             'type': 'static_library',
+            'defines': [
+                'HAVE_CONFIG_H'                
+            ],
             'include_dirs' : [
                 'scrypt-1.1.6',
                 'scrypt-1.1.6/lib/util',
@@ -18,20 +21,30 @@
                 'scrypt-1.1.6/lib/crypto/crypto_scrypt-ref.c'
             ],
             'conditions': [
-                ['OS == "linux"', {
-                    'link_settings': {
-                        'libraries': [
-                            '-lcrypto', #The openssl library (libcrypto)
-                            '-lrt' #RealTime library
+                [
+                    'OS == "linux"', {
+                        'link_settings': {
+                            'libraries': [
+                                '-lcrypto', #The openssl library (libcrypto)
+                                '-lrt' #RealTime library
+                            ],
+                        },
+                        'defines': [
+                            'HAVE_CLOCK_GETTIME=1',
+                            'HAVE_LIBRT=1',
+                            'HAVE_POSIX_MEMALIGN=1',
+                            'HAVE_STRUCT_SYSINFO=1',
+                            'HAVE_STRUCT_SYSINFO_MEM_UNIT=1',
+                            'HAVE_STRUCT_SYSINFO_TOTALRAM=1',
+                            'HAVE_SYSINFO=1',
+                            'HAVE_SYS_SYSINFO_H=1',
+                            '_FILE_OFFSET_BITS=64',                
                         ],
+                        'cflags' : [
+                            '-O2'
+                        ]
                     },
-                    'defines': [
-                        'HAVE_CONFIG_H'                
-                    ],
-                    'cflags' : [
-                        '-O2'
-                    ]
-                }]
+                ],
             ],
         },
         {
