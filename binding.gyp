@@ -45,6 +45,19 @@
                         ]
                     },
                 ],
+                [
+                    'OS == "mac"', {
+                        'link_settings': {
+                            'libraries': [
+                                '-lcrypto', 
+                            ],
+                        },
+                        'defines': [
+                            'HAVE_POSIX_MEMALIGN=1',
+                            'HAVE_SYSCTL_HW_USERMEM=1'
+                        ],
+                    },
+                ],
             ],
         },
         {
