@@ -1,5 +1,5 @@
 /*
-scrypt_node_async.cc and scrypt_node_async.h
+scrypt_node_async.cc 
 
 Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
