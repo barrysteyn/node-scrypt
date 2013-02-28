@@ -102,10 +102,12 @@ int ValidateCryptoSyncArguments(const Arguments& args, std::string& message, siz
             case 3:
                 //Set mexmem if possible, else set it to default
                 if (args[i]->IsNumber()) {
-                    maxmem = Local<Number>(args[i]->ToNumber())->Value();
+                    int maxmemArg = Local<Number>(args[i]->ToNumber())->Value();
 
-                    if (maxmem < 0)
+                    if (maxmemArg < 0)
                         maxmem = maxmem_default;
+                    else
+                        maxmem = maxmemArg;
                 }
                 break;
 
