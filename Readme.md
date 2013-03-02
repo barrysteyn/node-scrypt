@@ -317,3 +317,4 @@ The password hash and verify functions are also very heavily influenced by the s
 #Contributors
 
 * [René Nyffenegger](http://www.adp-gmbh.ch/) - produced original Base64 encoding code.
+* [Kelvin Wong](https://github.com/kelvinwong-ca) - MAC OS compilation and testing.
