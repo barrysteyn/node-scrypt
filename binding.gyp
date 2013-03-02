@@ -38,7 +38,8 @@
                     'OS == "mac"', {
                         'link_settings': {
                             'libraries': [
-                                '-lcrypto', 
+                                '-lcrypto',
+                                '-dynamiclib',
                             ],
                         },
                         'defines': [
@@ -46,6 +47,11 @@
                             'HAVE_SYSCTL_HW_USERMEM=1',
                             'CONFIG_H_FILE="../mac/config.h"'
                         ],
+                        'xcode_settings': {
+                            'OTHER_CFLAGS': [
+                                '-O2'
+                            ]
+                        },
                     },
                 ],
             ],
