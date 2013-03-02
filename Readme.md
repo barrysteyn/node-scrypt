@@ -14,7 +14,7 @@ For additional interest, read the article on wikipedias about the [key derivatio
 Password key derivation requires three properties:
 
 * The password must not be stored in plaintext. (Therefore it is hashed).
-* The password hash must be salted. (Making rainbow table attack is very difficult to pull off).
+* The password hash must be salted. (Making a rainbow table attack very difficult to pull off).
 * The salted hash function must not be fast. (If someone does get hold of the salted hashes, their only option will be brute force which will be very slow).
 
 This scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power now or in the future.
@@ -94,7 +94,7 @@ This library works on the following platforms:
 Windows support is coming very soon.
 
 #Installation Instructions
-As of now (Dec 2012), this library has been tested and works on Linux (Ubuntu to be exact).
+This library has been tested and works on Linux (Ubuntu to be exact) and Mac OS (thanks to [Kelvin Wong](https://github.com/kelvinwong-ca)).
 ##From NPM
 
     npm install scrypt
