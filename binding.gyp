@@ -27,7 +27,7 @@
                             ],
                         },
                         'defines': [
-                            'HAVE_CONFIG_H'
+                            'CONFIG_H_FILE="../linux/config.h"'
                         ],
                         'cflags' : [
                             '-O2'
