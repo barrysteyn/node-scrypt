@@ -351,7 +351,7 @@ Handle<Value> HashAsyncBefore(const Arguments& args) {
     req->data = baton;
     
     //Schedule work request
-    int status = uv_queue_work(uv_default_loop(), req, HashWork, HashAsyncAfter);
+    int status = uv_queue_work(uv_default_loop(), req, HashWork, (uv_after_work_cb)HashAsyncAfter);
     assert(status == 0); 
     
     return scope.Close(Undefined());   
@@ -454,7 +454,7 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
     req->data = baton;
     
     //Schedule work request
-    int status = uv_queue_work(uv_default_loop(), req, VerifyWork, VerifyAsyncAfter);
+    int status = uv_queue_work(uv_default_loop(), req, VerifyWork, (uv_after_work_cb)VerifyAsyncAfter);
     assert(status == 0); 
     
     return scope.Close(Undefined());   
@@ -559,7 +559,7 @@ Handle<Value> EncryptAsyncBefore(const Arguments& args) {
     req->data = baton;
     
     //Schedule work request
-    int status = uv_queue_work(uv_default_loop(), req, EncryptWork, EncryptAsyncAfter);
+    int status = uv_queue_work(uv_default_loop(), req, EncryptWork, (uv_after_work_cb)EncryptAsyncAfter);
     assert(status == 0); 
     
     return scope.Close(Undefined());   
@@ -674,7 +674,7 @@ Handle<Value> DecryptAsyncBefore(const Arguments& args) {
     req->data = baton;
     
     //Schedule work request
-    int status = uv_queue_work(uv_default_loop(), req, DecryptWork, DecryptAsyncAfter);
+    int status = uv_queue_work(uv_default_loop(), req, DecryptWork, (uv_after_work_cb)DecryptAsyncAfter);
     assert(status == 0); 
     
     return scope.Close(Undefined());   
