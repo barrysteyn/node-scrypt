@@ -17,23 +17,20 @@
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-ref.c'
             ],
-            'conditions': [
-                [
-                    'OS == "linux"', {
-                        'link_settings': {
-                            'libraries': [
-                                '-lcrypto', #The openssl library (libcrypto)
-                                '-lrt' #RealTime library
-                            ],
-                        },
-                        'defines': [
-                            'CONFIG_H_FILE="../linux/config.h"'
-                        ],
-                        'cflags' : [
-                            '-O2'
-                        ]
-                    },
+            # Default OS settings (includes Linux and all other unix type libs)
+            'link_settings': {
+                'libraries': [
+                    '-lcrypto', #The openssl library (libcrypto)
+                    '-lrt' #RealTime library
                 ],
+            },
+            'defines': [
+                'CONFIG_H_FILE="../linux/config.h"'
+            ],
+            'cflags' : [
+                '-O2'
+            ],
+            'conditions': [
                 [
                     'OS == "mac"', {
                         'link_settings': {
