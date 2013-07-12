@@ -111,16 +111,19 @@ getsalt(uint8_t salt[32]) {
 
 	/* Open /dev/urandom. */
 	if ((fd = open("/dev/urandom", O_RDONLY)) == -1)
-		goto err0;
+		return (4); /* Failure! */
 
 	/* Read bytes until we have filled the buffer. */
 	while (buflen > 0) {
-		if ((lenread = read(fd, buf, buflen)) == -1)
-			goto err1;
+		if ((lenread = read(fd, buf, buflen)) == -1) {
+			close(fd);
+			return (4); /* Failure! */
+		}
 
 		/* The random device should never EOF. */
 		if (lenread == 0)
-			goto err1;
+			close(fd);
+			return (4); /* Failure! */
 
 		/* We're partly done. */
 		buf += lenread;
@@ -130,17 +133,11 @@ getsalt(uint8_t salt[32]) {
 	/* Close the device. */
 	while (close(fd) == -1) {
 		if (errno != EINTR)
-			goto err0;
+			return (4); /* Failure! */
 	}
 
 	/* Success! */
 	return (0);
-
-err1:
-	close(fd);
-err0:
-	/* Failure! */
-	return (4);
 }
 
 /*
