@@ -51,6 +51,13 @@
                         },
                     },
                 ],
+                [
+                    'OS == "smartos"', {
+                        'defines': [
+                            '_SC_PHYS_PAGES=1'
+                        ],
+                    },
+                ],
             ],
         },
         {
