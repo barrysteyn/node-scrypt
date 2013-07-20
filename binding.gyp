@@ -17,7 +17,6 @@
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-ref.c'
             ],
-            # Default OS settings (includes Linux and all other unix type libs)
             'link_settings': {
                 'libraries': [
                     '-lcrypto', #The openssl library (libcrypto)
@@ -25,12 +24,25 @@
                 ],
             },
             'defines': [
-                'CONFIG_H_FILE="../linux/config.h"'
+                'CONFIG_H_FILE="../config.h"',
             ],
             'cflags' : [
                 '-O2'
             ],
             'conditions': [
+                [
+                    'OS == "linux"', {
+                        'defines': [
+                        'HAVE_CLOCK_GETTIME=1',
+                        'HAVE_LIBRT=1',
+                        'HAVE_STRUCT_SYSINFO=1',
+                        'HAVE_STRUCT_SYSINFO_MEM_UNIT=1',
+                        'HAVE_STRUCT_SYSINFO_TOTALRAM=1',
+                        'HAVE_SYSINFO=1',
+                        'HAVE_SYS_SYSINFO_H=1',
+                        ],
+                    }
+                ],
                 [
                     'OS == "mac"', {
                         'link_settings': {
@@ -40,9 +52,7 @@
                             ],
                         },
                         'defines': [
-                            'HAVE_POSIX_MEMALIGN=1',
                             'HAVE_SYSCTL_HW_USERMEM=1',
-                            'CONFIG_H_FILE="../mac/config.h"'
                         ],
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
@@ -54,7 +64,8 @@
                 [
                     'OS == "smartos"', {
                         'defines': [
-                            '_SC_PHYS_PAGES=1'
+                            'HAVE_LIBRT=1',
+                            'HAVE_CLOCK_GETTIME=1',
                         ],
                     },
                 ],
