@@ -60,7 +60,8 @@
                 [
                     'OS == "smartos"', {
                         'defines': [
-                            'HAVE_SYSCTL_HW_USERMEM=1',
+                            'HAVE_LIBRT=1',
+                            'HAVE_CLOCK_GETTIME=1',
                             'CONFIG_H_FILE="../config.h"'
                         ],
                     },
