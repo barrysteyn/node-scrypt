@@ -17,13 +17,13 @@
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-ref.c'
             ],
-            'link_settings': {
+            'link_settings': { #Default libraries to link to
                 'libraries': [
                     '-lcrypto', #The openssl library (libcrypto)
                     '-lrt' #RealTime library
                 ],
             },
-            'defines': [
+            'defines': [ #This config file is custom generated for each POSIX OS
                 'CONFIG_H_FILE="../config.h"',
             ],
             'cflags' : [
@@ -31,17 +31,21 @@
             ],
             'conditions': [
                 [
-                    'OS == "linux"', {
-                        'defines': [
-                        'HAVE_CLOCK_GETTIME=1',
-                        'HAVE_LIBRT=1',
-                        'HAVE_STRUCT_SYSINFO=1',
-                        'HAVE_STRUCT_SYSINFO_MEM_UNIT=1',
-                        'HAVE_STRUCT_SYSINFO_TOTALRAM=1',
-                        'HAVE_SYSINFO=1',
-                        'HAVE_SYS_SYSINFO_H=1',
+                    'OS != "win"', { #Build config file for posix OS (i.e. not windows)
+                        'actions' : [
+                            {
+                                'action_name' : 'configuration_script',
+                                'inputs': [
+                                    'scrypt/configuration/posixconfig'
+                                ],
+                                'outputs' : [
+                                    'scrypt/config.h'
+                                ],
+                                'action' : ['scrypt/configuration/posixconfig'],
+                                'message' : 'Running customised configuration script',
+                            }
                         ],
-                    }
+                    },
                 ],
                 [
                     'OS == "mac"', {
@@ -51,22 +55,11 @@
                                 '-dynamiclib',
                             ],
                         },
-                        'defines': [
-                            'HAVE_SYSCTL_HW_USERMEM=1',
-                        ],
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
                                 '-O2'
                             ]
                         },
-                    },
-                ],
-                [
-                    'OS == "smartos"', {
-                        'defines': [
-                            'HAVE_LIBRT=1',
-                            'HAVE_CLOCK_GETTIME=1',
-                        ],
                     },
                 ],
             ],
