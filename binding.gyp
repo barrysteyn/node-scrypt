@@ -25,7 +25,14 @@
                 ],
             },
             'defines': [
-                'CONFIG_H_FILE="../linux/config.h"'
+                'HAVE_CLOCK_GETTIME=1',
+                'HAVE_LIBRT=1',
+                'HAVE_STRUCT_SYSINFO=1',
+                'HAVE_STRUCT_SYSINFO_MEM_UNIT=1',
+                'HAVE_STRUCT_SYSINFO_TOTALRAM=1',
+                'HAVE_SYSINFO=1',
+                'HAVE_SYS_SYSINFO_H=1',
+                'CONFIG_H_FILE="../config.h"',
             ],
             'cflags' : [
                 '-O2'
@@ -40,9 +47,8 @@
                             ],
                         },
                         'defines': [
-                            'HAVE_POSIX_MEMALIGN=1',
                             'HAVE_SYSCTL_HW_USERMEM=1',
-                            'CONFIG_H_FILE="../mac/config.h"'
+                            'CONFIG_H_FILE="../config.h"'
                         ],
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
@@ -54,7 +60,8 @@
                 [
                     'OS == "smartos"', {
                         'defines': [
-                            '_SC_PHYS_PAGES=1'
+                            'HAVE_SYSCTL_HW_USERMEM=1',
+                            'CONFIG_H_FILE="../config.h"'
                         ],
                     },
                 ],
