@@ -4,7 +4,6 @@
 SCRIPT=$(readlink -f $0)
 SCRIPTPATH=$(dirname $SCRIPT)
 mkdir $SCRIPTPATH/config_output
-echo $SCRIPTPATH/config_output
-cd $SCRIPTPATH/config_output && "../posix_configuration/configure"
+cd $SCRIPTPATH/config_output && ../posix_configuration/configure -q
 cp $SCRIPTPATH/config_output/config.h $SCRIPTPATH/../config.h
 rm -rf $SCRIPTPATH/config_output
