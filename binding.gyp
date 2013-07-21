@@ -36,7 +36,7 @@
                             {
                                 'action_name' : 'configuration_script',
                                 'inputs': [
-                                    'scrypt/config.h'
+                                    ''
                                 ],
                                 'outputs' : [
                                     'scrypt/config.h'
