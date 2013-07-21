@@ -17,15 +17,15 @@
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
                 'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-ref.c'
             ],
-            'link_settings': { #Default libraries to link to
-                'libraries': [
-                    '-lcrypto', #The openssl library (libcrypto)
-                    '-lrt' #RealTime library
-                ],
-            },
             'defines': [ #This config file is custom generated for each POSIX OS
                 'CONFIG_H_FILE="../config.h"',
             ],
+            'link_settings': { #This is intended for all posix type environments except MAC
+                'libraries': [
+                    '-lcrypto', #The openssl library (libcrypto)
+                    '-lrt', #RealTime library
+                ],
+            },
             'cflags' : [
                 '-O2'
             ],
@@ -36,28 +36,30 @@
                             {
                                 'action_name' : 'configuration_script',
                                 'inputs': [
-                                    'scrypt/configuration/posixconfig'
+                                    'scrypt/config.h'
                                 ],
                                 'outputs' : [
                                     'scrypt/config.h'
                                 ],
                                 'action' : ['scrypt/configuration/posixconfig'],
-                                'message' : 'Running customised configuration script',
+                                'message' : 'This may take a few seconds: Running customised posix configuration script to produce',
                             }
                         ],
                     },
                 ],
                 [
-                    'OS == "mac"', {
-                        'link_settings': {
-                            'libraries': [
-                                '-lcrypto',
+                    'OS == "mac"', { #Mr Mac, this section is specially for you :)
+                        'link_settings': { 
+                            'libraries': [ #Add dynamic lib
                                 '-dynamiclib',
                             ],
+                            'libraries!': [ #Remove lrt (not present in MAC)
+                                '-lrt'
+                            ]
                         },
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
-                                '-O2'
+                                '-O2',
                             ]
                         },
                     },
