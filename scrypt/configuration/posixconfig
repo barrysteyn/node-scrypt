@@ -1,9 +1,8 @@
 #! /bin/sh
 # Will run scrypt's autoconf generation script and save the output in the appropriate place
 
-SCRIPT=$(readlink -f $0)
-SCRIPTPATH=$(dirname $SCRIPT)
+SCRIPTPATH=$(pwd)/scrypt/configuration
 mkdir $SCRIPTPATH/config_output
-cd $SCRIPTPATH/config_output && ../posix_configuration/configure -q
-cp $SCRIPTPATH/config_output/config.h $SCRIPTPATH/../config.h
+cd $SCRIPTPATH/config_output && ../posix_configuration/configure -q 
+cp /home/baz/Personal/Github/node-scrypt/scrypt/configuration/config_output/config.h $SCRIPTPATH/../config.h
 rm -rf $SCRIPTPATH/config_output
