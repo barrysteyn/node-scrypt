@@ -31,6 +31,15 @@
             ],
             'conditions': [
                 [
+                    'OS == "win"', {
+                        'link_settings': { 
+                            'libraries=': [ #Replace all posix libraries
+                                '-',
+                            ],
+                        },
+                    }
+                ],
+                [
                     'OS != "win"', { #Build config file for posix OS (i.e. not windows)
                         'actions' : [
                             {
@@ -44,6 +53,9 @@
                                 'action' : ['scrypt/configuration/posixconfig'],
                                 'message' : 'This may take a few seconds: Running customised posix configuration script to produce',
                             }
+                        ],
+                        'cflags' : [
+                            '-w'
                         ],
                     },
                 ],
@@ -105,6 +117,15 @@
                 'scrypt_node.cc',
             ],
             'dependencies': ['scrypt_lib','scrypt_passwordhash','scrypt_node_boilerplate'],
+            'conditions' : [
+                [
+                    'OS != "win"', {
+                        'cflags' : [
+                            '-w'
+                        ],
+                    },
+                ],
+            ],
         },
     ],
 }
