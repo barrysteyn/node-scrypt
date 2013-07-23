@@ -56,7 +56,7 @@ As one can see from the above example, both hashes start off by looking similar 
     c2NyeXB0AAwAAAAIAAAAATpP+fdQAryDiRmCmcoOrZa2mZ049KdbA/ofTTrATQQ+m
     0L/gR811d0WQyip6p2skXVEMz2+8U+xGryFu2p0yzfCxYLUrAaIzaZELkN2M6k0
 
-Compare this hash to the one above. Even though they start off looking similar, their output is actually vastly different (even though it is the same password being hashed). This is because of the **random** salt that has been added, ensuring that no two hashes will ever be indentical, even if the password that is being hashed is the same.
+Compare this hash to the one above. Even though they start off looking similar, their outputs are vastly different (even though it is the same password being hashed). This is because of the **random** salt that has been added, ensuring that no two hashes will ever be indentical, even if the password that is being hashed is the same.
 
 For those that are curious or paranoid, please look at how the hash is both [produced](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L146-197) and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L199-238) (you are going to need come knowledge of the C language for this). 
 
