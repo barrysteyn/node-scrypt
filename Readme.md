@@ -1,6 +1,9 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility.
 
+##Platforms Supported
+This module now supports all "unix" like platforms. It has been tested on **Linux**, **MAC OS** and **SmartOS**, but it is architectured in such a way that any unix type OS is supported. This includes FreeBSD, OpenBSD, SunOS etc. If there is an issue with a particular "unix" like OS, then make contact as it should be very easy to remedy.
+
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
 
@@ -29,6 +32,33 @@ This module implements the following:
     * Both *asynchronous* and *synchronous* versions are available.
 
 I suspect scrypt will be used mainly as a password key derivation function (its author's intended use), but I have also ported the scrypt encryption and decryption functions as implementations for them were available from the author. Performing scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower. It is also the basis for the key derivation functions.
+
+### The Scrypt Hash Format
+I have included this section because I keep being queried about the randomness of this module. First all, note that scrypt (and in general, all key derivation functions) store metadata in a header that cannot be encrypted in any way. For example, the random salt needs to be stored un-encrypted in the header. The header information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Scrypt uses a normal MAC to ensure integrity, but it derives it in a funky way based on its unique properties.
+
+Every Scrypt header starts with the word *"scrypt"*. The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the hash will be constructed (see the three tweakable inputs below). Users of scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability. 
+
+Taking the above paragraph into account, note the following: The base64 encoding for the word *"scrypt"* is *c2NyeXB0*. So at the very least, every hash derived using this module should start with *c2NyeXB0*. Next comes metadata that normally does not change once settled upon (so it should also look the same). Only then does the random salt get added along with the derived hashed password.
+
+To illustrate with an example, I have hashed two password: *password1* and *password2*. Their outputs are as follows:
+
+    password1
+    c2NyeXB0AAwAAAAIAAAAAcQ0zwp7QNLklxCn14vB75AYWDIrrT9I/7F9+lVGBfKN/1TH2hs
+    /HboSy1ptzN0YzHJhC7PZIEPQzf2nuoaqVZg8VkKEJlo8/QaH7qjU2VwB
+    
+    password2
+    c2NyeXB0AAwAAAAIAAAAAZ/+bp8gWcTZgEC7YQZeLLyxFeKRRdDkwbaGeFC0NkdUr/YFAWY
+    /UwdOH4i/PxW48fXeXBDOTvGWtS3lLUgzNM0PlJbXhMOGd2bke0PvTSnW
+
+As one can see from the above example, both hashes start off by looking similar (they both start with *c2NyeXB0AAwAAAAIAAAAA* - as explained above), but afterwards, things change very rapidly. In fact, I hashed the password *password1* again:
+
+    password1
+    c2NyeXB0AAwAAAAIAAAAATpP+fdQAryDiRmCmcoOrZa2mZ049KdbA/ofTTrATQQ+m
+    0L/gR811d0WQyip6p2skXVEMz2+8U+xGryFu2p0yzfCxYLUrAaIzaZELkN2M6k0
+
+Compare this hash to the one above. Even though they start off looking similar, their outputs are vastly different (even though it is the same password being hashed). This is because of the **random** salt that has been added, ensuring that no two hashes will ever be indentical, even if the password that is being hashed is the same.
+
+For those that are curious or paranoid, please look at how the hash is both [produced](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L146-197) and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L199-238) (you are going to need some knowledge of the [C language](http://c.learncodethehardway.org/book/) for this). 
 
 ##Why Use Scrypt?
 It is probably the most advanced key derivation function available. This is is quote taken from a comment in hacker news:
@@ -84,14 +114,6 @@ There is just one con I can think of: It is a relatively new library (only been 
 
 #Security Issues/Concerns
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
-
-#Platforms
-This library works on the following platforms:
- 
- * Linux
- * MAC OS
-
-Windows support is coming very soon.
 
 #Installation Instructions
 This library has been tested and works on Linux (Ubuntu to be exact) and Mac OS (thanks to [Kelvin Wong](https://github.com/kelvinwong-ca)).
