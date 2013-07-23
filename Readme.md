@@ -1,6 +1,9 @@
 #Scrypt For NodeJS
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility.
 
+##Platforms Supported
+This module now supports all "unix" like platforms. It has been tested on **Linux**, **MAC OS** and **SmartOS**, but it is architectured in such a way that any unix type OS is supported. This includes FreeBSD, OpenBSD, SunOS etc. If there is an issue with a particular "unix" like OS, then make contact as it should be very easy to remedy.
+
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
 
@@ -9,9 +12,6 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 * [Wikipedia Article on scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
 For additional interest, read the article on wikipedias about the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function).
-
-##Platforms Supported
-This module now supports all "unix" like platforms. It has been tested on **Linux**, **MAC OS** and **SmartOS**, but it is architectured in such a way that any unix type OS is supported. This includes FreeBSD, OpenBSD, SunOS etc. If there is an issue with a particular "unix" like OS, then make contact as it should be very easy to remedy.
 
 ###The Three Essential Properties Of Password Key Derivation
 Password key derivation requires three properties:
