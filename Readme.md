@@ -36,22 +36,25 @@ I suspect scrypt will be used mainly as a password key derivation function (its 
 ### The Scrypt Hash Format
 I have included this section because I keep being queried about the randomness of this module. First all, note that scrypt (and in general, all key derivation functions) store metadata in a header that cannot be encrypted in any way. For example, the random salt needs to be stored un-encrypted in the header. The header information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Scrypt uses a normal MAC to ensure integrity, but it derives it in a funky way based on its unique properties.
 
-Every Scrypt header starts with the word "scrypt". The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the hash will be constructed (see the three tweakable inputs below). Users of scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability. 
+Every Scrypt header starts with the word *"scrypt"*. The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the hash will be constructed (see the three tweakable inputs below). Users of scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability. 
 
-Taking the above paragraph into account, note the following: The base64 encoding for the word "scrypt" is `c2NyeXB0`. So at the very least, every scrypt hash derived using this module should start with `c2NyeXB0`. Next comes metadata that normally does not change once settled upon (so it should also look the same). Only then does the random salt get added along with the derived hashed password.
+Taking the above paragraph into account, note the following: The base64 encoding for the word *"scrypt"* is *c2NyeXB0*. So at the very least, every hash derived using this module should start with *c2NyeXB0*. Next comes metadata that normally does not change once settled upon (so it should also look the same). Only then does the random salt get added along with the derived hashed password.
 
-To illustrate with an example, I have hashed two password: `password1` and `password2`. Their outputs are as follows:
+To illustrate with an example, I have hashed two password: *password1* and *password2*. Their outputs are as follows:
 
     password1
-    c2NyeXB0AAwAAAAIAAAAAcQ0zwp7QNLklxCn14vB75AYWDIrrT9I/7F9+lVGBfKN/1TH2hs/HboSy1ptzN0YzHJhC7PZIEPQzf2nuoaqVZg8VkKEJlo8/QaH7qjU2VwB
+    c2NyeXB0AAwAAAAIAAAAAcQ0zwp7QNLklxCn14vB75AYWDIrrT9I/7F9+lVGBfKN/1TH2hs
+    /HboSy1ptzN0YzHJhC7PZIEPQzf2nuoaqVZg8VkKEJlo8/QaH7qjU2VwB
     
     password2
-    c2NyeXB0AAwAAAAIAAAAAZ/+bp8gWcTZgEC7YQZeLLyxFeKRRdDkwbaGeFC0NkdUr/YFAWY/UwdOH4i/PxW48fXeXBDOTvGWtS3lLUgzNM0PlJbXhMOGd2bke0PvTSnW
+    c2NyeXB0AAwAAAAIAAAAAZ/+bp8gWcTZgEC7YQZeLLyxFeKRRdDkwbaGeFC0NkdUr/YFAWY
+    /UwdOH4i/PxW48fXeXBDOTvGWtS3lLUgzNM0PlJbXhMOGd2bke0PvTSnW
 
-As one can see from the above example, both hashes start off by looking similar (they both have `c2NyeXB0AAwAAAAIAAAAA` - as explained above), but afterwards, things change very rapidly. In fact, I hashed the password `password1` again:
+As one can see from the above example, both hashes start off by looking similar (they both have *c2NyeXB0AAwAAAAIAAAAA* - as explained above), but afterwards, things change very rapidly. In fact, I hashed the password *password1* again:
 
     password1
-    c2NyeXB0AAwAAAAIAAAAATpP+fdQAryDiRmCmcoOrZa2mZ049KdbA/ofTTrATQQ+m0L/gR811d0WQyip6p2skXVEMz2+8U+xGryFu2p0yzfCxYLUrAaIzaZELkN2M6k0
+    c2NyeXB0AAwAAAAIAAAAATpP+fdQAryDiRmCmcoOrZa2mZ049KdbA/ofTTrATQQ+m
+    0L/gR811d0WQyip6p2skXVEMz2+8U+xGryFu2p0yzfCxYLUrAaIzaZELkN2M6k0
 
 Compare this hash to the one above. Even though they start off looking similar, their output is actually vastly different (even though it is the same password being hashed). This is because of the **random** salt that has been added, ensuring that no two hashes will ever be indentical, even if the password that is being hashed is the same.
 
