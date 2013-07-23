@@ -31,15 +31,6 @@
             ],
             'conditions': [
                 [
-                    'OS == "win"', {
-                        'link_settings': { 
-                            'libraries=': [ #Replace all posix libraries
-                                '-',
-                            ],
-                        },
-                    }
-                ],
-                [
                     'OS != "win"', { #Build config file for posix OS (i.e. not windows)
                         'actions' : [
                             {
