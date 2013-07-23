@@ -1,8 +1,8 @@
 var test = require('tap').test;
 var scrypt = require('../build/Release/scrypt');
 var password = "This is the test password";
-var maxtime_passwordhash = 0.1; //interactive - 100 milliseconds
-var maxtime_crypto = 0.1; //interactive - 100 milliseconds
+var maxtime_passwordhash = 0.05; 
+var maxtime_crypto = 0.05; 
 var message = "This is a message";
 
 //Key Derivation Tests
