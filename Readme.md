@@ -65,7 +65,7 @@ It is probably the most advanced key derivation function available. This is is q
 
 >Passwords hashed with scrypt with sufficiently-high strength values (there are 3 tweakable input numbers) are fundamentally impervious to being cracked. I use the word "fundamental" in the literal sense, here; even if you had the resources of a large country, you would not be able to design any hardware (whether it be GPU hardware, custom-designed hardware, or otherwise) which could crack these hashes. Ever. (For sufficiently-small definitions of "ever". At the very least "within your lifetime"; probably far longer.)
 
-The *three tweakable* inputs mentioned above are as follows (Quoting from the author):
+The *three tweakable* inputs mentioned above are as follows (quoting from Scrypt's author Colin Percival):
 
 **maxtime**
 >maxtime will instruct scrypt to spend at most maxtime seconds computing the derived encryption key from the password; [If using scrypt] for encryption, this value will determine how secure the encrypted data is, while for decryption this value is used as an upper limit (if scrypt detects that it would take too long to decrypt the data, it will exit with an error message).
