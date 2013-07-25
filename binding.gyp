@@ -20,30 +20,18 @@
             'defines': [ #This config file is custom generated for each POSIX OS
                 'CONFIG_H_FILE="../config.h"',
             ],
-            'link_settings': { #This is intended for all posix type environments except MAC
-                'libraries': [
-                    '-lcrypto', #The openssl library (libcrypto)
-                    '-lrt', #RealTime library
-                ],
-            },
             'cflags' : [
                 '-O2'
             ],
             'conditions': [
                 [
                     'OS != "win"', { #Build config file for posix OS (i.e. not windows)
-                        'actions' : [
-                            {
-                                'action_name' : 'configuration_script',
-                                'inputs': [
-                                    ''
-                                ],
-                                'outputs' : [
-                                    'scrypt/config.h'
-                                ],
-                                'action' : ['scrypt/configuration/posixconfig'],
-                                'message' : 'This may take a few seconds: Running customised posix configuration script to produce',
-                            }
+                        'variables' : { #Configuration file is also built with this command
+                            'librt' : '<!(scrypt/configuration/posixconfig)',
+                        },
+                        'libraries' : [
+                            '-lcrypto', #The openssl library (libcrypto)
+                            '<@(librt)', #Librt (if it exists for the platform)
                         ],
                         'cflags' : [
                             '-w'
@@ -56,9 +44,6 @@
                             'libraries': [ #Add dynamic lib
                                 '-dynamiclib',
                             ],
-                            'libraries!': [ #Remove lrt (not present in MAC)
-                                '-lrt'
-                            ]
                         },
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
