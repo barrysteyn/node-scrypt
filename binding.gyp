@@ -20,21 +20,19 @@
             'defines': [ #This config file is custom generated for each POSIX OS
                 'CONFIG_H_FILE="../config.h"',
             ],
-            'cflags' : [
-                '-O2'
-            ],
             'conditions': [
                 [
                     'OS != "win"', { #Build config file for posix OS (i.e. not windows)
                         'variables' : { #Configuration file is also built with this command
-                            'librt' : '<!(scrypt/configuration/posixconfig)',
+                            'libs' : '<!(scrypt/configuration/posixconfig)',
+                            'cflags' : '<!(echo "@CFLAGS@" | scrypt/config.status --file=- && rm config.log && rm scrypt/config.status)',
                         },
                         'libraries' : [
                             '-lcrypto', #The openssl library (libcrypto)
-                            '<@(librt)', #Librt (if it exists for the platform)
+                            '<@(libs)', #-lrt will be included here if it exists in the target OS
                         ],
                         'cflags' : [
-                            '-w'
+                            '<@(cflags)'
                         ],
                     },
                 ],
