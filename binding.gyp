@@ -38,11 +38,6 @@
                 ],
                 [
                     'OS == "mac"', { #Mr Mac, this section is specially for you :)
-                        'link_settings': { 
-                            'libraries': [ #Add dynamic lib
-                                '-dynamiclib',
-                            ],
-                        },
                         'xcode_settings': {
                             'OTHER_CFLAGS': [
                                 '-O2',
