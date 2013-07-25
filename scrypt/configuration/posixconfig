@@ -3,6 +3,7 @@
 
 SCRIPTPATH=$(pwd)/scrypt/configuration
 mkdir $SCRIPTPATH/config_output
-cd $SCRIPTPATH/config_output && ../posix_configuration/configure -q 
+cd $SCRIPTPATH/config_output && ../posix_configuration/configure -q
+echo '@LIBS@' | $SCRIPTPATH/config_output/config.status --file=-
 cp $SCRIPTPATH/config_output/config.h $SCRIPTPATH/../config.h
 rm -rf $SCRIPTPATH/config_output
