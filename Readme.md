@@ -135,8 +135,6 @@ You will need `node-gyp` to get this to work (install it if you don't have it: `
     node-gyp configure build
 
 #Testing
-Testing is accomplished with the [node tap module](https://github.com/isaacs/node-tap).
-##If installed via NPM
 To test, go to the folder where Scrypt was installed, and type:
 
     npm test
