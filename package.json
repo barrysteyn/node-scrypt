@@ -32,5 +32,8 @@
     ],
     "bugs": {
         "url": "https://github.com/barrysteyn/node-scrypt/issues"
+    },
+    "scripts" : {
+        "test": "npm install && node tests/scrypt-tests.js"
     }
 }
