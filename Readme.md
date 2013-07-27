@@ -1,4 +1,7 @@
 #Scrypt For NodeJS
+
+[![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
+
 node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. In short, it is a NodeJS module for what is arguably the most advanced password hash in existence.
 
 ##Platforms Supported
