@@ -136,16 +136,7 @@ Testing is accomplished with the [node tap module](https://github.com/isaacs/nod
 ##If installed via NPM
 To test, go to the folder where Scrypt was installed, and type:
 
-    cd node_modules/scrypt
-    npm install
-    node tests/scrypt-tests
-
-##If installed via source
-Go to the folder where Scrypt was installed and type:
-    
-    cd node-scrypt
-    npm install
-    node tests/scrypt-tests
+    npm test
 
 #Hash Info
 All Scrypt output is encoded into Base64 using [René Nyffenegger](http://www.adp-gmbh.ch/) [library](http://www.adp-gmbh.ch/cpp/common/base64.html). The character sets that compromises all output are `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`.
