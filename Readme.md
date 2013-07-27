@@ -4,7 +4,9 @@ node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt [key deriva
 ##Platforms Supported
 For Scrypt to work at its best, it needs to have its configuration file custom built for each platform it is installed on. Scrypt's author made Scrypt as a C program. The user of this C program is expected to run a specialised configuration script which will automatically determines the best and most secure way Scrypt can be compiled on that platform. In the past, the output of this configuration script run on a Linux box was used with this module, with other platforms (notably Mac OS) being specially customised. 
 
-As of version 1.6.0, this configuration is run automatically before each compile, meaning that this NodeJS Scrypt module will be perfectly tuned to the target operating system. But this is only available for Unix like platforms (Windows support coming soon). It has been tested on **Linux**, **MAC OS** and **SmartOS** (so its ready for Joyent Cloud), but it should workd on any unix type OS. This includes FreeBSD, OpenBSD, SunOS etc. If there is an issue with a particular "unix" like OS, then make contact as it should be very easy to remedy.
+As of version 1.6.0, this configuration is run automatically before each compile, meaning that this NodeJS Scrypt module will be perfectly tuned to the target operating system. But this is only available for Unix like platforms (Windows support coming soon). It has been tested on **Linux**, **MAC OS** and **SmartOS** (so its ready for Joyent Cloud). This includes FreeBSD, OpenBSD, SunOS etc. 
+
+**New In Version 1.7.0**: Version 1.7.0 now automatically determines what libraries (besides openssl) to link to. Therefore I expect this module to work on any *unix-like* platform.
 
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
