@@ -249,7 +249,6 @@ Handle<Value> HashSync(const Arguments& args) {
     double maxtime = 0.0;
     std::string validateMessage;
     uint8_t outbuf[96]; //Header size for password derivation is fixed
-    std::string output;
     
     //Validate arguments
     if (ValidateHashSyncArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
