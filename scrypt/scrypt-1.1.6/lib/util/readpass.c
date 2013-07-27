@@ -113,8 +113,10 @@ retry:
 		tcsetattr(fileno(readfrom), TCSANOW, &term_old);
 
 	/* Close /dev/tty if we opened it. */
-	if (readfrom != stdin)
+	if (readfrom != stdin) {
 		fclose(readfrom);
+		readfrom = NULL;
+	}
 
 	/* Copy the password out. */
 	if ((*passwd = strdup(passbuf)) == NULL) {
@@ -135,7 +137,7 @@ err2:
 		tcsetattr(fileno(readfrom), TCSAFLUSH, &term_old);
 err1:
 	/* Close /dev/tty if we opened it. */
-	if (readfrom != stdin)
+	if (readfrom != NULL && readfrom != stdin)
 		fclose(readfrom);
 
 	/* Failure! */
