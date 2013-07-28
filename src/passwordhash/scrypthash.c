@@ -148,9 +148,9 @@ err0:
  */
 int
 HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double maxmemfrac, double maxtime) {
-    int logN;
-    uint64_t N;
-    uint32_t r, p;
+    int logN=0;
+    uint64_t N=0;
+    uint32_t r=0, p=0;
     uint8_t dk[64],
             salt[32],
             hbuf[32];
@@ -201,8 +201,8 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double ma
  */
 int
 VerifyHash(const uint8_t header[96], const uint8_t* passwd) {
-    int N;
-    uint32_t r, p; 
+    int N=0;
+    uint32_t r=0, p=0; 
     uint8_t dk[64],
             salt[32],
             hbuf[32];
