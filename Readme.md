@@ -127,6 +127,11 @@ As should be the case with any security tool, this library should be scrutinized
 
     npm install scrypt
 
+*Ubuntu requires `libssl-dev`. Install the libary using the following command:
+
+    sudo apt-get install libssl-dev
+
+
 ##From Source
 You will need `node-gyp` to get this to work (install it if you don't have it: `npm install -g node-gyp`):
 
