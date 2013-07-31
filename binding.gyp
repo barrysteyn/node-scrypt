@@ -7,7 +7,7 @@
                 'scrypt/scrypt-1.1.6',
                 'scrypt/scrypt-1.1.6/lib/util',
                 'scrypt/scrypt-1.1.6/lib/crypto',
-                'scrypt/scrypt-1.1.6/lib/scryptenc'
+                'scrypt/scrypt-1.1.6/lib/scryptenc',
             ],
             'sources': [
                 'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.c',
@@ -25,24 +25,24 @@
                     'OS != "win"', { #Build config file for posix OS (i.e. not windows)
                         'variables' : { #Configuration file is also built with this command
                             'libs' : '<!(scrypt/configuration/posixconfig)',
-                            'cflags' : '<!(echo "@CFLAGS@" | scrypt/config.status --file=- && rm config.log && rm scrypt/config.status)',
                         },
+                        'include_dirs': [
+                            '<(node_root_dir)/deps/openssl/openssl/include',
+                        ],
                         'libraries' : [
-                            '-lcrypto', #The openssl library (libcrypto)
                             '<@(libs)', #-lrt will be included here if it exists in the target OS
                         ],
-                        'cflags' : [
-                            '<@(cflags)'
-                        ],
-                    },
-                ],
-                [
-                    'OS == "mac"', { #Mr Mac, this section is specially for you :)
-                        'xcode_settings': {
-                            'OTHER_CFLAGS': [
-                                '-O2',
-                            ]
-                        },
+                        'conditions' : [
+                            [
+                                'OS == "mac"', { 
+                                    'xcode_settings': {
+                                        'OTHER_CFLAGS': [
+                                            '-O2',
+                                        ]
+                                    },
+                                },
+                            ],
+                        ]
                     },
                 ],
             ],
