@@ -86,15 +86,6 @@
                 'scrypt_node.cc',
             ],
             'dependencies': ['scrypt_lib','scrypt_passwordhash','scrypt_node_boilerplate'],
-            'conditions' : [
-                [
-                    'OS != "win"', {
-                        'cflags' : [
-                            '-w'
-                        ],
-                    },
-                ],
-            ],
         },
     ],
 }
