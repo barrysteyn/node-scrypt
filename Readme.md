@@ -11,6 +11,9 @@ As of version 1.6.0, this configuration is run automatically before each compile
 
 **New In Version 1.7.0**: Version 1.7.0 now automatically determines what libraries (besides openssl) to link to. Therefore I expect this module to work on any *unix-like* platform.
 
+##Node Version Compatibilty
+This module supports Node version 0.8x and upwards. Earlier versions of Node do not come bundled with OpenSSL which is required for this module to work.
+
 ##What Is Scrypt? 
 Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
 
