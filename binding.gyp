@@ -32,17 +32,6 @@
                         'libraries' : [
                             '<@(libs)', #-lrt will be included here if it exists in the target OS
                         ],
-                        'conditions' : [
-                            [
-                                'OS == "mac"', { 
-                                    'xcode_settings': {
-                                        'OTHER_CFLAGS': [
-                                            '-O2',
-                                        ]
-                                    },
-                                },
-                            ],
-                        ]
                     },
                 ],
             ],
