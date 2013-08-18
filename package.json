@@ -1,7 +1,7 @@
 {
     "name": "scrypt",
     "description": "The scrypt crypto library for NodeJS",
-    "version": "1.7.2",
+    "version": "1.7.4",
     "keywords": [
         "scrypt",
         "password",
@@ -16,7 +16,7 @@
         "url": "http://doctrina.org"
     },
     "engines" : {
-        "node": ">= 0.8.15"
+        "node": ">= 0.8.0"
     },
     "repository" : {
         "type": "git",
