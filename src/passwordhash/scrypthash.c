@@ -24,6 +24,12 @@
    Barry Steyn barry.steyn@gmail.com 
 
 */
+/*
+ * This source code is a derivate from the original source code
+ * from the source as detailed above.
+ * Modifications: Copyright (C) 2013 Tobias Hintze
+ * MIT license shall apply for the modifications.
+ */
 
 #include "sha256.h"
 #include "sysendian.h"
@@ -145,9 +151,13 @@ err0:
 
 /*
  * Creates a password hash. This is the actual key derivation function
+ * optional:
+ *     (if dkout!=0): copy derived key to output parameter, which can
+ *     then be used to encrypt data.
  */
 int
-HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double maxmemfrac, double maxtime) {
+HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double maxmemfrac, double maxtime,
+        uint8_t dkout[64]) {
     int logN=0;
     uint64_t N=0;
     uint32_t r=0, p=0;
@@ -192,15 +202,20 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double ma
     HMAC_SHA256_Update(&hctx, header, 64);
     HMAC_SHA256_Final(hbuf, &hctx);
     memcpy(&header[64], hbuf, 32);
+    if (dkout) memcpy(&dkout[0], &dk[0], 64);
 
     return 0; //success
 }
 
 /*
  * Verifies password hash (also ensures hash integrity at same time)
+ * optional:
+ *     (if dkout!=0): copy derived key to output parameter, which can
+ *     then be used to decrypt data.
  */
 int
-VerifyHash(const uint8_t header[96], const uint8_t* passwd) {
+VerifyHash(const uint8_t header[96], const uint8_t* passwd,
+        uint8_t dkout[64]) {
     int N=0;
     uint32_t r=0, p=0; 
     uint8_t dk[64],
@@ -234,5 +249,6 @@ VerifyHash(const uint8_t header[96], const uint8_t* passwd) {
     if (memcmp(hbuf, &header[64], 32))
         return (11);        
 
+    if (dkout) memcpy(&dkout[0], &dk[0], 64);
     return (0); //Success
 }

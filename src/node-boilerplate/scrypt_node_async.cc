@@ -24,10 +24,18 @@ misrepresented as being the original source code.
 Barry Steyn barry.steyn@gmail.com
 
 */
+/*
+ * This source code is a derivate from the original source code
+ * from the source as detailed above.
+ * Modifications: Copyright (C) 2013 Tobias Hintze
+ * MIT license shall apply for the modifications.
+ */
 
 #include <node.h>
 #include <v8.h>
+#include <node_buffer.h>
 #include <string>
+#include <string.h>
 
 #include "scrypt_node_async.h"
 #include "scrypt_common.h"
@@ -58,6 +66,7 @@ struct Baton {
     double maxmemfrac;
     double maxtime;
     size_t outbuflen;
+    uint8_t dk[64];
 };
 
 /*
@@ -345,6 +354,7 @@ Handle<Value> HashAsyncBefore(const Arguments& args) {
     baton->maxmemfrac = maxmemfrac;
     baton->maxmem = maxmem;
     baton->callback = Persistent<Function>::New(callback);
+    memset(baton->dk, 0, 64);
 
     //Asynchronous work request
     uv_work_t *req = new uv_work_t();
@@ -363,12 +373,12 @@ Handle<Value> HashAsyncBefore(const Arguments& args) {
 void HashWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
     uint8_t outbuf[96]; //Header size for password derivation is fixed
-    
+
     //perform scrypt password hash
     baton->result = HashPassword(
         (const uint8_t*)baton->password.c_str(),
         outbuf,
-        baton->maxmem, baton->maxmemfrac, baton->maxtime
+        baton->maxmem, baton->maxmemfrac, baton->maxtime, baton->dk
     );
 
     //Base64 encode for storage
@@ -384,6 +394,7 @@ void HashWork(uv_work_t* req) {
 void HashAsyncAfter(uv_work_t* req) {
     HandleScope scope;
     Baton* baton = static_cast<Baton*>(req->data);
+    Local<Object> globalObj = Context::GetCurrent()->Global();
 
     if (baton->result) { //There has been an error
         Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
@@ -397,15 +408,23 @@ void HashAsyncAfter(uv_work_t* req) {
         // the exception from JavaScript land using the
         // process.on('uncaughtException') event.
         TryCatch try_catch;
-        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        baton->callback->Call(globalObj, argc, argv);
         if (try_catch.HasCaught()) {
             node::FatalException(try_catch);
         }
     } else {
-        const unsigned argc = 2;
+        // creating a Buffer for the derived key takes some steps:
+        node::Buffer *slowBuffer = node::Buffer::New(64);
+        memcpy(node::Buffer::Data(slowBuffer), baton->dk, 64);
+        Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
+        Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(64), Integer::New(0) };
+        Local<Object> dkBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+
+        const unsigned argc = 3;
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
-            Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length()))
+            Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length())),
+            dkBuffer
         };
 
         TryCatch try_catch;
@@ -448,6 +467,7 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
     baton->message = *hash;
     baton->password = *password;
     baton->callback = Persistent<Function>::New(callback);
+    memset(baton->dk, 0, 64);
 
     //Asynchronous work request
     uv_work_t *req = new uv_work_t();
@@ -465,16 +485,16 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
  */
 void VerifyWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
-    
+
     //Hashed password was encoded to base64, so we need to decode it now
     int base64DecodedLength = calcBase64DecodedLength(baton->message.c_str());
     unsigned char passwordHash[base64DecodedLength];
     base64_decode(baton->message.c_str(), baton->message.length(), passwordHash);
- 
+
     //perform work
     baton->result = VerifyHash(
         passwordHash,
-        (const uint8_t*)baton->password.c_str()
+        (const uint8_t*)baton->password.c_str(), baton->dk
     );
 }
 
@@ -484,6 +504,7 @@ void VerifyWork(uv_work_t* req) {
 void VerifyAsyncAfter(uv_work_t* req) {
     HandleScope scope;
     Baton* baton = static_cast<Baton*>(req->data);
+    Local<Object> globalObj = Context::GetCurrent()->Global();
 
     if (baton->result) { //error
         Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
@@ -495,15 +516,23 @@ void VerifyAsyncAfter(uv_work_t* req) {
         };
 
         TryCatch try_catch;
-        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        baton->callback->Call(globalObj, argc, argv);
         if (try_catch.HasCaught()) {
             node::FatalException(try_catch);
         }
     } else {
-        const unsigned argc = 2;
+        // creating a Buffer for the derived key takes some steps:
+        node::Buffer *slowBuffer = node::Buffer::New(64);
+        memcpy(node::Buffer::Data(slowBuffer), baton->dk, 64);
+        Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
+        Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(64), Integer::New(0) };
+        Local<Object> dkBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+
+        const unsigned argc = 3;
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
-            Local<Value>::New(Boolean::New(true))
+            Local<Value>::New(Boolean::New(true)),
+            dkBuffer
         };
 
         TryCatch try_catch;

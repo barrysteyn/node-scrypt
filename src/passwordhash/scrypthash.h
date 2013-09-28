@@ -24,6 +24,12 @@
    Barry Steyn barry.steyn@gmail.com 
 
 */
+/*
+ * This source code is a derivate from the original source code
+ * from the source as detailed above.
+ * Modifications: Copyright (C) 2013 Tobias Hintze
+ * MIT license shall apply for the modifications.
+ */
 
 #ifndef _SCRYPTHASH_H_
 #define _SCRYPTHASH_H_
@@ -31,7 +37,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int HashPassword(const uint8_t*, uint8_t header[96], size_t, double, double);
-int VerifyHash(const uint8_t header[96], const uint8_t*);
+int HashPassword(const uint8_t*, uint8_t header[96], size_t, double, double, uint8_t dkout[64]);
+int VerifyHash(const uint8_t header[96], const uint8_t*, uint8_t dkout[64]);
 
 #endif /* !_SCRYPTHASH_H_ */
