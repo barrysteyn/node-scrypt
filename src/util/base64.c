@@ -1,27 +1,30 @@
-/* 
-   base64.c and base64.h
+/*
+base64.c
 
-   This source code is provided 'as-is', without any express or implied
-   warranty. In no event will the author be held liable for any damages
-   arising from the use of this software.
+Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-   Permission is granted to anyone to use this software for any purpose,
-   including commercial applications, and to alter it and redistribute it
-   freely, subject to the following restrictions:
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
 
-   1. The origin of this source code must not be misrepresented; you must not
-      claim that you wrote the original source code. If you use this source code
-      in a product, an acknowledgment in the product documentation would be
-      appreciated but is not required.
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-   2. Altered source versions must be plainly marked as such, and must not be
-      misrepresented as being the original source code.
+1. The origin of this source code must not be misrepresented; you must not
+claim that you wrote the original source code. If you use this source code
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
 
-   3. This notice may not be removed or altered from any source distribution.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original source code.
 
-   René Nyffenegger rene.nyffenegger@adp-gmbh.ch
+3. This notice may not be removed or altered from any source distribution.
+
+Barry Steyn barry.steyn@gmail.com
 
 */
+
 
 #include <openssl/bio.h>
 #include <openssl/evp.h>
@@ -62,7 +65,6 @@ base64_encode(const uint8_t* input, size_t length, char **b64text) {
     BIO_get_mem_ptr(bio, &bufferPtr);
     BIO_set_close(bio, BIO_NOCLOSE); // Do not destroy bufferPtr when freeing bio memory in next line
     BIO_free_all(bio);
-    //BIO_free_all(b64);
 
     *b64text=(*bufferPtr).data;
 
@@ -84,7 +86,6 @@ base64_decode(const char* b64text, uint8_t **output) {
     BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL); //Do not use newlines to flush buffer
     outputLength = BIO_read(bio, *output, strlen(b64text));
     BIO_free_all(bio);
-    //BIO_free_all(b64);
-
+    
     return outputLength;
 }
