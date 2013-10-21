@@ -37,13 +37,14 @@
             ],
         },
         {
-            'target_name': 'scrypt_passwordhash',
+            'target_name': 'scrypt_wrapper',
             'type': 'static_library',
             'defines': [
                 'HAVE_CONFIG_H'                
             ],
             'sources': [
-                'src/passwordhash/scrypthash.c'
+                'src/scryptwrapper/keyderivation.c',
+                'src/scryptwrapper/passwordhash.c'
             ],
             'include_dirs' : [
                 'scrypt/scrypt-1.1.6/lib/util',
@@ -66,7 +67,7 @@
             ],
             'include_dirs' : [
                 'src/util',
-                'src/passwordhash',
+                'src/scryptwrapper',
             ],
         },
         {
@@ -74,7 +75,7 @@
             'sources': [
                 'scrypt_node.cc',
             ],
-            'dependencies': ['scrypt_lib','scrypt_passwordhash','scrypt_node_boilerplate'],
+            'dependencies': ['scrypt_lib','scrypt_wrapper','scrypt_node_boilerplate'],
         },
     ],
 }
