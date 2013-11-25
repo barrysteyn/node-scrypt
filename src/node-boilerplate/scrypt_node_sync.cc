@@ -24,6 +24,12 @@ misrepresented as being the original source code.
 Barry Steyn barry.steyn@gmail.com
 
 */
+/*
+ * This source code is a derivate from the original source code
+ * from the source as detailed above.
+ * Modifications: Copyright (C) 2013 Tobias Hintze
+ * MIT license shall apply for the modifications.
+ */
 
 #include <node.h>
 #include <v8.h>
@@ -265,7 +271,7 @@ Handle<Value> HashSync(const Arguments& args) {
     int result = HashPassword(
         (const uint8_t*)*password,
         outbuf,
-        maxmem, maxmemfrac, maxtime
+        maxmem, maxmemfrac, maxtime, NULL
     );
 
     if (result) { //There has been an error
@@ -312,7 +318,7 @@ Handle<Value> VerifySync(const Arguments& args) {
     //perform scrypt password verify
     int result = VerifyHash(
         passwordHash,
-        (const uint8_t*)*password
+        (const uint8_t*)*password, NULL
     );
 
     if (result) { //Password did not verify

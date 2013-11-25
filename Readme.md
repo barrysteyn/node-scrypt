@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
 
-node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. In short, it is a NodeJS module for what is arguably the most advanced password hash in existence.
+node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. In short, it is a NodeJS module for what is arguably the most advanced password hash in existence. For those interested in the actual key derivation it can provide that as well.
 
 ##Platforms Supported
 For Scrypt to work at its best, it needs to have its configuration file custom built for each platform it is installed on. Scrypt's author made Scrypt as a C program. The user of this C program is expected to run a specialised configuration script which will automatically determines the best and most secure way Scrypt can be compiled on that platform. In the past, the output of this configuration script run on a Linux box was used with this module, with other platforms (notably Mac OS) being specially customised. 
@@ -46,7 +46,7 @@ I suspect Scrypt will be used mainly as a password key derivation function (its 
 ### The Scrypt Hash Format
 I have included this section because I keep being queried about the randomness of this module. Scrypt (and in general, all key derivation functions) store metadata in the header which cannot be encrypted.  For example, the random salt needs to be stored un-encrypted in the header. The header information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Scrypt uses a normal MAC to ensure integrity, but it derives it in a funky way based on its unique properties.
 
-Every Scrypt header starts with the word *"scrypt"*. The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the hash will be constructed (see the three tweakable inputs below). Users of Scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability. 
+Every Scrypt header starts with the word *"scrypt"*. The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the key for hash construction will be derived (see the three tweakable inputs below). Users of Scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability.
 
 Taking the above paragraph into account, note the following: The base64 encoding for the word *"scrypt"* is *c2NyeXB0*. So at the very least, every hash derived using this module should start with *c2NyeXB0*. Next comes metadata that normally does not change once settled upon (so it should also look the same). Only then does the random salt get added along with the derived hashed password.
 
@@ -143,7 +143,7 @@ To test, go to the folder where Scrypt was installed, and type:
     npm test
 
 #Hash Info
-All Scrypt output is encoded into Base64 using [René Nyffenegger](http://www.adp-gmbh.ch/) [library](http://www.adp-gmbh.ch/cpp/common/base64.html). The character sets that compromises all output are `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`.
+Almost all Scrypt output is encoded into Base64 using [René Nyffenegger](http://www.adp-gmbh.ch/) [library](http://www.adp-gmbh.ch/cpp/common/base64.html). The character sets that compromises all output are `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`.
 
 #Usage
 There are both asynchronous and synchronous functions available. It is highly recommended not to use the synchronous version unless necessary due to the fact that Node's event loop will be blocked for the duration of these purposefully slow functions.
@@ -157,9 +157,10 @@ For interactive authentication, set `maxtime` to `0.1` - 100 milliseconds.
     var password = "This is a password";
     var maxtime = 0.1;
 
-    scrypt.passwordHash(password, maxtime, function(err, pwdhash) {
+    scrypt.passwordHash(password, maxtime, function(err, pwdhash, dk) {
         if (!err) {
             //pwdhash should now be stored in the database
+            //dk can be used for encryption
         }
     });
 
@@ -170,9 +171,10 @@ Note: `maxmem` and `maxmemfrac` can also be passed to hash function. If they are
     var maxtime = 0.1;
     var maxmem = 0, maxmemfrac = 0.5;
 
-    scrypt.passwordHash(password, maxtime, maxmem, maxmemfrac, function(err, pwdhash) {
+    scrypt.passwordHash(password, maxtime, maxmem, maxmemfrac, function(err, pwdhash, dk) {
         if (!err) {
             //pwdhash should now be stored in the database
+            //dk can be used for encryption
         }
     });
 
@@ -182,9 +184,12 @@ Note: `maxmem` and `maxmemfrac` can also be passed to hash function. If they are
     var password = "This is a password";
     var hash; //This should be obtained from the database
 
-    scrypt.verifyHash(hash, password, function(err, result) {
-        if (!err)
+    scrypt.verifyHash(hash, password, function(err, result, dk) {
+        if (!err) {
+            // dk will be a 64bit Buffer with the derived key
+            // dk can be used for decryption
             return result; //Will be True
+        }
         
         return False;    
     });
@@ -271,6 +276,19 @@ Note: that `maxmem` and `maxmemfrac` can also be passed to the functions. If the
     var cipher = scrypt.encryptSync(message, password, maxtime, maxmem, maxmemfrac);
     var plainText = scrypt.decryptSync(cipher, password, maxtime, maxmem, maxmemfrac);
 
+##Actual Key Derivation
+
+The passwordHash function can be used to acquire a passphrase-derived key under the
+constraints of the max* parameters. The key will be salted and can be used for
+encryption purposes.
+
+The verifyHash function can be used to calculate a previously derived key. Passphrase,
+parameters and the salt are passed via the base64 encoded hash parameter.
+
+Using the passwordHash and verifyHash functions for key derivation is usefull if you
+do not want to use this node.js module for encryption and decryption but still need
+a passphrase-derived key for other purposes.
+
 #Api
 
 ##Authentication
@@ -339,3 +357,4 @@ The password hash and verify functions are also very heavily influenced by the S
 * [René Nyffenegger](http://www.adp-gmbh.ch/) - produced original Base64 encoding code.
 * [Kelvin Wong](https://github.com/kelvinwong-ca) - MAC OS compilation and testing.
 * [Tamas Geschitz](https://github.com/gtamas) - SmartOS and MAC OS testing
+* [Tobias Hintze](https://github.com/thz) - added code for exposing derived key
