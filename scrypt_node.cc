@@ -54,30 +54,14 @@ void RegisterModule(Handle<Object> target) {
         FunctionTemplate::New(VerifySync)->GetFunction());
 
     
-    /* Cryptography */
-    //Asynchronous
-    target->Set(String::NewSymbol("encrypt"),
-        FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
-
-    target->Set(String::NewSymbol("decrypt"),
-        FunctionTemplate::New(DecryptAsyncBefore)->GetFunction());
-    
-    //Synchronous
-    target->Set(String::NewSymbol("encryptSync"),
-        FunctionTemplate::New(EncryptSync)->GetFunction());
-
-    target->Set(String::NewSymbol("decryptSync"),
-        FunctionTemplate::New(DecryptSync)->GetFunction());
-    
-    
     /* Raw key derivation functions */
     //Asynchronous
-    target->Set(String::NewSymbol("scryptKDF"),
+    /*target->Set(String::NewSymbol("scryptKDF"),
         FunctionTemplate::New(EncryptAsyncBefore)->GetFunction());
 
     //Synchronous
     target->Set(String::NewSymbol("scryptKDFSync"),
         FunctionTemplate::New(DecryptAsyncBefore)->GetFunction());
-    
+    */
 }
 NODE_MODULE(scrypt, RegisterModule)
