@@ -31,13 +31,13 @@ Barry Steyn barry.steyn@gmail.com
 
 #include "scrypt_node_sync.h"
 #include "scrypt_common.h"
-#include "base64.h"
 
 //Scrypt is a C library
 extern "C" {
     #include "../../scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.h"
     #include "keyderivation.h"
     #include "passwordhash.h"
+    #include "base64.h"
 }
 
 using namespace v8;
@@ -193,11 +193,12 @@ Handle<Value> HashSync(const Arguments& args) {
         return scope.Close(Undefined());
     } else {
         //Base64 encode for storage
-        int base64EncodedLength = calcBase64EncodedLength(96);
-        char base64Encode[base64EncodedLength + 1];
-        base64_encode(outbuf, 96, base64Encode);
+        char* base64Encode = NULL;
+        size_t base64EncodedLength = base64_encode(outbuf, 96, &base64Encode);
        
         Local<String> passwordHash = String::New((const char*)base64Encode, base64EncodedLength); 
+        if (base64Encode) delete base64Encode;
+
         return scope.Close(passwordHash);
     }
 }
@@ -221,11 +222,9 @@ Handle<Value> VerifySync(const Arguments& args) {
     String::Utf8Value hash(args[0]->ToString());
     String::Utf8Value password(args[1]->ToString());
 
-
     //Hashed password was encoded to base64, so we need to decode it now
-    int base64DecodedLength = calcBase64DecodedLength(*hash);
-    unsigned char passwordHash[base64DecodedLength];
-    base64_decode(*hash, hash.length(), passwordHash);
+    uint8_t* passwordHash = NULL;
+    base64_decode(*hash, &passwordHash);
     
     //perform scrypt password verify
     int result = VerifyHash(
@@ -238,4 +237,7 @@ Handle<Value> VerifySync(const Arguments& args) {
     } else {
         return scope.Close(Local<Value>::New(Boolean::New(true)));
     }
+
+    //clean up
+    if (passwordHash) delete passwordHash;
 }

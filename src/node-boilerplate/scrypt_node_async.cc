@@ -28,16 +28,20 @@ Barry Steyn barry.steyn@gmail.com
 #include <node.h>
 #include <v8.h>
 #include <string>
+#include <stdlib.h>
+
+//FOR TESTING - ReMOVE
+#include <iostream>
 
 #include "scrypt_node_async.h"
 #include "scrypt_common.h"
-#include "base64.h"
 
 //Scrypt is a C library
 extern "C" {
     #include "../../scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.h"
     #include "keyderivation.h"
     #include "passwordhash.h"
+    #include "base64.h"
 }
 
 using namespace v8;
@@ -54,11 +58,12 @@ struct Baton {
     int result;
     std::string message;
     std::string password;
-    std::string output;
+    char* output;
+    size_t outputLength;
+
     size_t maxmem;
     double maxmemfrac;
     double maxtime;
-    size_t outbuflen;
 };
 
 /*
@@ -364,6 +369,7 @@ Handle<Value> HashAsyncBefore(const Arguments& args) {
 void HashWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
     uint8_t outbuf[96]; //Header size for password derivation is fixed
+    char *base64Encode = NULL;
     
     //perform scrypt password hash
     baton->result = HashPassword(
@@ -371,11 +377,11 @@ void HashWork(uv_work_t* req) {
         outbuf,
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
-
+    
+    std::cout << "STARTING HERE\n";
     //Base64 encode for storage
-    int base64EncodedLength = calcBase64EncodedLength(96);
-    char base64Encode[base64EncodedLength + 1];
-    base64_encode(outbuf, 96, base64Encode);
+    baton->outputLength = base64_encode(outbuf, 96, &base64Encode);
+    std::cout << "ENDING HERE\n";
     baton->output = base64Encode;
 }
 
@@ -406,7 +412,7 @@ void HashAsyncAfter(uv_work_t* req) {
         const unsigned argc = 2;
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
-            Local<Value>::New(String::New((const char*)baton->output.c_str(), baton->output.length()))
+            Local<Value>::New(String::New((const char*)baton->output, baton->outputLength))
         };
 
         TryCatch try_catch;
@@ -417,6 +423,7 @@ void HashAsyncAfter(uv_work_t* req) {
     }
 
     //Clean up
+    if (baton->output) delete baton->output;
     baton->callback.Dispose();
     delete baton;
     delete req;
@@ -466,17 +473,19 @@ Handle<Value> VerifyAsyncBefore(const Arguments& args) {
  */
 void VerifyWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
+    uint8_t* passwordHash = NULL;
     
     //Hashed password was encoded to base64, so we need to decode it now
-    int base64DecodedLength = calcBase64DecodedLength(baton->message.c_str());
-    unsigned char passwordHash[base64DecodedLength];
-    base64_decode(baton->message.c_str(), baton->message.length(), passwordHash);
+    base64_decode(baton->message.c_str(), &passwordHash);
  
     //perform work
     baton->result = VerifyHash(
         passwordHash,
         (const uint8_t*)baton->password.c_str()
     );
+
+    //clean up
+    if (passwordHash) delete passwordHash;
 }
 
 /*
