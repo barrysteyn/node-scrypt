@@ -28,6 +28,7 @@
 #include "sha256.h"
 #include "keyderivation.h"
 #include "sysendian.h"
+#include "salt.h"
 
 #include <string.h>
 

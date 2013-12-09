@@ -43,6 +43,7 @@
                 'HAVE_CONFIG_H'                
             ],
             'sources': [
+                'src/util/salt.c',
                 'src/scryptwrapper/keyderivation.c',
                 'src/scryptwrapper/passwordhash.c'
             ],
@@ -50,7 +51,8 @@
                 'scrypt/scrypt-1.1.6/lib/util',
                 'scrypt/scrypt-1.1.6/lib/crypto',
                 'scrypt/scrypt-1.1.6/lib/scryptenc',
-                'scrypt/scrypt-1.1.6'
+                'scrypt/scrypt-1.1.6',
+                'src/util',
             ],
         },
         {
