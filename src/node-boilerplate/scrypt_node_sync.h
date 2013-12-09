@@ -26,8 +26,10 @@ Barry Steyn barry.steyn@gmail.com
 */
 
 
-//Forward declarations
 using namespace v8;
+
+//Forward declarations
 
 Handle<Value> HashSync(const Arguments& args);
 Handle<Value> VerifySync(const Arguments& args);
+Handle<Value> ParamsSync(const Arguments& args);
