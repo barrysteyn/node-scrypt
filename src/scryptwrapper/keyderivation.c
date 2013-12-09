@@ -31,10 +31,6 @@
 #include "scryptenc_cpuperf.h"
 #include "memlimit.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 /*
  * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables. 
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
@@ -95,49 +91,6 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_
 
     /* Success! */
     return (0);
-}
-
-/*
- * Obtains salt for password hash. This function is copied from Colin Percival's scrypt reference code
- */
-int
-getsalt(uint8_t salt[], size_t saltlen) {
-	int fd;
-	ssize_t lenread;
-	uint8_t * buf = salt;
-
-	/* Open /dev/urandom. */
-	if ((fd = open("/dev/urandom", O_RDONLY)) == -1)
-		goto err0;
-
-	/* Read bytes until we have filled the buffer. */
-	while (saltlen > 0) {
-		if ((lenread = read(fd, buf, saltlen)) == -1)
-			goto err1;
-
-		/* The random device should never EOF. */
-		if (lenread == 0)
-			goto err1;
-
-		/* We're partly done. */
-		buf += lenread;
-		saltlen -= lenread;
-	}
-
-	/* Close the device. */
-	while (close(fd) == -1) {
-		if (errno != EINTR)
-			goto err0;
-	}
-
-	/* Success! */
-	return (0);
-
-err1:
-	close(fd);
-err0:
-	/* Failure! */
-	return (4);
 }
 
 /*
