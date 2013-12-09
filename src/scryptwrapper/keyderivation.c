@@ -58,8 +58,9 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_
     if (opslimit < 32768)
         opslimit = 32768;
 
-    /* Fix r = 8 for now. */
-    *r = 8;
+    /* if r is not set, then default it to 8 */
+	if (!*r) //r is the underlying block size that is used
+		*r = 8;
 
     /*
     * The memory limit requires that 128Nr <= memlimit, while the CPU
