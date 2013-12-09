@@ -158,6 +158,13 @@ int ValidateVerifySyncArguments(const Arguments& args, std::string& message) {
 }
 
 /*
+ * Validates JavaScript function arguments for translation function
+ */
+int ValidateParamsSyncArguments(const Arguments& args, std::string& message) {
+	return 0;
+}
+
+/*
  * Password Hash: Function called from JavaScript land.
  */
 Handle<Value> HashSync(const Arguments& args) {
@@ -167,6 +174,7 @@ Handle<Value> HashSync(const Arguments& args) {
     double maxtime = 0.0;
     std::string validateMessage;
     uint8_t outbuf[96]; //Header size for password derivation is fixed
+	Local<String> passwordHash;
     
     //Validate arguments
     if (ValidateHashSyncArguments(args, validateMessage, maxmem, maxmemfrac, maxtime)) {
@@ -186,19 +194,25 @@ Handle<Value> HashSync(const Arguments& args) {
         maxmem, maxmemfrac, maxtime
     );
 
-    if (result) { //There has been an error
+	if (!result) {
+        //Base64 encode for storage
+        char* base64Encode = NULL;
+        size_t base64EncodedLength = base64_encode(outbuf, 96, &base64Encode);
+       
+        passwordHash = String::New((const char*)base64Encode, base64EncodedLength); 
+		
+		//Clean up
+		if (base64Encode) 
+			delete base64Encode;
+	}
+  
+ 
+	if (result) { //There has been an error
         ThrowException(
             Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
         );
         return scope.Close(Undefined());
     } else {
-        //Base64 encode for storage
-        char* base64Encode = NULL;
-        size_t base64EncodedLength = base64_encode(outbuf, 96, &base64Encode);
-       
-        Local<String> passwordHash = String::New((const char*)base64Encode, base64EncodedLength); 
-        if (base64Encode) delete base64Encode;
-
         return scope.Close(passwordHash);
     }
 }
@@ -232,12 +246,21 @@ Handle<Value> VerifySync(const Arguments& args) {
         (const uint8_t*)*password
     );
 
+    //clean up
+    if (passwordHash) 
+		delete passwordHash;
+
     if (result) { //Password did not verify
         return scope.Close(Local<Value>::New(Boolean::New(false)));
     } else {
         return scope.Close(Local<Value>::New(Boolean::New(true)));
     }
+}
 
-    //clean up
-    if (passwordHash) delete passwordHash;
+/*
+ * Translation Function: Function called from JavaScript land.
+ */
+Handle<Value> ParamsSync(const Arguments& args) {
+    HandleScope scope;
+	return scope.Close(Undefined());
 }
