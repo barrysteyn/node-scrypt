@@ -1,5 +1,5 @@
 /*
-base64.c
+base64.h
 
 Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
