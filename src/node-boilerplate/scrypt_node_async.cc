@@ -30,9 +30,6 @@ Barry Steyn barry.steyn@gmail.com
 #include <string>
 #include <stdlib.h>
 
-//FOR TESTING - ReMOVE
-#include <iostream>
-
 #include "scrypt_node_async.h"
 #include "scrypt_common.h"
 
@@ -378,10 +375,8 @@ void HashWork(uv_work_t* req) {
         baton->maxmem, baton->maxmemfrac, baton->maxtime
     );
     
-    std::cout << "STARTING HERE\n";
     //Base64 encode for storage
     baton->outputLength = base64_encode(outbuf, 96, &base64Encode);
-    std::cout << "ENDING HERE\n";
     baton->output = base64Encode;
 }
 
