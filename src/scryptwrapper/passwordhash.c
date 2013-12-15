@@ -27,6 +27,7 @@
 
 #include "sha256.h"
 #include "keyderivation.h"
+#include "pickparams.h"
 #include "sysendian.h"
 #include "salt.h"
 
