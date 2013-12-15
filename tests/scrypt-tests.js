@@ -4,6 +4,83 @@ var password = "This is the test password";
 var maxtime_passwordhash = 0.05; 
 var maxtime_crypto = 0.05; 
 var message = "This is a message";
+var parameters;
+
+/* Pick Parameters Tests */
+//General
+test("Pick Parameters (Translation function): Pick parameters with incorrect argument - no arguments are present", function(t) {
+	console.log("Pick parameters (translation function)\nTesting of arguments\n");
+	try {
+		scrypt.params();
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because at one least argument is needed - in this case, no arguments were given");
+		t.equal(err.message,"Wrong number of arguments: At least one argument is needed - the maxtime", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+test("Pick Parameters (Translation function): Pick parameters with incorrect argument - incorrect argument type", function(t) {
+	try {
+		scrypt.params("abc");
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxtime was passed as a string, but a number is expected");
+		t.equal(err.message,"maxtime argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+test("Pick Parameters (Translation function): Pick parameters with incorrect argument - incorrect argument type", function(t) {
+	try {
+		scrypt.params(0);
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because maxtime was passed as a number <= 0");
+		t.equal(err.message,"maxtime must be greater than 0", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+test("Pick Parameters (Translation function): Pick parameters with incorrect argument - incorrect argument type", function(t) {
+	try {
+		scrypt.params(1, "abc");
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmemfrac was passed as a string, but a number is expected");
+		t.equal(err.message,"max_memfrac argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+test("Pick Parameters (Translation function): Pick parameters with incorrect argument - incorrect argument type", function(t) {
+	try {
+		scrypt.params(1, 0.5, "abc");
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxtime was passed as a string, but a number is expected");
+		t.equal(err.message,"maxmem argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+//Asynchronous
+test("Asynchronous: Pick parameters with incorrect argument - no arguments before callback", function(t) {
+	console.log("Pick parameters (translation function)\nTesting of arguments\n");
+	try {
+		scrypt.params(function(){});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because at one least argument is needed before the callback - in this case, no arguments were given");
+		t.equal(err.message,"Wrong number of arguments: At least one argument is needed before the callback - the maxtime", "The correct message is displayed, namely: "+err.message);
+		t.end();
+	}
+});
+
+//Synchronous
+test("Synchronous: Pick parameters returns an object given correct inputs", function(t) {
+	parameters = scrypt.params(2, 0.5, 1);
+	t.type(parameters,"object","Returned entity is an object");
+	t.type(parameters.N, "number","N is present in object and is of type number");
+	t.type(parameters.r, "number","r is present in object and is of type number");
+	t.type(parameters.p, "number","p is present in object and is of type number");
+	t.end();
+});
+
 
 //Asycrhonous Key Derivation Tests
 test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
