@@ -26,73 +26,7 @@
 */
 
 #include <sys/types.h>
-
 #include "crypto_scrypt.h"
-#include "scryptenc_cpuperf.h"
-#include "memlimit.h"
-
-/*
- * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables. 
- * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
- */
-int
-pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_t * r, uint32_t * p) {
-    //Note: logN (as opposed to N) is calculated here. This is because it is compact (it can be represented by an int)
-    //      and it is easy (and quick) to convert to N by right shifting bits
-    size_t memlimit;
-    double opps;
-    double opslimit;
-    double maxN, maxrp;
-    int rc;
-
-    /* Figure out how much memory to use. */
-    if (memtouse(maxmem, maxmemfrac, &memlimit))
-        return (1);
-
-    /* Figure out how fast the CPU is. */
-    if ((rc = scryptenc_cpuperf(&opps)) != 0)
-        return (rc);
-    opslimit = opps * maxtime;
-
-    /* Allow a minimum of 2^15 salsa20/8 cores. */
-    if (opslimit < 32768)
-        opslimit = 32768;
-
-    /* if r is not set, then default it to 8 */
-	if (!*r) //r is the underlying block size that is used
-		*r = 8;
-
-    /*
-    * The memory limit requires that 128Nr <= memlimit, while the CPU
-    * limit requires that 4Nrp <= opslimit. If opslimit < memlimit/32,
-    * opslimit imposes the stronger limit on N.
-    */
-    if (opslimit < memlimit/32) {
-        /* Set p = 1 and choose N based on the CPU limit. */
-        *p = 1;
-        maxN = opslimit / (*r * 4);
-        for (*logN = 1; *logN < 63; *logN += 1) {
-            if ((uint64_t)(1) << *logN > maxN / 2)
-                break;
-        }
-    } else {
-        /* Set N based on the memory limit. */
-        maxN = memlimit / (*r * 128);
-        for (*logN = 1; *logN < 63; *logN += 1) {
-            if ((uint64_t)(1) << *logN > maxN / 2)
-            break;
-        }
-
-        /* Choose p based on the CPU limit. */
-        maxrp = (opslimit / 4) / ((uint64_t)(1) << *logN);
-        if (maxrp > 0x3fffffff)
-            maxrp = 0x3fffffff;
-        *p = (uint32_t)(maxrp) / *r;
-    }
-
-    /* Success! */
-    return (0);
-}
 
 /*
  * This is the actual key derivation function. 
