@@ -4,9 +4,8 @@ var password = "This is the test password";
 var maxtime_passwordhash = 0.05; 
 var maxtime_crypto = 0.05; 
 var message = "This is a message";
-var parameters;
 
-/* Pick Parameters Tests */
+/* Parameters Tests */
 //General
 test("Pick Parameters (Translation function): Pick parameters with incorrect argument - no arguments are present", function(t) {
 	console.log("Pick parameters (translation function)\nTesting of arguments\n");
@@ -61,7 +60,6 @@ test("Pick Parameters (Translation function): Pick parameters with incorrect arg
 
 //Asynchronous
 test("Asynchronous: Pick parameters with incorrect argument - no arguments before callback", function(t) {
-	console.log("Pick parameters (translation function)\nTesting of arguments\n");
 	try {
 		scrypt.params(function(){});
 	} catch (err) {
@@ -71,9 +69,39 @@ test("Asynchronous: Pick parameters with incorrect argument - no arguments befor
 	}
 });
 
+test("Asynchronous: Pick parameters returns an object given correct inputs of just maxtime", function(t) {
+	scrypt.params(2, function(err, parameters) {
+		t.type(parameters,"object","Returned entity is an object");
+		t.type(parameters.N, "number","N is present in object and is of type number");
+		t.type(parameters.r, "number","r is present in object and is of type number");
+		t.type(parameters.p, "number","p is present in object and is of type number");
+		t.end();
+	});
+});
+
+test("Asynchronous: Pick parameters returns an object given correct inputs of just maxtime and max_memfrac", function(t) {
+	scrypt.params(2, 0.5, function(err, parameters) {
+		t.type(parameters,"object","Returned entity is an object");
+		t.type(parameters.N, "number","N is present in object and is of type number");
+		t.type(parameters.r, "number","r is present in object and is of type number");
+		t.type(parameters.p, "number","p is present in object and is of type number");
+		t.end();
+	});
+});
+
+test("Asynchronous: Pick parameters returns an object given correct inputs of maxtime, max_memfrac and maxmem", function(t) {
+	scrypt.params(2, 0.5, 1, function(err, parameters) {
+		t.type(parameters,"object","Returned entity is an object");
+		t.type(parameters.N, "number","N is present in object and is of type number");
+		t.type(parameters.r, "number","r is present in object and is of type number");
+		t.type(parameters.p, "number","p is present in object and is of type number");
+		t.end();
+	});
+});
+
 //Synchronous
-test("Synchronous: Pick parameters returns an object given correct inputs", function(t) {
-	parameters = scrypt.params(2, 0.5, 1);
+test("Synchronous: Pick parameters returns an object given correct inputs of just maxtime", function(t) {
+	parameters = scrypt.params(2);
 	t.type(parameters,"object","Returned entity is an object");
 	t.type(parameters.N, "number","N is present in object and is of type number");
 	t.type(parameters.r, "number","r is present in object and is of type number");
@@ -81,6 +109,23 @@ test("Synchronous: Pick parameters returns an object given correct inputs", func
 	t.end();
 });
 
+test("Synchronous: Pick parameters returns an object given correct inputs of just maxtime and max_memfrac", function(t) {
+	parameters = scrypt.params(2, 0.5);
+	t.type(parameters,"object","Returned entity is an object");
+	t.type(parameters.N, "number","N is present in object and is of type number");
+	t.type(parameters.r, "number","r is present in object and is of type number");
+	t.type(parameters.p, "number","p is present in object and is of type number");
+	t.end();
+});
+
+test("Synchronous: Pick parameters returns an object given correct inputs of maxtime, max_memfrac and maxmem", function(t) {
+	parameters = scrypt.params(2, 0.5, 1);
+	t.type(parameters,"object","Returned entity is an object");
+	t.type(parameters.N, "number","N is present in object and is of type number");
+	t.type(parameters.r, "number","r is present in object and is of type number");
+	t.type(parameters.p, "number","p is present in object and is of type number");
+	t.end();
+});
 
 //Asycrhonous Key Derivation Tests
 test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
