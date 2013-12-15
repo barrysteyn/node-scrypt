@@ -45,6 +45,7 @@
             'sources': [
                 'src/util/salt.c',
                 'src/scryptwrapper/keyderivation.c',
+                'src/scryptwrapper/pickparams.c',
                 'src/scryptwrapper/passwordhash.c'
             ],
             'include_dirs' : [
@@ -62,6 +63,7 @@
                 'HAVE_CONFIG_H'                
             ],
             'sources': [
+                'src/node-boilerplate/scrypt_params.cc',
                 'src/node-boilerplate/scrypt_node_async.cc',
                 'src/node-boilerplate/scrypt_node_sync.cc',
                 'src/node-boilerplate/scrypt_common.cc',
