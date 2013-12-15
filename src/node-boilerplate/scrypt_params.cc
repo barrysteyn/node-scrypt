@@ -32,8 +32,6 @@ Barry Steyn barry.steyn@gmail.com
 #include "scrypt_common.h"
 #include "scrypt_params.h"
 
-#include <iostream> //for testing - remove when finished
-
 //Scrypt is a C library and there needs c linkings
 extern "C" {
     #include "pickparams.h"
@@ -46,19 +44,17 @@ const double maxmemfrac_default = 0.5;
 
 //Asynchronous work request data
 struct Baton {
-    //Asynch callback function
+    //Async callback function
     Persistent<Function> callback;
 
-    //Custom data for scrypt
+    //Custom data
     int result;
-    std::string message;
-    std::string password;
-    char* output;
-    size_t outputLength;
-
     size_t maxmem;
     double maxmemfrac;
     double maxtime;
+    int N;
+    uint32_t r;
+	uint32_t p;
 };
 
 /*
@@ -112,7 +108,7 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
                 break; 
             
 			case 2:
-                //Check maxmemr
+                //Check maxmem
                 if (!args[i]->IsNumber()) {
                     message = "maxmem argument must be a number";
                     return 1;
@@ -133,21 +129,13 @@ int ValidateArguments(const Arguments& args, std::string& message, size_t& maxme
 }
 
 /*
- * The function call into the scrypt wrapper that determines the parameters
+ * Creates the actual JSON object that will be returned to the user
  */
-int createJSONObject(Local<Object> &obj, const size_t &maxmem, const double &maxmemfrac, const double &maxtime) {
-    int N=0;
-    uint32_t r=0, p=0;
-    int result = pickparams(maxmem, maxmemfrac, maxtime, &N, &r, &p);
-
-    if (!result) {
-        obj = Object::New();
-        obj->Set(String::NewSymbol("N"), Integer::New(N));
-        obj->Set(String::NewSymbol("r"), Integer::New(r));
-        obj->Set(String::NewSymbol("p"), Integer::New(p));
-    }
-
-	return result;
+inline void createJSONObject(Local<Object> &obj, const int &N, const uint32_t &r, const uint32_t &p) {
+	obj = Object::New();
+	obj->Set(String::NewSymbol("N"), Integer::New(N));
+	obj->Set(String::NewSymbol("r"), Integer::New(r));
+	obj->Set(String::NewSymbol("p"), Integer::New(p));
 }
 
 /*
@@ -155,8 +143,9 @@ int createJSONObject(Local<Object> &obj, const size_t &maxmem, const double &max
  */
 Handle<Value> ParamsSync(HandleScope &scope, const size_t &maxmem, const double &maxmemfrac, const double &maxtime) {
 	Local<Object> obj;
-
-	int result = createJSONObject(obj, maxmem, maxmemfrac, maxtime);
+    int N=0;
+    uint32_t r=0, p=0;
+	int result = pickparams(maxmem, maxmemfrac, maxtime, &N, &r, &p); //Call to the scrypt function is here
 	
 	if (result) { //There has been an error
         ThrowException(
@@ -164,10 +153,65 @@ Handle<Value> ParamsSync(HandleScope &scope, const size_t &maxmem, const double 
         );
         return scope.Close(Undefined());		
 	} else { 
+		createJSONObject(obj, N, r, p);
 		return scope.Close(obj);
 	}
 }
 
+
+/*
+ * Asynchronous: Work performed here
+ */
+void ParamsWork(uv_work_t* req) {
+    Baton* baton = static_cast<Baton*>(req->data);
+	baton->result = pickparams(baton->maxmem, baton->maxmemfrac, baton->maxtime, &baton->N, &baton->r, &baton->p); //Call to the scrypt function is here
+}
+
+/*
+ * Asynchronous: Call back function for when work is finished
+ */
+void ParamsAsyncAfter(uv_work_t* req) {
+    HandleScope scope;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //There has been an error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        //Prepare the parameters for the callback function
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        // Wrap the callback function call in a TryCatch so that we can call
+        // node's FatalException afterwards. This makes it possible to catch
+        // the exception from JavaScript land using the
+        // process.on('uncaughtException') event.
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 2;
+		Local<Object> obj;
+		createJSONObject(obj, baton->N, baton->r, baton->p);
+        
+		Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(obj)
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    //Clean up
+    baton->callback.Dispose();
+    delete baton;
+    delete req;
+}
 
 /*
  * Params: Parses arguments and determines what type
@@ -189,9 +233,30 @@ Handle<Value> Params(const Arguments& args) {
         return scope.Close(Undefined());
 	}
 
-	if (callbackPosition == -1) { //Synchronous
+	if (callbackPosition == -1) { 
+		//Synchronous
 		return ParamsSync(scope, maxmem, maxmemfrac, maxtime);
-	} else { //Asynchronous
+	} else { 
+		//Asynchronous
+
+		//Arguments from JavaScript land
+		Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
+
+		//Asynchronous call baton that holds data passed to async function
+		Baton* baton = new Baton();
+		baton->maxtime = maxtime;
+		baton->maxmemfrac = maxmemfrac;
+		baton->maxmem = maxmem;
+		baton->callback = Persistent<Function>::New(callback);
+
+		//Asynchronous work request
+		uv_work_t *req = new uv_work_t();
+		req->data = baton;
+
+		//Schedule work request
+		int status = uv_queue_work(uv_default_loop(), req, ParamsWork, (uv_after_work_cb)ParamsAsyncAfter);
+		assert(status == 0);
+
 		return scope.Close(Undefined());
 	}
 }
