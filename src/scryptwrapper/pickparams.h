@@ -1,5 +1,5 @@
 /* 
-   keyderivation.h
+   pickparams.h
 
    Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -25,10 +25,10 @@
 
 */
 
-#ifndef _KEYDERIVATION_H_
-#define _KEYDERIVATION_H_
+#ifndef _PICKPARAMS_H_
+#define _PICKPARAMS_H_
 
 int
-KeyDerivationFunction(const uint8_t*, size_t, const uint8_t*, size_t, uint64_t, uint32_t, uint32_t, uint8_t*, size_t);
+pickparams(size_t, double, double, int*, uint32_t*, uint32_t*);
 
-#endif /* !_KEYDERIVATION_H_ */
+#endif /* !_PICKPARAMS_H_ */
