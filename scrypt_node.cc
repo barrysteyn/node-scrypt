@@ -32,6 +32,7 @@ Barry Steyn barry.steyn@gmail.com
 #include "src/node-boilerplate/scrypt_node_sync.h"
 #include "src/node-boilerplate/scrypt_node_async.h"
 #include "src/node-boilerplate/scrypt_params.h"
+#include "src/node-boilerplate/scrypt_passwordhash.h"
 
 using namespace v8;
 /*
@@ -60,9 +61,13 @@ void RegisterModule(Handle<Object> target) {
     //target->Set(String::NewSymbol("params"),
     //    FunctionTemplate::New(HashAsyncBefore)->GetFunction());
     
-    //Synchronous
+    //Translation function
     target->Set(String::NewSymbol("params"),
         FunctionTemplate::New(Params)->GetFunction());
+
+	//Hash function (testing for now)
+    target->Set(String::NewSymbol("htest"),
+        FunctionTemplate::New(HashTest)->GetFunction());
 	
     /* Raw key derivation functions */
     //Asynchronous
