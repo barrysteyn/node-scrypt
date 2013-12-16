@@ -64,6 +64,7 @@
             ],
             'sources': [
                 'src/node-boilerplate/scrypt_params.cc',
+                'src/node-boilerplate/scrypt_passwordhash.cc',
                 'src/node-boilerplate/scrypt_node_async.cc',
                 'src/node-boilerplate/scrypt_node_sync.cc',
                 'src/node-boilerplate/scrypt_common.cc',
