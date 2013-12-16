@@ -31,11 +31,14 @@ Barry Steyn barry.steyn@gmail.com
 #include <openssl/buffer.h>
 #include <stdint.h>
 #include <string.h> //needed for strlen function
-
-#include "base64.h"
+#include <math.h>
 
 //Forward declaration
+#include "base64.h"
 
+/*
+ * Calculates the length of decoded base64 string (this is an internal function)
+ */
 static size_t
 calcDecodedLength(const char* b64input) { //Calculates the length of a decoded base64 string
     size_t len = strlen(b64input),
@@ -49,6 +52,9 @@ calcDecodedLength(const char* b64input) { //Calculates the length of a decoded b
     return (size_t)len*0.75 - padding;
 }
 
+/*
+ * Base64 encoding implemented using OpenSSL
+ */
 size_t
 base64_encode(const uint8_t* input, size_t length, char **b64text) {
     BIO *bio, *b64;
@@ -71,6 +77,9 @@ base64_encode(const uint8_t* input, size_t length, char **b64text) {
     return (*bufferPtr).length;
 }
 
+/*
+ * Base64 decoding implemented using OpenSSL
+ */
 size_t
 base64_decode(const char* b64text, uint8_t **output) {
     BIO *bio, *b64;
