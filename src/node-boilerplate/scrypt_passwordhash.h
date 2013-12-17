@@ -32,6 +32,6 @@ using namespace v8;
 
 //Forward declaration(s)
 
-Handle<Value> HashTest(const Arguments& args);
+Handle<Value> PasswordHash(const Arguments& args);
 
 #endif //_SCRYPT_PASSWORDHASH_H_

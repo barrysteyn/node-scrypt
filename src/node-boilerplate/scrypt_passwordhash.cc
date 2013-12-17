@@ -25,34 +25,59 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
-#include <iostream> //For testing, remove when finished
-
 #include <node.h>
 #include <node_buffer.h>
-#include <string_bytes.h>
 #include <v8.h>
 #include <string>
-#include <string.h> //Contains memcpy reference
 
-#include "scrypt_passwordhash.h"
 #include "scrypt_common.h"
 
-//Scrypt is a C library
+//C Linkings
 extern "C" {
     #include "passwordhash.h"
     #include "base64.h"
 }
 
+//Forward Declaration
+void * memcpy (void *destination, const void *source, size_t num);
+
 using namespace v8;
 
-const size_t maxmem_default = 0;
-const double maxmemfrac_default = 0.5;
+//Asynchronous work request data
+struct Baton {
+    //Async callback function
+    Persistent<Function> callback;
+
+    //Custom data for scrypt
+    int result;
+    std::string message;
+    std::string password;
+    char* output;
+    size_t outputLength;
+    ScryptParams *params;
+    ScryptParamsTranslate *paramsTranslate;
+
+    //Temporary - remove once structs take over
+    size_t maxmem;
+    double maxmemfrac;
+    double maxtime;
+
+    //Construtor / destructor   
+    Baton() : output(NULL), params(NULL), paramsTranslate(NULL) { callback.Clear(); }
+    ~Baton() {
+        if (params) delete params;
+        if (paramsTranslate) delete paramsTranslate;
+        if (output) delete output;
+		callback.Dispose(); //V8 persistent object clean up
+    }
+};
+
 
 /*
  * Validates JavaScript function arguments for password hash, sets maxmem, maxmemfrac and maxtime and determines if function
  * is sync or async
  */
-int ValidateHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int &callbackPosition) {
+int ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int &callbackPosition) {
     if (args.Length() < 2) {
         message = "Wrong number of arguments: At least two arguments are needed - password and max_time";
         return 1;
@@ -106,7 +131,7 @@ int ValidateHashArguments(const Arguments& args, std::string& message, size_t& m
                     int maxmemArg = Local<Number>(args[i]->ToNumber())->Value();
 
                     if (maxmemArg < 0)
-                        maxmem = maxmem_default;
+                        maxmem = MAXMEM;
                     else
                         maxmem = (size_t)maxmemArg;
                 }
@@ -118,7 +143,7 @@ int ValidateHashArguments(const Arguments& args, std::string& message, size_t& m
                     maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
 
                     if (maxmemfrac <=0)
-                        maxmemfrac = maxmemfrac_default;
+                        maxmemfrac = MAXMEMFRAC;
                 }                
                 break; 
         }
@@ -153,69 +178,142 @@ inline void createBuffer(v8::Local<v8::Object> &buffer, const char* data, const 
 }
 
 /*
- * Synchronous: Password Hash
+ * Synchronous: After work function
  */
-Handle<Value> HashSync(HandleScope &scope, const String::Utf8Value &password, const size_t &maxmem, const double &maxmemfrac, const double &maxtime) {
-	uint8_t outbuf[96]; //Header size for password derivation is fixed
-	size_t hashLength = 96;
-    Local<String> passwordHash;
- 
-	//perform scrypt password hash
-    int result = HashPassword(
-        (const uint8_t*)*password,
-        outbuf,
-        maxmem, maxmemfrac, maxtime
-    );
+Handle<Value> PasswordHashSyncAfterWork(HandleScope &scope, Baton* baton) {
+	Local<String> passwordHash;
+	int result = baton->result;
 
-    if (!result) {
-        //Base64 encode for storage
-        char* base64Encode = NULL;
-        size_t base64EncodedLength = base64_encode(outbuf, 96, &base64Encode);
+	if (!result) passwordHash = String::New((const char*)baton->output, baton->outputLength);
 
-        passwordHash = String::New((const char*)base64Encode, base64EncodedLength);
-
-        //Clean up
-        if (base64Encode)
-            delete base64Encode;
-    }
+	//cleanup
+	delete baton;
 
     if (result) { //There has been an error
         ThrowException(
             Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
         );
-        return scope.Close(Undefined());
-	} else {
-		//v8::Local<v8::Object> buffer
-		//createBuffer(buffer, outbuf, hashLength);
+		return scope.Close(Undefined());
+	} else { 
 		return scope.Close(passwordHash);
 	}
 }
 
-Handle<Value> HashTest(const Arguments& args) {
+/*
+ * Asynchronous: After work function
+ */
+void PasswordHashAsyncAfterWork(uv_work_t *req) {
     HandleScope scope;
-    size_t maxmem = maxmem_default;
-    double maxmemfrac = maxmemfrac_default;
+    Baton* baton = static_cast<Baton*>(req->data);
+
+    if (baton->result) { //There has been an error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+
+        //Prepare the parameters for the callback function
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { err };
+
+        // Wrap the callback function call in a TryCatch so that we can call
+        // node's FatalException afterwards. This makes it possible to catch
+        // the exception from JavaScript land using the
+        // process.on('uncaughtException') event.
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    } else {
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = {
+            Local<Value>::New(Null()),
+            Local<Value>::New(String::New((const char*)baton->output, baton->outputLength))
+        };
+
+        TryCatch try_catch;
+        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        if (try_catch.HasCaught()) {
+            node::FatalException(try_catch);
+        }
+    }
+
+    delete baton; // Destructor handles cleanup
+    delete req;
+}
+
+
+/*
+ * Work Function: Scrypt password hash performed here
+ */
+void PasswordHashWork(Baton* baton) {
+    uint8_t outbuf[96]; //Header size for password derivation is fixed
+    char *base64Encode = NULL;
+
+    //perform scrypt password hash
+    baton->result = HashPassword(
+        (const uint8_t*)baton->password.c_str(),
+        outbuf,
+        baton->maxmem, baton->maxmemfrac, baton->maxtime
+    );
+
+    //Base64 encode for storage
+    baton->outputLength = base64_encode(outbuf, 96, &base64Encode);
+    baton->output = base64Encode;
+}
+
+/*
+ * Asynchronous Work Function
+ */
+void PasswordHashAsyncWork(uv_work_t* req) {
+	PasswordHashWork(static_cast<Baton*>(req->data));	
+}
+
+/*
+ * PasswordHash: Parses arguments and determines what type (sync or async) this function is
+ *       This function is the "entry" point from JavaScript land
+ */
+Handle<Value> PasswordHash(const Arguments& args) {
+    HandleScope scope;
+    size_t maxmem = MAXMEM;
+    double maxmemfrac = MAXMEMFRAC;
     double maxtime = 0.0;
     std::string validateMessage;
     int callbackPosition = -1;
 
 	//Validate arguments
-    if (ValidateHashArguments(args, validateMessage, maxmem, maxmemfrac, maxtime, callbackPosition)) {
+    if (ValidatePasswordHashArguments(args, validateMessage, maxmem, maxmemfrac, maxtime, callbackPosition)) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
         return scope.Close(Undefined());
     }
 
-    //Arguments from JavaScript land
+    //Arguments from JavaScript land common to both sync and async
     String::Utf8Value password(args[0]->ToString());
 
+	//Call baton that holds data passed to both async and sync functions (DRY)
+	Baton* baton = new Baton();
+	baton->password = *password;
+	baton->maxtime = maxtime;
+	baton->maxmemfrac = maxmemfrac;
+	baton->maxmem = maxmem;
+
 	if (callbackPosition == -1) {
-		return HashSync(scope, password, maxmem, maxmemfrac, maxtime);
+		//Synchronous request
+		PasswordHashWork(baton);
+		return PasswordHashSyncAfterWork(scope, baton);
 	} else {
-		//Arguments from JavaScript land
-		String::Utf8Value password(args[0]->ToString());
+		//Arguments from JavaScript land needed for async: callback function
 		Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
+		baton->callback = Persistent<Function>::New(callback);
+
+		//Work request 
+		uv_work_t *req = new uv_work_t();
+		req->data = baton;
+
+		//Schedule work request
+		int status = uv_queue_work(uv_default_loop(), req, PasswordHashAsyncWork, (uv_after_work_cb)PasswordHashAsyncAfterWork);
+		assert(status == 0);
+
         return scope.Close(Undefined());
 	}
 }
