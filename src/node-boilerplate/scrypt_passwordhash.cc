@@ -77,7 +77,8 @@ struct Baton {
  * Validates JavaScript function arguments for password hash, sets maxmem, maxmemfrac and maxtime and determines if function
  * is sync or async
  */
-int ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int &callbackPosition) {
+inline int 
+ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int &callbackPosition) {
     if (args.Length() < 2) {
         message = "Wrong number of arguments: At least two arguments are needed - password and max_time";
         return 1;
@@ -155,7 +156,8 @@ int ValidatePasswordHashArguments(const Arguments& args, std::string& message, s
 /*
  * Create a NodeJS Buffer 
  */
-inline void createBuffer(v8::Local<v8::Object> &buffer, const char* data, const size_t &dataLength) {
+inline void 
+createBuffer(v8::Local<v8::Object> &buffer, const char* data, const size_t &dataLength) {
 	//Return data in a NodeJS Buffer. This will allow native ability
 	//to convert between encodings and will allow the user to take
 	//advantage of Node's buffer functions (excellent article: http://www.samcday.com.au/blog/2011/03/03/creating-a-proper-buffer-in-a-node-c-addon/)
@@ -180,7 +182,8 @@ inline void createBuffer(v8::Local<v8::Object> &buffer, const char* data, const 
 /*
  * Synchronous: After work function
  */
-Handle<Value> PasswordHashSyncAfterWork(HandleScope &scope, Baton* baton) {
+inline Handle<Value> 
+PasswordHashSyncAfterWork(HandleScope &scope, Baton* baton) {
 	Local<String> passwordHash;
 	int result = baton->result;
 
@@ -202,7 +205,8 @@ Handle<Value> PasswordHashSyncAfterWork(HandleScope &scope, Baton* baton) {
 /*
  * Asynchronous: After work function
  */
-void PasswordHashAsyncAfterWork(uv_work_t *req) {
+inline void 
+PasswordHashAsyncAfterWork(uv_work_t *req) {
     HandleScope scope;
     Baton* baton = static_cast<Baton*>(req->data);
 
@@ -244,7 +248,8 @@ void PasswordHashAsyncAfterWork(uv_work_t *req) {
 /*
  * Work Function: Scrypt password hash performed here
  */
-void PasswordHashWork(Baton* baton) {
+inline void 
+PasswordHashWork(Baton* baton) {
     uint8_t outbuf[96]; //Header size for password derivation is fixed
     char *base64Encode = NULL;
 
@@ -263,7 +268,8 @@ void PasswordHashWork(Baton* baton) {
 /*
  * Asynchronous Work Function
  */
-void PasswordHashAsyncWork(uv_work_t* req) {
+inline void 
+PasswordHashAsyncWork(uv_work_t* req) {
 	PasswordHashWork(static_cast<Baton*>(req->data));	
 }
 
@@ -271,7 +277,8 @@ void PasswordHashAsyncWork(uv_work_t* req) {
  * PasswordHash: Parses arguments and determines what type (sync or async) this function is
  *       This function is the "entry" point from JavaScript land
  */
-Handle<Value> PasswordHash(const Arguments& args) {
+Handle<Value> 
+PasswordHash(const Arguments& args) {
     HandleScope scope;
     size_t maxmem = MAXMEM;
     double maxmemfrac = MAXMEMFRAC;
