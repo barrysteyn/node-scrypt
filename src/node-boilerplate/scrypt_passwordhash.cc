@@ -29,6 +29,7 @@ Barry Steyn barry.steyn@gmail.com
 #include <node_buffer.h>
 #include <v8.h>
 #include <string>
+#include <algorithm>
 
 #include "scrypt_common.h"
 
@@ -49,6 +50,7 @@ struct Baton {
     Persistent<Function> callback;
 
     //Custom data for scrypt
+	bool base64;
     int result;
     std::string message;
     std::string password;
@@ -63,7 +65,7 @@ struct Baton {
     double maxtime;
 
     //Construtor / destructor   
-    Baton() : output(NULL), params(NULL), paramsTranslate(NULL) { callback.Clear(); }
+    Baton() : base64(true), output(NULL), params(NULL), paramsTranslate(NULL) { callback.Clear(); }
     ~Baton() {
         if (params) delete params;
         if (paramsTranslate) delete paramsTranslate;
@@ -78,20 +80,22 @@ struct Baton {
  * is sync or async
  */
 inline int 
-ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int &callbackPosition) {
+ValidatePasswordHashArguments(const Arguments& args, std::string& errMessage, Baton &baton) {
+	//Set default arguments
     if (args.Length() < 2) {
-        message = "Wrong number of arguments: At least two arguments are needed - password and max_time";
+        errMessage = "Wrong number of arguments: At least two arguments are needed - password and max_time";
         return 1;
     }
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		message = "Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time";
+		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time";
 		return 1;
 	}
 
     for (int i=0; i < args.Length(); i++) {
 		if (i > 1 && args[i]->IsFunction()) {
-			callbackPosition = i; //an async function
+			Local<Function> callback = Local<Function>::Cast(args[i]);
+			baton.callback = Persistent<Function>::New(callback);
 			return 0;
 		}
 
@@ -99,12 +103,12 @@ ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_
             case 0:
                 //Check password is a string
                 if (!args[i]->IsString()) {
-                    message = "password must be a string";
+                    errMessage = "password must be a string";
                     return 1;
                 }
                 
                 if (args[i]->ToString()->Length() == 0) {
-                    message = "password cannot be empty";
+                    errMessage = "password cannot be empty";
                     return 1;
                 }
                 
@@ -113,14 +117,14 @@ ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_
             case 1:
                 //Check max_time is a number
                 if (!args[i]->IsNumber()) {
-                    message = "maxtime argument must be a number";
+                    errMessage = "maxtime argument must be a number";
                     return 1;
                 }
 
                 //Check that maxtime is not less than or equal to zero (which would not make much sense)
-                maxtime = Local<Number>(args[i]->ToNumber())->Value();
-                if (maxtime <= 0) {
-                    message = "maxtime must be greater than 0";
+                baton.maxtime = Local<Number>(args[i]->ToNumber())->Value();
+                if (baton.maxtime <= 0) {
+                    errMessage = "maxtime must be greater than 0";
                     return 1;
                 }
                 
@@ -132,21 +136,31 @@ ValidatePasswordHashArguments(const Arguments& args, std::string& message, size_
                     int maxmemArg = Local<Number>(args[i]->ToNumber())->Value();
 
                     if (maxmemArg < 0)
-                        maxmem = MAXMEM;
+                        baton.maxmem = MAXMEM;
                     else
-                        maxmem = (size_t)maxmemArg;
+                        baton.maxmem = (size_t)maxmemArg;
                 }
                 break;
 
             case 3:
                 //Set mexmemfrac if possible, else set it to default
                 if (args[i]->IsNumber()) {
-                    maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
+                    baton.maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
 
-                    if (maxmemfrac <=0)
-                        maxmemfrac = MAXMEMFRAC;
+                    if (baton.maxmemfrac <=0)
+                        baton.maxmemfrac = MAXMEMFRAC;
                 }                
                 break; 
+
+			case 4:
+				//Set encoding if possible, else leave it as default 
+				if (args[i]->IsString()) {
+					v8::String::Utf8Value bufferValue(args[i]);
+					std::string buffer = *bufferValue;
+					std::transform(buffer.begin(), buffer.end(), buffer.begin(), ::tolower);
+					if (buffer == "buffer") {
+					}
+				}
         }
     }
 
@@ -280,38 +294,28 @@ PasswordHashAsyncWork(uv_work_t* req) {
 Handle<Value> 
 PasswordHash(const Arguments& args) {
     HandleScope scope;
-    size_t maxmem = MAXMEM;
-    double maxmemfrac = MAXMEMFRAC;
-    double maxtime = 0.0;
     std::string validateMessage;
-    int callbackPosition = -1;
+	Baton* baton = new Baton(); //Will hold data for both async and sync (DRY)
 
 	//Validate arguments
-    if (ValidatePasswordHashArguments(args, validateMessage, maxmem, maxmemfrac, maxtime, callbackPosition)) {
+    if (ValidatePasswordHashArguments(args, validateMessage, *baton)) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
         return scope.Close(Undefined());
     }
 
-    //Arguments from JavaScript land common to both sync and async
+	//Password obtained from JavaScript land
     String::Utf8Value password(args[0]->ToString());
-
-	//Call baton that holds data passed to both async and sync functions (DRY)
-	Baton* baton = new Baton();
 	baton->password = *password;
-	baton->maxtime = maxtime;
-	baton->maxmemfrac = maxmemfrac;
-	baton->maxmem = maxmem;
 
-	if (callbackPosition == -1) {
-		//Synchronous request
+	if (baton->callback.IsEmpty()) {
+		//Synchronous 
+
 		PasswordHashWork(baton);
 		return PasswordHashSyncAfterWork(scope, baton);
 	} else {
-		//Arguments from JavaScript land needed for async: callback function
-		Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
-		baton->callback = Persistent<Function>::New(callback);
+		//Asynchronous
 
 		//Work request 
 		uv_work_t *req = new uv_work_t();
