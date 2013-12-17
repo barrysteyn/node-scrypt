@@ -1,11 +1,12 @@
 var test = require('tap').test;
-var scrypt = require('../build/Release/scrypt');
+var scrypt = require('../');
 var password = "This is the test password";
 var maxtime_passwordhash = 0.05; 
 var maxtime_crypto = 0.05; 
 var message = "This is a message";
 
-/* Parameters Tests */
+/* Translation Function (Parameter) Tests */
+
 //General
 test("Pick Parameters (Translation function): Pick parameters with incorrect argument - no arguments are present", function(t) {
 	console.log("Pick parameters (translation function)\nTesting of arguments\n");
@@ -127,14 +128,18 @@ test("Synchronous: Pick parameters returns an object given correct inputs of max
 	t.end();
 });
 
-//Asycrhonous Key Derivation Tests
+/* Password Hash Tests */
+
+//General (both async and sync)
+
+//Asynchronous
 test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
     console.log("Password Hash Functionality\nTesting of arguments\n");
     try {
         scrypt.passwordHash(maxtime_passwordhash, function(err, hash) {} );
     } catch (err) {
         t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, password was not present");
-        t.equal(err.message,"Wrong number of arguments: At least three arguments are needed -  password, max_time and a callback function", "The correct message is displayed, namely: "+err.message);
+        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time", "The correct message is displayed, namely: "+err.message);
         t.end();
     }
 });
@@ -144,17 +149,7 @@ test("Asynchronous: Password hashing with incorrect arguments - only two argumen
         scrypt.passwordHash(password, function(err, hash) {} );
     } catch (err) {
         t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, maxtime_passwordhash was not present");
-        t.equal(err.message,"Wrong number of arguments: At least three arguments are needed -  password, max_time and a callback function", "The correct message is displayed, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    try {
-        scrypt.passwordHash(password, maxtime_passwordhash);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, callback was not present");
-        t.equal(err.message,"Wrong number of arguments: At least three arguments are needed -  password, max_time and a callback function", "The correct message is displayed, namely: "+err.message);
+        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time", "The correct message is displayed, namely: "+err.message);
         t.end();
     }
 });
@@ -177,16 +172,6 @@ test("Asynchronous: Password hashing with incorrect arguments - maxtime given an
     } catch (err) {
         t.ok(err,"An error was correctly thrown because maxtime was not set as a number (it was set as 'a')");
         t.equal(err.message,"maxtime argument must be a number", "The correct message is displayed, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing with incorrect arguments - no callback function present", function(t) {
-    try {
-        scrypt.passwordHash(password, maxtime_passwordhash, 1);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown there was no callback function present");
-        t.equal(err.message,"callback function not present", "The correct message is displayed, namely: "+err.message);
         t.end();
     }
 });
@@ -224,7 +209,18 @@ test("Asynchronous: Password hashing: Salt means same passwords hash to differen
 });
 
 
-//Synchronous Key Derivation Tests
+//Synchronous
+test("Synchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
+    console.log("Password Hash Functionality\nTesting of arguments\n");
+    try {
+        scrypt.passwordHashSync(maxtime_passwordhash);
+    } catch (err) {
+        t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, password was not present");
+        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed - password and max_time", "The correct message is displayed, namely: "+err.message);
+        t.end();
+    }
+});
+
 test("Synchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
     console.log("Password Hash Functionality\nTesting of arguments\n");
     try {
