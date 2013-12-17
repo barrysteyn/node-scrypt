@@ -40,34 +40,19 @@ using namespace v8;
  */
 void RegisterModule(Handle<Object> target) {
 
-    /* Password Hash*/
-    //Asynchronous
-    target->Set(String::NewSymbol("passwordHash"),
-        FunctionTemplate::New(HashAsyncBefore)->GetFunction());
-
     target->Set(String::NewSymbol("verifyHash"),
         FunctionTemplate::New(VerifyAsyncBefore)->GetFunction());
     
-    //Synchronous
-    target->Set(String::NewSymbol("passwordHashSync"),
-        FunctionTemplate::New(HashSync)->GetFunction());
-    
-    target->Set(String::NewSymbol("verifyHashSync"),
+	target->Set(String::NewSymbol("verifyHashSync"),
         FunctionTemplate::New(VerifySync)->GetFunction());
 
-
-	/*Translation Function*/
-    //Asynchronous
-    //target->Set(String::NewSymbol("params"),
-    //    FunctionTemplate::New(HashAsyncBefore)->GetFunction());
-    
     //Translation function
     target->Set(String::NewSymbol("params"),
         FunctionTemplate::New(Params)->GetFunction());
 
-	//Hash function (testing for now)
-    target->Set(String::NewSymbol("htest"),
-        FunctionTemplate::New(HashTest)->GetFunction());
+	//Password Hash function
+    target->Set(String::NewSymbol("passwordHash"),
+        FunctionTemplate::New(PasswordHash)->GetFunction());
 	
     /* Raw key derivation functions */
     //Asynchronous
