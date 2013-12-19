@@ -39,113 +39,149 @@ extern "C" {
 
 using namespace v8;
 
-const size_t maxmem_default = 0;
-const double maxmemfrac_default = 0.5;
+namespace {
 
-//Asynchronous work request data
-struct Baton {
-    //Async callback function
-    Persistent<Function> callback;
+//Defaults
+const size_t MAXMEM = 0;
+const double MAXMEMFRAC = 0.5;
 
-    //Custom data
-    int result;
-    size_t maxmem;
-    double maxmemfrac;
-    double maxtime;
-    int N;
-    uint32_t r;
+//
+// Structure to hold information
+//
+struct TranslationInfo {
+	//Async callback function
+	Persistent<Function> callback;
+
+	//Custom data
+	int result;
+	size_t maxmem;
+	double maxmemfrac;
+	double maxtime;
+	int N;
+	uint32_t r;
 	uint32_t p;
+
+	//Constructor / Destructor
+	TranslationInfo() : maxmem(MAXMEM), maxmemfrac(MAXMEMFRAC) { callback.Clear(); }
+	~TranslationInfo() { callback.Dispose(); }
 };
 
-/*
- * Validates JavaScript params function and determines whether it is asynchronous or synchronous
- */
-int ValidateArguments(const Arguments& args, std::string& message, size_t& maxmem, double& maxmemfrac, double& maxtime, int& callbackPosition) {
+//
+// Validates JavaScript params function and determines whether it is asynchronous or synchronous
+//
+int 
+ValidateArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
     if (args.Length() == 0) {
-        message = "Wrong number of arguments: At least one argument is needed - the maxtime";
+        errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
         return 1;
     }
 
 	if (args.Length() > 0 && args[0]->IsFunction()) {
-		message = "Wrong number of arguments: At least one argument is needed before the callback - the maxtime";
+		errMessage = "Wrong number of arguments: At least one argument is needed before the callback - the maxtime";
 		return 1;
 	}
 
     for (int i=0; i < args.Length(); i++) {
-		if (i > 0 && args[i]->IsFunction()) { //An async signature
-			callbackPosition = i;
+		v8::Handle<v8::Value> currentVal = args[i];
+		if (i > 0 && currentVal->IsFunction()) { //An async signature
+            translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			return 0;
 		}
 
         switch(i) {
             case 0:
-                //Check max_time is a number
-                if (!args[i]->IsNumber()) {
-                    message = "maxtime argument must be a number";
+                //Check maxtime is a number
+                if (!currentVal->IsNumber()) {
+                    errMessage = "maxtime argument must be a number";
                     return 1;
                 }
 
                 //Check that maxtime is not less than or equal to zero (which would not make much sense)
-                maxtime = Local<Number>(args[i]->ToNumber())->Value();
-                if (maxtime <= 0) {
-                    message = "maxtime must be greater than 0";
+                translationInfo.maxtime = currentVal->ToNumber()->Value();
+                if (translationInfo.maxtime <= 0) {
+                    errMessage = "maxtime must be greater than 0";
                     return 1;
                 }
                 
                 break;   
 
-            case 1:
-                //Check max_memfac is a number
-                if (!args[i]->IsNumber()) {
-                    message = "max_memfrac argument must be a number";
-                    return 1;
-                }
+			case 1:
+                //Check maxmem
+				if (!currentVal->IsUndefined()) {
+					if (!currentVal->IsNumber()) {
+						errMessage = "maxmem argument must be a number";
+						return 1;
+					}
 
-                //Set mexmemfrac if possible, else set it to default
-				maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
-				if (maxmemfrac <=0)
-					maxmemfrac = maxmemfrac_default;
-                break; 
+					//Set mexmem if possible, else set it to default
+					if (currentVal->ToNumber()->Value() > 0) {
+						translationInfo.maxmem = Local<Number>(args[i]->ToNumber())->Value();
+					}
+				}
+ 
+				break;
             
 			case 2:
-                //Check maxmem
-                if (!args[i]->IsNumber()) {
-                    message = "maxmem argument must be a number";
-                    return 1;
-                }
+                //Check max_memfac is a number
+				if (!currentVal->IsUndefined()) {
+					if (!currentVal->IsNumber()) {
+						errMessage = "max_memfrac argument must be a number";
+						return 1;
+					}
 
-                //Set mexmem if possible, else set it to default
-				int maxmemArg = Local<Number>(args[i]->ToNumber())->Value();
-				if (maxmemArg < 0)
-					maxmem = maxmem_default;
-				else
-					maxmem = (size_t)maxmemArg;
+					//Set mexmemfrac if possible, else set it to default
+					if (currentVal->ToNumber()->Value() > 0) {
+						translationInfo.maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
+					}
+				}
 
-                break;
+                break; 
         }
     }
 
     return 0;
 }
 
-/*
- * Creates the actual JSON object that will be returned to the user
- */
-inline void createJSONObject(Local<Object> &obj, const int &N, const uint32_t &r, const uint32_t &p) {
+//
+// Creates the actual JSON object that will be returned to the user
+//
+void 
+createJSONObject(Local<Object> &obj, const int &N, const uint32_t &r, const uint32_t &p) {
 	obj = Object::New();
 	obj->Set(String::NewSymbol("N"), Integer::New(N));
 	obj->Set(String::NewSymbol("r"), Integer::New(r));
 	obj->Set(String::NewSymbol("p"), Integer::New(p));
 }
 
-/*
- * The synchronous function interface
- */
-Handle<Value> ParamsSync(HandleScope &scope, const size_t &maxmem, const double &maxmemfrac, const double &maxtime) {
+//
+// Work funtion: Work performed here
+//
+void
+ParamsWork(TranslationInfo* translationInfo) {
+	translationInfo->result = pickparams(&translationInfo->N, &translationInfo->r, &translationInfo->p, translationInfo->maxtime, translationInfo->maxmem, translationInfo->maxmemfrac);
+}
+
+//
+// Asynchronous: Wrapper to work function
+//
+void 
+ParamsAsyncWork(uv_work_t* req) {
+	ParamsWork(static_cast<TranslationInfo*>(req->data));
+}
+
+//
+// Synchronous: After work function
+//
+Handle<Value> 
+ParamsSyncAfterWork(HandleScope &scope, TranslationInfo *translationInfo) {
 	Local<Object> obj;
-    int N=0;
-    uint32_t r=0, p=0;
-	int result = pickparams(maxmem, maxmemfrac, maxtime, &N, &r, &p); //Call to the scrypt function is here
+	int result = translationInfo->result;
+
+	if (!result) {
+		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
+	}
+
+	delete translationInfo; //cleanup
 	
 	if (result) { //There has been an error
         ThrowException(
@@ -153,29 +189,21 @@ Handle<Value> ParamsSync(HandleScope &scope, const size_t &maxmem, const double 
         );
         return scope.Close(Undefined());		
 	} else { 
-		createJSONObject(obj, N, r, p);
 		return scope.Close(obj);
 	}
 }
 
 
-/*
- * Asynchronous: Work performed here
- */
-void ParamsWork(uv_work_t* req) {
-    Baton* baton = static_cast<Baton*>(req->data);
-	baton->result = pickparams(baton->maxmem, baton->maxmemfrac, baton->maxtime, &baton->N, &baton->r, &baton->p); //Call to the scrypt function is here
-}
-
-/*
- * Asynchronous: Call back function for when work is finished
- */
-void ParamsAsyncAfter(uv_work_t* req) {
+//
+// Asynchronous: After work function
+//
+void
+ParamsAsyncAfterWork(uv_work_t* req) {
     HandleScope scope;
-    Baton* baton = static_cast<Baton*>(req->data);
+    TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 
-    if (baton->result) { //There has been an error
-        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(baton->result).c_str()));
+    if (translationInfo->result) { //There has been an error
+        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(translationInfo->result).c_str()));
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;
@@ -186,14 +214,14 @@ void ParamsAsyncAfter(uv_work_t* req) {
         // the exception from JavaScript land using the
         // process.on('uncaughtException') event.
         TryCatch try_catch;
-        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
         if (try_catch.HasCaught()) {
             node::FatalException(try_catch);
         }
     } else {
         const unsigned argc = 2;
 		Local<Object> obj;
-		createJSONObject(obj, baton->N, baton->r, baton->p);
+		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
         
 		Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
@@ -201,60 +229,52 @@ void ParamsAsyncAfter(uv_work_t* req) {
         };
 
         TryCatch try_catch;
-        baton->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+        translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
         if (try_catch.HasCaught()) {
             node::FatalException(try_catch);
         }
     }
 
     //Clean up
-    baton->callback.Dispose();
-    delete baton;
+    delete translationInfo;
     delete req;
 }
 
-/*
- * Params: Parses arguments and determines what type
- *         (sync or async) this function is
- */
-Handle<Value> Params(const Arguments& args) {
+} //unnamed namespace
+
+//
+// Params: Parses arguments and determines what type (sync or async) this function is
+//         This function is the "entry" point from JavaScript land
+//
+Handle<Value> 
+Params(const Arguments& args) {
 	HandleScope scope;
 	std::string validateMessage;
-    size_t maxmem = maxmem_default;
-    double maxmemfrac = maxmemfrac_default;
-    double maxtime = 0.0;
-	int callbackPosition = -1;
+	TranslationInfo* translationInfo = new TranslationInfo();
 
 	//Validate arguments and determine function type
-	if (ValidateArguments(args, validateMessage, maxmem, maxmemfrac, maxtime, callbackPosition)) {
+	if (ValidateArguments(args, validateMessage, *translationInfo)) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
+		delete translationInfo;
         return scope.Close(Undefined());
 	}
 
-	if (callbackPosition == -1) { 
+	if (translationInfo->callback.IsEmpty()) { 
 		//Synchronous
-		return ParamsSync(scope, maxmem, maxmemfrac, maxtime);
+		
+		ParamsWork(translationInfo);
+		return ParamsSyncAfterWork(scope, translationInfo);
 	} else { 
 		//Asynchronous
 
-		//Arguments from JavaScript land
-		Local<Function> callback = Local<Function>::Cast(args[callbackPosition]);
-
-		//Asynchronous call baton that holds data passed to async function
-		Baton* baton = new Baton();
-		baton->maxtime = maxtime;
-		baton->maxmemfrac = maxmemfrac;
-		baton->maxmem = maxmem;
-		baton->callback = Persistent<Function>::New(callback);
-
 		//Asynchronous work request
 		uv_work_t *req = new uv_work_t();
-		req->data = baton;
+		req->data = translationInfo;
 
 		//Schedule work request
-		int status = uv_queue_work(uv_default_loop(), req, ParamsWork, (uv_after_work_cb)ParamsAsyncAfter);
+		int status = uv_queue_work(uv_default_loop(), req, ParamsAsyncWork, (uv_after_work_cb)ParamsAsyncAfterWork);
 		assert(status == 0);
 
 		return scope.Close(Undefined());
