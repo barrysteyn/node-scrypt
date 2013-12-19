@@ -25,32 +25,19 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
-//Universal constants
-const size_t MAXMEM = 0;
-const double MAXMEMFRAC = 0.5;
-
-//Forward declarations
-std::string ScryptErrorDescr(const int error);
+//Declarations
+std::string ScryptErrorDescr(const int);
+int checkScryptParameters(const v8::Local<v8::Object>&, std::string&);
 
 //Structures
 
-/*
- * Holds N,r and p parameters
- */
+//
+//  Holds N,r and p parameters
+//
 struct ScryptParams {
 	int N;
 	uint32_t r;
 	uint32_t p;
-};
 
-/*
- * Holds maxtime, maxmem and maxmem_frac (parameters that will need translating)
- */
-struct ScryptParamsTranslate {
-	double maxtime;
-	double maxmemfrac;
-	size_t maxmem;
-	ScryptParams *params; //A pointer to a structure that holds the translated parameters
-
-	ScryptParamsTranslate() : maxmemfrac(MAXMEMFRAC), maxmem(MAXMEM), params(NULL) {}
+	void operator=(const v8::Local<v8::Object>& rhs);
 };
