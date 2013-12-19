@@ -29,6 +29,6 @@
 #define _PICKPARAMS_H_
 
 int
-pickparams(size_t, double, double, int*, uint32_t*, uint32_t*);
+pickparams(int*, uint32_t*, uint32_t*, double, size_t, double);
 
 #endif /* !_PICKPARAMS_H_ */

@@ -37,9 +37,10 @@
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
  */
 int
-pickparams(size_t maxmem, double maxmemfrac, double maxtime, int *logN, uint32_t *r, uint32_t *p) {
+pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, double maxmemfrac) {
     //Note: logN (as opposed to N) is calculated here. This is because it is compact (it can be represented by an int)
-    //      and it is easy (and quick) to convert to N by right shifting bits
+    //      and it is easy (and quick) to convert to N by right shifting bits. Most importantly, using logN only requires
+	//		32 bits to be stored. Seeing as it is embedded inside the hash, the smaller the better
     size_t memlimit;
     double opps;
     double opslimit;
