@@ -37,10 +37,8 @@
  * Creates a password hash. This is the actual key derivation function
  */
 int
-HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double maxmemfrac, double maxtime) {
-    int logN=0;
-    uint64_t N=0;
-    uint32_t r=0, p=0;
+HashPassword(const uint8_t* passwd, uint8_t header[96], uint32_t logN, uint32_t r, uint32_t p) {
+	uint64_t N=0;
     uint8_t dk[64],
             salt[32],
             hbuf[32];
@@ -49,17 +47,12 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], size_t maxmem, double ma
     HMAC_SHA256_CTX hctx;
     int rc;
 
-    /* Calculate logN, r, p */
-    if ((rc = pickparams(maxmem, maxmemfrac, maxtime, &logN, &r, &p) != 0))
-        return (rc);
-
-    
     /* Get Some Salt */
     if ((rc = getsalt(salt, 32)) != 0)
         return (rc); 
 
     /* Generate the derived keys. */
-    N = (uint64_t) 1 << logN;
+    N = (1 << logN);
     if (KeyDerivationFunction(passwd, (size_t)strlen((char *)passwd), salt, 32, N, r, p, dk, 64))
         return (3);
 
