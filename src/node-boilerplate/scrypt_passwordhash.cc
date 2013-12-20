@@ -30,7 +30,6 @@ Barry Steyn barry.steyn@gmail.com
 #include <v8.h>
 #include <string>
 
-#include "scrypt_common.h"
 
 //C Linkings
 extern "C" {
@@ -42,6 +41,7 @@ extern "C" {
 extern void * memcpy (void *destination, const void *source, size_t num);
 
 using namespace v8;
+#include "scrypt_common.h"
 
 namespace 
 {
@@ -61,7 +61,7 @@ struct ScryptInfo {
 	char* output;
 	size_t outputLength;
 	std::string encoding;
-	ScryptParams params;
+	Internal::ScryptParams params;
 
 	//Construtor / destructor   
 	ScryptInfo() : base64(true), output(NULL), encoding("base64") { callback.Clear(); }
@@ -117,7 +117,7 @@ ValidatePasswordHashArguments(const Arguments& args, std::string& errMessage, Sc
                     return 1;
                 }
 				
-				if (checkScryptParameters(currentVal->ToObject(), errMessage)) {
+				if (Internal::CheckScryptParameters(currentVal->ToObject(), errMessage)) {
 					return 1;
 				}
                	
@@ -182,7 +182,7 @@ PasswordHashSyncAfterWork(HandleScope &scope, ScryptInfo* scryptInfo) {
 
     if (result) { //There has been an error
         ThrowException(
-            Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
+			Internal::MakeErrorObject(2,"",result)
         );
 		return scope.Close(Undefined());
 	} else { 
@@ -199,7 +199,7 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
     ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
 
     if (scryptInfo->result) { //There has been an error
-        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(scryptInfo->result).c_str()));
+        Local<Value> err = Internal::MakeErrorObject(2,"",scryptInfo->result);
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;

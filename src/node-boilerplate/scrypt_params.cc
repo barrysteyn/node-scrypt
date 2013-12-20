@@ -29,6 +29,8 @@ Barry Steyn barry.steyn@gmail.com
 #include <v8.h>
 #include <string>
 
+using namespace v8;
+
 #include "scrypt_common.h"
 #include "scrypt_params.h"
 
@@ -36,8 +38,6 @@ Barry Steyn barry.steyn@gmail.com
 extern "C" {
     #include "pickparams.h"
 }
-
-using namespace v8;
 
 namespace {
 
@@ -185,7 +185,7 @@ ParamsSyncAfterWork(HandleScope &scope, TranslationInfo *translationInfo) {
 	
 	if (result) { //There has been an error
         ThrowException(
-            Exception::TypeError(String::New(ScryptErrorDescr(result).c_str()))
+			Internal::MakeErrorObject(2,"",result)
         );
         return scope.Close(Undefined());		
 	} else { 
@@ -203,7 +203,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
     TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 
     if (translationInfo->result) { //There has been an error
-        Local<Value> err = Exception::Error(String::New(ScryptErrorDescr(translationInfo->result).c_str()));
+        Local<Value> err = Internal::MakeErrorObject(2,"",translationInfo->result);
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;
