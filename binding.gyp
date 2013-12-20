@@ -68,6 +68,7 @@
                 'src/node-boilerplate/scrypt_node_async.cc',
                 'src/node-boilerplate/scrypt_node_sync.cc',
                 'src/node-boilerplate/scrypt_common.cc',
+                'src/node-boilerplate/scrypt_error.cc',
                 'src/util/base64.c',
             ],
             'include_dirs' : [

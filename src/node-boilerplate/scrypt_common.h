@@ -25,19 +25,22 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
-//Declarations
-std::string ScryptErrorDescr(const int);
-int checkScryptParameters(const v8::Local<v8::Object>&, std::string&);
-
-//Structures
-
 //
 //  Holds N,r and p parameters
 //
-struct ScryptParams {
-	int N;
-	uint32_t r;
-	uint32_t p;
 
-	void operator=(const v8::Local<v8::Object>& rhs);
-};
+namespace Internal {
+	struct ScryptParams {
+		int N;
+		uint32_t r;
+		uint32_t p;
+
+		void operator=(const v8::Local<v8::Object>& rhs);
+	};
+
+	//
+	//Declarations
+	//
+	int CheckScryptParameters(const v8::Local<v8::Object>&, std::string&);
+	v8::Local<v8::Value> MakeErrorObject(int, const char*, int);
+}
