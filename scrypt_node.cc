@@ -33,6 +33,7 @@ Barry Steyn barry.steyn@gmail.com
 #include "src/node-boilerplate/scrypt_node_async.h"
 #include "src/node-boilerplate/scrypt_params.h"
 #include "src/node-boilerplate/scrypt_passwordhash.h"
+#include "src/node-boilerplate/scrypt_error.h"
 
 using namespace v8;
 /*
@@ -53,6 +54,10 @@ void RegisterModule(Handle<Object> target) {
 	//Password Hash function
     target->Set(String::NewSymbol("passwordHash"),
         FunctionTemplate::New(PasswordHash)->GetFunction());
+
+	//Error Object
+    target->Set(String::NewSymbol("errorObject"),
+        FunctionTemplate::New(MakeErrorObject)->GetFunction());
 	
     /* Raw key derivation functions */
     //Asynchronous
