@@ -29,6 +29,7 @@ Barry Steyn barry.steyn@gmail.com
 #include <node_buffer.h>
 #include <v8.h>
 #include <string>
+#include <algorithm>
 
 
 //C Linkings
@@ -60,11 +61,10 @@ struct ScryptInfo {
 	std::string password;
 	char* output;
 	size_t outputLength;
-	std::string encoding;
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : base64(true), output(NULL), encoding("base64") { callback.Clear(); }
+	ScryptInfo() : base64(true), output(NULL) { callback.Clear(); }
 	~ScryptInfo() {
 		if (output) delete output;
 		callback.Dispose(); //V8 persistent object clean up
@@ -72,11 +72,10 @@ struct ScryptInfo {
 };
 
 //
-// Validates JavaScript function arguments for password hash, sets maxmem, maxmemfrac and maxtime and determines if function
-// is sync or async
+// Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-ValidatePasswordHashArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
+AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
 	//Set default arguments
     if (args.Length() < 2) {
         errMessage = "Wrong number of arguments: At least two arguments are needed - password and max_time";
@@ -127,12 +126,12 @@ ValidatePasswordHashArguments(const Arguments& args, std::string& errMessage, Sc
 			case 2:
 				//Set encoding if possible, else leave it as default 
 				if (currentVal->IsString()) {
-					v8::String::Utf8Value bufferValue(currentVal);
+					std::string encoding(*String::Utf8Value(currentVal));
+					std::transform(encoding.begin(), encoding.end(), encoding.begin(), ::tolower);
 					
 					//This will be transformed to lower case in JavaScript land
-					scryptInfo.encoding = *bufferValue;
-					if (scryptInfo.encoding != "buffer") {
-						scryptInfo.encoding = "base64"; //set back to default if not buffer	
+					if (encoding == "buffer") {
+						scryptInfo.base64 = false; 
 					}
 				}
         }
@@ -170,23 +169,14 @@ createBuffer(v8::Local<v8::Object> &buffer, const char* data, const size_t &data
 //
 // Synchronous: After work function
 //
-Handle<Value> 
-PasswordHashSyncAfterWork(HandleScope &scope, ScryptInfo* scryptInfo) {
-	Local<String> passwordHash;
-	int result = scryptInfo->result;
-
-	if (!result) passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
-
-	//cleanup
-	delete scryptInfo;
-
-    if (result) { //There has been an error
+void
+PasswordHashSyncAfterWork(Local<String> &passwordHash, ScryptInfo* scryptInfo) {
+    if (scryptInfo->result) { //There has been an error
         ThrowException(
-			Internal::MakeErrorObject(2,"",result)
+			Internal::MakeErrorObject(SCRYPT,"",scryptInfo->result)
         );
-		return scope.Close(Undefined());
-	} else { 
-		return scope.Close(passwordHash);
+	} else {
+		passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
 	}
 }
 
@@ -240,7 +230,6 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 void 
 PasswordHashWork(ScryptInfo* scryptInfo) {
     uint8_t outbuf[96]; //Header size for password derivation is fixed
-    char *base64Encode = NULL;
 
     //perform scrypt password hash
     scryptInfo->result = HashPassword(
@@ -249,9 +238,9 @@ PasswordHashWork(ScryptInfo* scryptInfo) {
 		scryptInfo->params.N, scryptInfo->params.r, scryptInfo->params.p
     );
 
-    //Base64 encode for storage
-    scryptInfo->outputLength = base64_encode(outbuf, 96, &base64Encode);
-    scryptInfo->output = base64Encode;
+	if (scryptInfo->base64) {
+		scryptInfo->outputLength = base64_encode(outbuf, 96, &scryptInfo->output);
+	}
 }
 
 //
@@ -272,37 +261,39 @@ Handle<Value>
 PasswordHash(const Arguments& args) {
     HandleScope scope;
     std::string validateMessage;
-	ScryptInfo* scryptInfo = new ScryptInfo(); //Will hold data for both async and sync (DRY)
+	ScryptInfo* scryptInfo = new ScryptInfo(); 
+	Local<String> hash;
 
 	//Validate arguments
-    if (ValidatePasswordHashArguments(args, validateMessage, *scryptInfo)) {
+    if (AssignArguments(args, validateMessage, *scryptInfo)) {
         ThrowException(
             Exception::TypeError(String::New(validateMessage.c_str()))
         );
-		delete scryptInfo;
-        return scope.Close(Undefined());
-    }
+    } else {
 
-	//Password obtained from JavaScript land
-    String::Utf8Value password(args[0]->ToString());
-	scryptInfo->password = *password;
+		//Password obtained from JavaScript land
+		String::Utf8Value password(args[0]->ToString());
+		scryptInfo->password = *password;
 
-	if (scryptInfo->callback.IsEmpty()) {
-		//Synchronous 
+		if (scryptInfo->callback.IsEmpty()) {
+			//Synchronous 
+			PasswordHashWork(scryptInfo);
+			PasswordHashSyncAfterWork(hash, scryptInfo);
+		} else {
+			//Work request 
+			uv_work_t *req = new uv_work_t();
+			req->data = scryptInfo;
 
-		PasswordHashWork(scryptInfo);
-		return PasswordHashSyncAfterWork(scope, scryptInfo);
-	} else {
-		//Asynchronous
-
-		//Work request 
-		uv_work_t *req = new uv_work_t();
-		req->data = scryptInfo;
-
-		//Schedule work request
-		int status = uv_queue_work(uv_default_loop(), req, PasswordHashAsyncWork, (uv_after_work_cb)PasswordHashAsyncAfterWork);
-		assert(status == 0);
-
-        return scope.Close(Undefined());
+			//Schedule work request
+			int status = uv_queue_work(uv_default_loop(), req, PasswordHashAsyncWork, (uv_after_work_cb)PasswordHashAsyncAfterWork);
+			assert(status == 0);
+		}
 	}
+
+	//Clean up heap only if call is synchronous
+	if (scryptInfo->callback.IsEmpty()) {
+		delete scryptInfo;
+	}
+
+	return scope.Close(hash);
 }
