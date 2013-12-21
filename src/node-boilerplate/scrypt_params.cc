@@ -239,7 +239,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 Handle<Value> 
 Params(const Arguments& args) {
 	HandleScope scope;
-	Local<Object> result;
+	Local<Object> params;
 	std::string validateMessage;
 	TranslationInfo* translationInfo = new TranslationInfo();
 
@@ -253,7 +253,7 @@ Params(const Arguments& args) {
 			//Synchronous
 			
 			ParamsWork(translationInfo);
-			ParamsSyncAfterWork(result, translationInfo);
+			ParamsSyncAfterWork(params, translationInfo);
 		} else { 
 			//Asynchronous work request
 			uv_work_t *req = new uv_work_t();
@@ -270,5 +270,5 @@ Params(const Arguments& args) {
 		delete translationInfo;
 	}	
 	
-	return scope.Close(result);
+	return scope.Close(params);
 }
