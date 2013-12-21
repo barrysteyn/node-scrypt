@@ -43,11 +43,10 @@ MakeErrorObject(const Arguments& args) {
 	Local<Value> errObj;
 	std::string errString = (args[1]->IsString()) ? std::string(*v8::String::Utf8Value(args[1]->ToString())) : "";
 	const char* errMessage = (errString != "") ? errString.c_str() : NULL; //We should be able to use c_str as it won't be popped off the stack until exiting this function
-	int scryptErrCode = (args[2]->IsNumber()) ? args[2]->ToNumber()->Value() : -1;
 	if (!args[0]->IsNumber()) {
-		errObj = Internal::MakeErrorObject(500, errMessage, scryptErrCode);
+		errObj = Internal::MakeErrorObject(500, errMessage);
 	} else
-		errObj = Internal::MakeErrorObject(args[0]->ToNumber()->Value(), errMessage, scryptErrCode);
+		errObj = Internal::MakeErrorObject(args[0]->ToNumber()->Value(), errMessage);
 	
 	return scope.Close(errObj);
 }

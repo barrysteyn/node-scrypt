@@ -176,7 +176,7 @@ void
 ParamsSyncAfterWork(Local<Object>& obj, const TranslationInfo *translationInfo) {
 	if (translationInfo->result) { //There has been an error
         ThrowException(
-			Internal::MakeErrorObject(SCRYPT,"",translationInfo->result)
+			Internal::MakeErrorObject(SCRYPT,translationInfo->result)
         );
 	} else { 
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
@@ -193,7 +193,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
     TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 
     if (translationInfo->result) { //There has been an error
-        Local<Value> err = Internal::MakeErrorObject(SCRYPT,"",translationInfo->result);
+        Local<Value> err = Internal::MakeErrorObject(SCRYPT,translationInfo->result);
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;
@@ -246,7 +246,7 @@ Params(const Arguments& args) {
 	//Validate arguments and determine function type
 	if (AssignArguments(args, validateMessage, *translationInfo)) {
         ThrowException(
-			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str(), -1)
+			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
         );
 	} else {
 		if (translationInfo->callback.IsEmpty()) { 
