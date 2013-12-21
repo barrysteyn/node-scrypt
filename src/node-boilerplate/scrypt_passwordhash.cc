@@ -173,7 +173,7 @@ void
 PasswordHashSyncAfterWork(Local<String> &passwordHash, ScryptInfo* scryptInfo) {
     if (scryptInfo->result) { //There has been an error
         ThrowException(
-			Internal::MakeErrorObject(SCRYPT,"",scryptInfo->result)
+			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
         );
 	} else {
 		passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
@@ -189,7 +189,7 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
     ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
 
     if (scryptInfo->result) { //There has been an error
-        Local<Value> err = Internal::MakeErrorObject(2,"",scryptInfo->result);
+        Local<Value> err = Internal::MakeErrorObject(SCRYPT,scryptInfo->result);
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;
@@ -267,7 +267,7 @@ PasswordHash(const Arguments& args) {
 	//Validate arguments
     if (AssignArguments(args, validateMessage, *scryptInfo)) {
         ThrowException(
-            Exception::TypeError(String::New(validateMessage.c_str()))
+			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
         );
     } else {
 
