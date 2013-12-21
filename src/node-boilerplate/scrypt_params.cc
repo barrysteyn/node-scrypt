@@ -67,10 +67,10 @@ struct TranslationInfo {
 };
 
 //
-// Validates JavaScript params function and determines whether it is asynchronous or synchronous
+// Assigns and validates arguments from JavaScript land
 //
 int 
-ValidateArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
+AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
     if (args.Length() == 0) {
         errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
         return 1;
@@ -172,24 +172,14 @@ ParamsAsyncWork(uv_work_t* req) {
 //
 // Synchronous: After work function
 //
-Handle<Value> 
-ParamsSyncAfterWork(HandleScope &scope, TranslationInfo *translationInfo) {
-	Local<Object> obj;
-	int result = translationInfo->result;
-
-	if (!result) {
-		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
-	}
-
-	delete translationInfo; //cleanup
-	
-	if (result) { //There has been an error
+void
+ParamsSyncAfterWork(Local<Object>& obj, const TranslationInfo *translationInfo) {
+	if (translationInfo->result) { //There has been an error
         ThrowException(
-			Internal::MakeErrorObject(2,"",result)
+			Internal::MakeErrorObject(SCRYPT,"",translationInfo->result)
         );
-        return scope.Close(Undefined());		
 	} else { 
-		return scope.Close(obj);
+		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
 	}
 }
 
@@ -203,7 +193,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
     TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 
     if (translationInfo->result) { //There has been an error
-        Local<Value> err = Internal::MakeErrorObject(2,"",translationInfo->result);
+        Local<Value> err = Internal::MakeErrorObject(SCRYPT,"",translationInfo->result);
 
         //Prepare the parameters for the callback function
         const unsigned argc = 1;
@@ -249,34 +239,36 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 Handle<Value> 
 Params(const Arguments& args) {
 	HandleScope scope;
+	Local<Object> result;
 	std::string validateMessage;
 	TranslationInfo* translationInfo = new TranslationInfo();
 
 	//Validate arguments and determine function type
-	if (ValidateArguments(args, validateMessage, *translationInfo)) {
+	if (AssignArguments(args, validateMessage, *translationInfo)) {
         ThrowException(
-            Exception::TypeError(String::New(validateMessage.c_str()))
+			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str(), -1)
         );
+	} else {
+		if (translationInfo->callback.IsEmpty()) { 
+			//Synchronous
+			
+			ParamsWork(translationInfo);
+			ParamsSyncAfterWork(result, translationInfo);
+		} else { 
+			//Asynchronous work request
+			uv_work_t *req = new uv_work_t();
+			req->data = translationInfo;
+
+			//Schedule work request
+			int status = uv_queue_work(uv_default_loop(), req, ParamsAsyncWork, (uv_after_work_cb)ParamsAsyncAfterWork);
+			assert(status == 0);
+		}
+	}
+
+	//Only clean up heap if synchronous
+	if (translationInfo->callback.IsEmpty()) {
 		delete translationInfo;
-        return scope.Close(Undefined());
-	}
-
-	if (translationInfo->callback.IsEmpty()) { 
-		//Synchronous
-		
-		ParamsWork(translationInfo);
-		return ParamsSyncAfterWork(scope, translationInfo);
-	} else { 
-		//Asynchronous
-
-		//Asynchronous work request
-		uv_work_t *req = new uv_work_t();
-		req->data = translationInfo;
-
-		//Schedule work request
-		int status = uv_queue_work(uv_default_loop(), req, ParamsAsyncWork, (uv_after_work_cb)ParamsAsyncAfterWork);
-		assert(status == 0);
-
-		return scope.Close(Undefined());
-	}
+	}	
+	
+	return scope.Close(result);
 }
