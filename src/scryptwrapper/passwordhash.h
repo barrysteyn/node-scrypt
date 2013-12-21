@@ -29,7 +29,7 @@
 #define _SCRYPTHASH_H_
 
 int
-HashPassword(const uint8_t*, uint8_t header[96], uint32_t, uint32_t, uint32_t);
+HashPassword(const uint8_t*, uint8_t**, uint32_t, uint32_t, uint32_t);
 
 int
 VerifyHash(const uint8_t header[96], const uint8_t*);
