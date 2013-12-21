@@ -31,13 +31,15 @@
 #include "sysendian.h"
 #include "salt.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 /*
  * Creates a password hash. This is the actual key derivation function
  */
 int
-HashPassword(const uint8_t* passwd, uint8_t header[96], uint32_t logN, uint32_t r, uint32_t p) {
+HashPassword(const uint8_t* passwd, uint8_t** header, uint32_t logN, uint32_t r, uint32_t p) {
+	*header = (uint8_t*)malloc(96);
 	uint64_t N=0;
     uint8_t dk[64],
             salt[32],
@@ -57,24 +59,24 @@ HashPassword(const uint8_t* passwd, uint8_t header[96], uint32_t logN, uint32_t 
         return (3);
 
     /* Construct the file header. */
-    memcpy(header, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
-    header[6] = 0;
-    header[7] = logN;
-    be32enc(&header[8], r);
-    be32enc(&header[12], p);
-    memcpy(&header[16], salt, 32);
+    memcpy(*header, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
+    (*header)[6] = 0;
+    (*header)[7] = logN;
+    be32enc(&(*header)[8], r);
+    be32enc(&(*header)[12], p);
+    memcpy(&(*header)[16], salt, 32);
 
     /* Add header checksum. */
     SHA256_Init(&ctx);
-    scrypt_SHA256_Update(&ctx, header, 48);
+    scrypt_SHA256_Update(&ctx, *header, 48);
     scrypt_SHA256_Final(hbuf, &ctx);
-    memcpy(&header[48], hbuf, 16);
+    memcpy(&(*header)[48], hbuf, 16);
 
     /* Add header signature (used for verifying password). */
     HMAC_SHA256_Init(&hctx, key_hmac, 32);
-    HMAC_SHA256_Update(&hctx, header, 64);
+    HMAC_SHA256_Update(&hctx, *header, 64);
     HMAC_SHA256_Final(hbuf, &hctx);
-    memcpy(&header[64], hbuf, 32);
+    memcpy(&(*header)[64], hbuf, 32);
 
     return 0; //success
 }

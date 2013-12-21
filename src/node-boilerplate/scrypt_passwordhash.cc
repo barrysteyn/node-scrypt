@@ -29,17 +29,14 @@ Barry Steyn barry.steyn@gmail.com
 #include <node_buffer.h>
 #include <v8.h>
 #include <string>
+#include <cstring>
 #include <algorithm>
-
 
 //C Linkings
 extern "C" {
     #include "passwordhash.h"
     #include "base64.h"
 }
-
-//Forward Declaration
-extern void * memcpy (void *destination, const void *source, size_t num);
 
 using namespace v8;
 #include "scrypt_common.h"
@@ -57,9 +54,8 @@ struct ScryptInfo {
 	//Custom data for scrypt
 	bool base64;
 	int result;
-	std::string message;
 	std::string password;
-	char* output;
+	uint8_t* output;
 	size_t outputLength;
 	Internal::ScryptParams params;
 
@@ -76,7 +72,6 @@ struct ScryptInfo {
 //
 int 
 AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
-	//Set default arguments
     if (args.Length() < 2) {
         errMessage = "Wrong number of arguments: At least two arguments are needed - password and max_time";
         return 1;
@@ -88,15 +83,14 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 	}
 
     for (int i=0; i < args.Length(); i++) {
-		v8::Handle<v8::Value> currentVal = args[i];
+		Local<Value> currentVal = args[i];
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			return 0;
 		}
 
         switch(i) {
-            case 0:
-                //Check password is a string
+            case 0: //Password
                 if (!currentVal->IsString()) {
                     errMessage = "password must be a string";
                     return 1;
@@ -106,11 +100,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
                     errMessage = "password cannot be empty";
                     return 1;
                 }
-                
+               
+				scryptInfo.password = *String::Utf8Value(currentVal->ToString());
                 break;
 
-            case 1:
-                //Check Scrypt parameters
+            case 1: //Scrypt parameters
                 if (!currentVal->IsObject()) {
                     errMessage = "expecting scrypt parameters JSON object";
                     return 1;
@@ -123,13 +117,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				scryptInfo.params = currentVal->ToObject();
                 break;   
 
-			case 2:
-				//Set encoding if possible, else leave it as default 
+			case 2: //Encoding
 				if (currentVal->IsString()) {
 					std::string encoding(*String::Utf8Value(currentVal));
 					std::transform(encoding.begin(), encoding.end(), encoding.begin(), ::tolower);
-					
-					//This will be transformed to lower case in JavaScript land
+				
 					if (encoding == "buffer") {
 						scryptInfo.base64 = false; 
 					}
@@ -144,7 +136,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 // Create a NodeJS Buffer 
 //
 void 
-createBuffer(v8::Local<v8::Object> &buffer, const char* data, const size_t &dataLength) {
+CreateBuffer(Local<Value> &buffer, const char* data, const size_t &dataLength) {
 	//Return data in a NodeJS Buffer. This will allow native ability
 	//to convert between encodings and will allow the user to take
 	//advantage of Node's buffer functions (excellent article: http://www.samcday.com.au/blog/2011/03/03/creating-a-proper-buffer-in-a-node-c-addon/)
@@ -153,30 +145,42 @@ createBuffer(v8::Local<v8::Object> &buffer, const char* data, const size_t &data
 	memcpy(node::Buffer::Data(slowBuffer), data, dataLength);
 
 	//Create the node JS "fast" buffer
-	v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();	
-	v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+	Local<Object> globalObj = Context::GetCurrent()->Global();	
+	Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
 
 	//Constructor arguments for "fast" buffer:
     // First argument is the JS object handle for the "slow buffer"
     // Second argument is the length of the slow buffer
     // Third argument is the offset in the "slow buffer" that "fast buffer" should start at
-	v8::Handle<v8::Value> constructorArgs[3] = { slowBuffer->handle_, v8::Integer::New(dataLength), v8::Integer::New(0) };
+	Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
 
 	//Create the "fast buffer"
 	buffer = bufferConstructor->NewInstance(3, constructorArgs);
 }
 
 //
+// Creates the password hash passed to JS land
+//
+void
+CreatePasswordHash(Local<Value>& passwordHash, const ScryptInfo* scryptInfo) {
+	if (scryptInfo->base64) {
+		passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
+	} else {
+		CreateBuffer(passwordHash, (const char*)scryptInfo->output, scryptInfo->outputLength);
+	}
+}
+
+//
 // Synchronous: After work function
 //
 void
-PasswordHashSyncAfterWork(Local<String> &passwordHash, ScryptInfo* scryptInfo) {
+PasswordHashSyncAfterWork(Local<Value> &passwordHash, const ScryptInfo* scryptInfo) {
     if (scryptInfo->result) { //There has been an error
         ThrowException(
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
         );
 	} else {
-		passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
+		CreatePasswordHash(passwordHash, scryptInfo);
 	}
 }
 
@@ -206,9 +210,12 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
         }
     } else {
         const unsigned argc = 2;
+		Local<Value> passwordHash;
+		CreatePasswordHash(passwordHash, scryptInfo);
+	
         Local<Value> argv[argc] = {
             Local<Value>::New(Null()),
-            Local<Value>::New(String::New((const char*)scryptInfo->output, scryptInfo->outputLength))
+			passwordHash
         };
 
         TryCatch try_catch;
@@ -229,18 +236,19 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 //
 void 
 PasswordHashWork(ScryptInfo* scryptInfo) {
-    uint8_t outbuf[96]; //Header size for password derivation is fixed
-
     //perform scrypt password hash
     scryptInfo->result = HashPassword(
         (const uint8_t*)scryptInfo->password.c_str(),
-        outbuf,
+        &scryptInfo->output,
 		scryptInfo->params.N, scryptInfo->params.r, scryptInfo->params.p
     );
 
 	if (scryptInfo->base64) {
-		scryptInfo->outputLength = base64_encode(outbuf, 96, &scryptInfo->output);
-	}
+		uint8_t* hashOutput = scryptInfo->output;
+		scryptInfo->outputLength = base64_encode(hashOutput, 96, (char**)&scryptInfo->output);
+		delete hashOutput;
+	} else
+		scryptInfo->outputLength = 96;
 }
 
 //
@@ -255,26 +263,21 @@ PasswordHashAsyncWork(uv_work_t* req) {
 
 //
 // PasswordHash: Parses arguments and determines what type (sync or async) this function is
-//               This function is the "entry" point from JavaScript land
+// This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
 PasswordHash(const Arguments& args) {
     HandleScope scope;
     std::string validateMessage;
 	ScryptInfo* scryptInfo = new ScryptInfo(); 
-	Local<String> hash;
+	Local<Value> hash;
 
-	//Validate arguments
+	//Assign and validate arguments
     if (AssignArguments(args, validateMessage, *scryptInfo)) {
         ThrowException(
 			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
         );
     } else {
-
-		//Password obtained from JavaScript land
-		String::Utf8Value password(args[0]->ToString());
-		scryptInfo->password = *password;
-
 		if (scryptInfo->callback.IsEmpty()) {
 			//Synchronous 
 			PasswordHashWork(scryptInfo);
