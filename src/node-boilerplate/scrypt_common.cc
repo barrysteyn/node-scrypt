@@ -151,7 +151,7 @@ namespace Internal {
 	// Produces a JSON error object for errors resulting from Scrypt
 	//
 	v8::Local<v8::Value> MakeErrorObject(int errCode, int scryptErrorCode) {
-		assert(scryptErrorCode == SCRYPT);
+		assert(errCode == SCRYPT);
 		v8::Local<v8::Object> obj = v8::Object::New();
 		obj->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(errCode));
 		obj->Set(v8::String::NewSymbol("err_message"), v8::String::New("Scrypt internal error"));
