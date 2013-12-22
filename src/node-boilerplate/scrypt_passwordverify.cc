@@ -31,7 +31,6 @@ Barry Steyn barry.steyn@gmail.com
 #include <algorithm>
 #include <stdlib.h>
 
-
 //Scrypt is a C library
 extern "C" {
     #include "passwordhash.h"
@@ -49,12 +48,11 @@ struct PasswordHash {
     Persistent<Function> callback;
 
     //Custom data
-	bool base64;
     int result;
 	std::string hash;
     std::string password;
 
-	PasswordHash() : base64(true) { callback.Clear(); }
+	PasswordHash() { callback.Clear(); }
 	~PasswordHash() { callback.Dispose(); }
 };
 
@@ -89,7 +87,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
                     return 1;
                 }
                
-				passwordHash.hash = *String::Utf8Value(currentVal); 
+				passwordHash.hash = std::string(*String::Utf8Value(currentVal), currentVal->ToString()->Length());
                 break;
             
             case 1: //The password
@@ -105,15 +103,6 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
                 
 				passwordHash.password = *String::Utf8Value(currentVal); 
                 break;
-
-			case 2: //Encoding
-				if (currentVal->IsString()) {
-                    std::string encoding(*String::Utf8Value(currentVal));
-                    std::transform(encoding.begin(), encoding.end(), encoding.begin(), ::tolower);
-					
-					if (encoding == "raw")
-						passwordHash.base64 = false;
-				}
         }
     }
 
@@ -126,17 +115,9 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 void
 VerifyHashWork(PasswordHash* passwordHash) {
 	uint8_t *hash = NULL;
-
-	if (passwordHash->base64) {
-		base64_decode(passwordHash->hash.c_str(), &hash);
-	} 
+	base64_decode(passwordHash->hash.c_str(), &hash);
     
-	passwordHash->result = VerifyHash(
-       	(passwordHash->base64)
-			? (const uint8_t*)hash
-			: (const uint8_t*)passwordHash->hash.c_str(),
-		96, (const uint8_t*)passwordHash->password.c_str()
-    );
+	passwordHash->result = VerifyHash((const uint8_t*)hash, 96, (const uint8_t*)passwordHash->password.c_str());
 
 	if (hash) delete hash;
 }
@@ -171,9 +152,10 @@ void
 VerifyHashAsyncAfterWork(uv_work_t* req) {
     HandleScope scope;
     PasswordHash* passwordHash = static_cast<PasswordHash*>(req->data);
+	Local<Value> err;
+	if (passwordHash->result) err = Internal::MakeErrorObject(SCRYPT,passwordHash->result);
 
-    if (passwordHash->result) {
-        Local<Value> err = Internal::MakeErrorObject(SCRYPT,passwordHash->result);
+	if (passwordHash->result && passwordHash->result != 11) {
 
         const unsigned argc = 1;
         Local<Value> argv[argc] = { err };
@@ -186,8 +168,8 @@ VerifyHashAsyncAfterWork(uv_work_t* req) {
     } else {
         const unsigned argc = 2;
         Local<Value> argv[argc] = {
-            Local<Value>::New(Null()),
-            Local<Value>::New(Boolean::New(true))
+            Local<Value>::New(err),
+            Local<Value>::New(Boolean::New(passwordHash->result == 0))
         };
 
         TryCatch try_catch;

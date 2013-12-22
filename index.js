@@ -49,7 +49,7 @@ function parseScryptParameters(args, scryptInfo, start) {
 }
 
 //
-// 
+//Parses arguments specific to the hash function
 //
 function parsePwdHashArguments(args, scryptArgs) {
 	var startIndex = parseScryptParameters(args, scryptArgs, 1);
@@ -78,7 +78,7 @@ function parsePwdHashArguments(args, scryptArgs) {
 }
 
 //
-// Scrypt: Helper functions
+// Scrypt Password Hash
 //
 scrypt.passwordHash = function(passwordHash, params) {
 	return function() {	
@@ -108,7 +108,20 @@ scrypt.passwordHash = function(passwordHash, params) {
 	}
 }(scrypt.passwordHash, scrypt.params);
 
-//For backward compatibility, make function aliases
-//scrypt.passwordHashSync = scrypt.passwordHash;
+//
+// Scrypt Verify Password Hash
+//
+scrypt.verifyHash = function(verifyHash) {
+	return function() {
+		arguments[0] = (Buffer.isBuffer(arguments[0])) ? arguments[0].toString("base64") : arguments[0];
+		return verifyHash.apply(this, arguments);
+	}
+}(scrypt.verifyHash);
+
+//
+// Backward Compatbility
+//
+scrypt.passwordHashSync = scrypt.passwordHash;
+scrypt.verifyHashSync = scrypt.verifyHash;
 
 module.exports = scrypt;
