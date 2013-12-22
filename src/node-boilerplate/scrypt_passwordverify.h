@@ -1,5 +1,5 @@
 /*
-scrypt_node_sync.h
+scrypt_passwordverify.h
 
 Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -25,11 +25,10 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
+#ifndef _SCRYPT_PASSWORDVERIFY_H_
+#define _SCRYPT_PASSWORDVERIFY_H_
 
-using namespace v8;
+Handle<Value>
+VerifyPasswordHash(const Arguments& args);
 
-//Forward declarations
-
-Handle<Value> HashSync(const Arguments& args);
-Handle<Value> VerifySync(const Arguments& args);
-Handle<Value> ParamsSync(const Arguments& args);
+#endif //_SCRYPT_PASSWORDVERIFY_H_

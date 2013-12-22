@@ -28,9 +28,6 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _SCRYPT_PICK_PARAMS_H_
 #define _SCRYPT_PICK_PARAMS_H_
 
-//Forward declarations
-using namespace v8;
-
 Handle<Value> Params(const Arguments& args);
 
 #endif /*_SCRYPT_PICK_PARAMS_H_*/ 

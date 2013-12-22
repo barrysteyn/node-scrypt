@@ -85,7 +85,7 @@ HashPassword(const uint8_t* passwd, uint8_t** header, uint32_t logN, uint32_t r,
  * Verifies password hash (also ensures hash integrity at same time)
  */
 int
-VerifyHash(const uint8_t header[96], const uint8_t* passwd) {
+VerifyHash(const uint8_t* header, size_t headerLength, const uint8_t* passwd) {
     int N=0;
     uint32_t r=0, p=0; 
     uint8_t dk[64],
