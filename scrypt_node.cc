@@ -29,24 +29,16 @@ Barry Steyn barry.steyn@gmail.com
 #include <v8.h>
 
 
-#include "src/node-boilerplate/scrypt_node_sync.h"
-#include "src/node-boilerplate/scrypt_node_async.h"
+using namespace v8;
 #include "src/node-boilerplate/scrypt_params.h"
 #include "src/node-boilerplate/scrypt_passwordhash.h"
+#include "src/node-boilerplate/scrypt_passwordverify.h"
 #include "src/node-boilerplate/scrypt_error.h"
 
-using namespace v8;
 /*
  * Module initialisation function
  */
 void RegisterModule(Handle<Object> target) {
-
-    target->Set(String::NewSymbol("verifyHash"),
-        FunctionTemplate::New(VerifyAsyncBefore)->GetFunction());
-    
-	target->Set(String::NewSymbol("verifyHashSync"),
-        FunctionTemplate::New(VerifySync)->GetFunction());
-
     //Translation function
     target->Set(String::NewSymbol("params"),
         FunctionTemplate::New(Params)->GetFunction());
@@ -54,6 +46,10 @@ void RegisterModule(Handle<Object> target) {
 	//Password Hash function
     target->Set(String::NewSymbol("passwordHash"),
         FunctionTemplate::New(PasswordHash)->GetFunction());
+
+	//Verify password hash
+    target->Set(String::NewSymbol("verifyHash"),
+        FunctionTemplate::New(VerifyPasswordHash)->GetFunction());
 
 	//Error Object
     target->Set(String::NewSymbol("errorObject"),

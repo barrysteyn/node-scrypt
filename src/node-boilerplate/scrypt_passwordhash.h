@@ -28,10 +28,6 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _SCRYPT_PASSWORDHASH_H_
 #define _SCRYPT_PASSWORDHASH_H_
 
-using namespace v8;
-
-//Forward declaration(s)
-
 Handle<Value> PasswordHash(const Arguments& args);
 
 #endif //_SCRYPT_PASSWORDHASH_H_

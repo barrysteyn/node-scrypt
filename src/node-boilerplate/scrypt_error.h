@@ -28,8 +28,6 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _SCRYPT_ERROR_H_
 #define _SCRYPT_ERROR_H_
 
-//Forward declarations
-using namespace v8;
 Handle<Value> MakeErrorObject(const Arguments& args);
 
 #endif /*_SCRYPT_ERROR_H_*/ 
