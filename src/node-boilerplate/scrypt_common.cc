@@ -131,32 +131,43 @@ namespace Internal {
 	//
 	// Produces a JSON error object
 	//
-	v8::Local<v8::Value> MakeErrorObject(int errCode, const char* errMessage) {
-		v8::Local<v8::Object> obj = v8::Object::New();
+	v8::Local<v8::Value> MakeErrorObject(int errorCode, const char* errorMessage) {
 
-		if (errCode == INTERNARG || errCode == JSARG) {
-			obj->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(errCode));
-			obj->Set(v8::String::NewSymbol("err_message"), v8::String::New(errMessage));
-		} else {
-			obj->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(500));
-			if (errMessage)
-				obj->Set(v8::String::NewSymbol("internal_message"), v8::String::New(errMessage));
-			obj->Set(v8::String::NewSymbol("err_message"), v8::String::New("Unknown internal error - please report this error to make this module better. Details about reporting the error can be found at..."));
+		if (errorCode) {
+			v8::Local<v8::Object> errorObject = v8::Object::New();
+
+			if (errorCode == INTERNARG || errorCode == JSARG) {
+				errorObject->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(errorCode));
+				errorObject->Set(v8::String::NewSymbol("err_message"), v8::String::New(errorMessage));
+			} else {
+				errorObject->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(500));
+				if (errorMessage) {
+					errorObject->Set(v8::String::NewSymbol("internal_message"), v8::String::New(errorMessage));
+				}
+				errorObject->Set(v8::String::NewSymbol("err_message"), v8::String::New("Unknown internal error - please report this error to make this module better. Details about reporting the error can be found at..."));
+			}
+
+			return errorObject;
 		}
-
-		return obj;
+	
+		return v8::Local<v8::Value>::New(v8::Null());
 	}
 
 	//
 	// Produces a JSON error object for errors resulting from Scrypt
 	//
-	v8::Local<v8::Value> MakeErrorObject(int errCode, int scryptErrorCode) {
-		assert(errCode == SCRYPT);
-		v8::Local<v8::Object> obj = v8::Object::New();
-		obj->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(errCode));
-		obj->Set(v8::String::NewSymbol("err_message"), v8::String::New("Scrypt internal error"));
-		obj->Set(v8::String::NewSymbol("scrypt_err_code"),v8::Integer::New(scryptErrorCode));
-		obj->Set(v8::String::NewSymbol("scrypt_err_message"),v8::String::New(ScryptErrorDescr(scryptErrorCode).c_str()));
-		return obj;
+	v8::Local<v8::Value> MakeErrorObject(int errorCode, int scryptErrorCode) {
+		assert(errorCode == SCRYPT);
+		
+		if (scryptErrorCode) { 
+			v8::Local<v8::Object> errorObject = v8::Object::New();
+			errorObject->Set(v8::String::NewSymbol("err_code"), v8::Integer::New(errorCode));
+			errorObject->Set(v8::String::NewSymbol("err_message"), v8::String::New("Scrypt message"));
+			errorObject->Set(v8::String::NewSymbol("scrypt_err_code"),v8::Integer::New(scryptErrorCode));
+			errorObject->Set(v8::String::NewSymbol("scrypt_err_message"),v8::String::New(ScryptErrorDescr(scryptErrorCode).c_str()));
+			return errorObject;
+		}
+
+		return v8::Local<v8::Value>::New(v8::Null());
 	}
-} //end internal namespace
+} //end Internal namespace
