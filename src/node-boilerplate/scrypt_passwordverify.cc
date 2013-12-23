@@ -26,6 +26,7 @@ Barry Steyn barry.steyn@gmail.com
 */
 
 #include <node.h>
+#include <node_buffer.h>
 #include <v8.h>
 #include <string>
 #include <algorithm>
@@ -49,10 +50,11 @@ struct PasswordHash {
 
     //Custom data
     int result;
+	bool base64;
 	std::string hash;
     std::string password;
 
-	PasswordHash() { callback.Clear(); }
+	PasswordHash() : base64(true) { callback.Clear(); }
 	~PasswordHash() { callback.Dispose(); }
 };
 
@@ -77,18 +79,31 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 
         switch(i) {
             case 0: //The hash
-                if (!currentVal->IsString()) {
-                    errMessage = "hash must be a string";
+                if (!currentVal->IsString() && !currentVal->IsObject()) {
+                    errMessage = "hash must be a string or a buffer";
                     return 1;
                 }
-                
-                if (currentVal->ToString()->Length() == 0) {
-                    errMessage = "hash cannot be empty";
-                    return 1;
-                }
+				
+				if (currentVal->IsString()) {
+					
+					if (currentVal->ToString()->Length() == 0) {
+						errMessage = "hash cannot be empty";
+						return 1;
+					}
                
-				passwordHash.hash = std::string(*String::Utf8Value(currentVal), currentVal->ToString()->Length());
-                break;
+					passwordHash.hash = std::string(*String::Utf8Value(currentVal), currentVal->ToString()->Length());
+				}
+
+				if (currentVal->IsObject()) {
+					if (!node::Buffer::HasInstance(currentVal)) {
+						errMessage = "hash must be a Buffer object";
+						return 1;
+					}
+					passwordHash.hash = std::string(node::Buffer::Data(currentVal->ToObject()), node::Buffer::Length(currentVal->ToObject()));
+					passwordHash.base64 = false;
+				}
+
+			break;
             
             case 1: //The password
                 if (!currentVal->IsString()) {
@@ -103,7 +118,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
                 
 				passwordHash.password = *String::Utf8Value(currentVal); 
                 break;
-        }
+		}
     }
 
     return 0;
@@ -115,11 +130,17 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 void
 VerifyHashWork(PasswordHash* passwordHash) {
 	uint8_t *hash = NULL;
-	base64_decode(passwordHash->hash.c_str(), &hash);
-    
-	passwordHash->result = VerifyHash((const uint8_t*)hash, 96, (const uint8_t*)passwordHash->password.c_str());
+	if (passwordHash->base64) {
+		base64_decode(passwordHash->hash.c_str(), &hash);
+	} else {
+		hash = (uint8_t*)passwordHash->hash.c_str();
+	}
 
-	if (hash) delete hash;
+	passwordHash->result = VerifyHash((const uint8_t*)hash, 96, (const uint8_t*)passwordHash->password.c_str());
+		
+	if (passwordHash->base64 && hash) {
+		delete hash;
+	}
 }
 
 //
@@ -152,32 +173,19 @@ void
 VerifyHashAsyncAfterWork(uv_work_t* req) {
     HandleScope scope;
     PasswordHash* passwordHash = static_cast<PasswordHash*>(req->data);
-	Local<Value> err;
-	if (passwordHash->result) err = Internal::MakeErrorObject(SCRYPT,passwordHash->result);
+	const unsigned argc = 2;
 
-	if (passwordHash->result && passwordHash->result != 11) {
+	Local<Value> argv[argc] = {
+		Internal::MakeErrorObject(SCRYPT,passwordHash->result),
+		Local<Value>::New(Boolean::New(passwordHash->result == 0))
+	};
 
-        const unsigned argc = 1;
-        Local<Value> argv[argc] = { err };
+	TryCatch try_catch;
+	passwordHash->callback->Call(Context::GetCurrent()->Global(), argc, argv);
 
-        TryCatch try_catch;
-        passwordHash->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    } else {
-        const unsigned argc = 2;
-        Local<Value> argv[argc] = {
-            Local<Value>::New(err),
-            Local<Value>::New(Boolean::New(passwordHash->result == 0))
-        };
-
-        TryCatch try_catch;
-        passwordHash->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    }
+	if (try_catch.HasCaught()) {
+		node::FatalException(try_catch);
+	}
 
     //Clean up
     delete passwordHash;
