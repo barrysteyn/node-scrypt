@@ -190,40 +190,26 @@ PasswordHashSyncAfterWork(Local<Value> &passwordHash, const ScryptInfo* scryptIn
 void 
 PasswordHashAsyncAfterWork(uv_work_t *req) {
     HandleScope scope;
+	uint8_t argc = 1;
+	Local<Value> passwordHash;
     ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
 
-    if (scryptInfo->result) { //There has been an error
-        Local<Value> err = Internal::MakeErrorObject(SCRYPT,scryptInfo->result);
-
-        //Prepare the parameters for the callback function
-        const unsigned argc = 1;
-        Local<Value> argv[argc] = { err };
-
-        // Wrap the callback function call in a TryCatch so that we can call
-        // node's FatalException afterwards. This makes it possible to catch
-        // the exception from JavaScript land using the
-        // process.on('uncaughtException') event.
-        TryCatch try_catch;
-        scryptInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    } else {
-        const unsigned argc = 2;
-		Local<Value> passwordHash;
+	if (!scryptInfo->result) {
 		CreatePasswordHash(passwordHash, scryptInfo);
-	
-        Local<Value> argv[argc] = {
-            Local<Value>::New(Null()),
-			passwordHash
-        };
+		argc++;
+	}
 
-        TryCatch try_catch;
-        scryptInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    }
+	Local<Value> argv[2] = {
+		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
+		passwordHash
+	};
+
+	TryCatch try_catch;
+	scryptInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+
+	if (try_catch.HasCaught()) {
+		node::FatalException(try_catch);
+	}
 
 	//Cleanup
     delete scryptInfo; 
@@ -247,8 +233,9 @@ PasswordHashWork(ScryptInfo* scryptInfo) {
 		uint8_t* hashOutput = scryptInfo->output;
 		scryptInfo->outputLength = base64_encode(hashOutput, 96, (char**)&scryptInfo->output);
 		delete hashOutput;
-	} else
+	} else {
 		scryptInfo->outputLength = 96;
+	}
 }
 
 //
