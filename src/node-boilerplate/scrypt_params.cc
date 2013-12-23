@@ -191,39 +191,24 @@ void
 ParamsAsyncAfterWork(uv_work_t* req) {
     HandleScope scope;
     TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
-
-    if (translationInfo->result) { //There has been an error
-        Local<Value> err = Internal::MakeErrorObject(SCRYPT,translationInfo->result);
-
-        //Prepare the parameters for the callback function
-        const unsigned argc = 1;
-        Local<Value> argv[argc] = { err };
-
-        // Wrap the callback function call in a TryCatch so that we can call
-        // node's FatalException afterwards. This makes it possible to catch
-        // the exception from JavaScript land using the
-        // process.on('uncaughtException') event.
-        TryCatch try_catch;
-        translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    } else {
-        const unsigned argc = 2;
-		Local<Object> obj;
+	uint8_t argc = 1;
+	Local<Object> obj;
+	
+	if (!translationInfo->result) {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
-        
-		Local<Value> argv[argc] = {
-            Local<Value>::New(Null()),
-            Local<Value>::New(obj)
-        };
+		argc++;
+	}
+	
+	Local<Value> argv[2] = {
+		Internal::MakeErrorObject(SCRYPT,translationInfo->result),
+		Local<Value>::New(obj)
+	};
 
-        TryCatch try_catch;
-        translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
-        if (try_catch.HasCaught()) {
-            node::FatalException(try_catch);
-        }
-    }
+	TryCatch try_catch;
+	translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+	if (try_catch.HasCaught()) {
+		node::FatalException(try_catch);
+	}
 
     //Clean up
     delete translationInfo;
