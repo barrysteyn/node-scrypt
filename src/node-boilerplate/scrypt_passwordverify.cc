@@ -34,8 +34,8 @@ Barry Steyn barry.steyn@gmail.com
 
 //Scrypt is a C library
 extern "C" {
-    #include "passwordhash.h"
-    #include "base64.h"
+	#include "passwordhash.h"
+	#include "base64.h"
 }
 
 using namespace v8;
@@ -87,7 +87,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 				if (currentVal->IsString()) {
 					
 					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "hash cannot be empty";
+						errMessage = "hash string cannot be empty";
 						return 1;
 					}
                
@@ -99,6 +99,12 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 						errMessage = "hash must be a Buffer object";
 						return 1;
 					}
+
+					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
+						errMessage = "hash buffer cannot be empty";
+						return 1;
+					}
+
 					passwordHash.hash = std::string(node::Buffer::Data(currentVal->ToObject()), node::Buffer::Length(currentVal->ToObject()));
 					passwordHash.base64 = false;
 				}

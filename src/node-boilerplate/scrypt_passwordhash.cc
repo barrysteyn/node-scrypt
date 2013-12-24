@@ -97,7 +97,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
                 }
                 
                 if (currentVal->ToString()->Length() == 0) {
-                    errMessage = "password cannot be empty";
+                    errMessage = "password string cannot be empty";
                     return 1;
                 }
                
@@ -254,17 +254,17 @@ PasswordHashAsyncWork(uv_work_t* req) {
 //
 Handle<Value> 
 PasswordHash(const Arguments& args) {
-    HandleScope scope;
-    std::string validateMessage;
+	HandleScope scope;
+	std::string validateMessage;
 	ScryptInfo* scryptInfo = new ScryptInfo(); 
 	Local<Value> hash;
 
 	//Assign and validate arguments
-    if (AssignArguments(args, validateMessage, *scryptInfo)) {
-        ThrowException(
+	if (AssignArguments(args, validateMessage, *scryptInfo)) {
+		ThrowException(
 			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
-        );
-    } else {
+		);
+	} else {
 		if (scryptInfo->callback.IsEmpty()) {
 			//Synchronous 
 			PasswordHashWork(scryptInfo);
