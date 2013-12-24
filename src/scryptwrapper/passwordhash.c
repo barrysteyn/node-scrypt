@@ -55,7 +55,7 @@ HashPassword(const uint8_t* passwd, uint8_t** header, uint32_t logN, uint32_t r,
 
     /* Generate the derived keys. */
     N = (1 << logN);
-    if (KeyDerivationFunction(passwd, (size_t)strlen((char *)passwd), salt, 32, N, r, p, dk, 64))
+    if (ScryptKeyDerivationFunction(passwd, (size_t)strlen((char *)passwd), salt, 32, N, r, p, dk, 64))
         return (3);
 
     /* Construct the file header. */
@@ -109,7 +109,7 @@ VerifyHash(const uint8_t* header, size_t headerLength, const uint8_t* passwd) {
             return (7);
 
     /* Compute Derived Key */
-    if (KeyDerivationFunction(passwd, (size_t)strlen((char *)passwd), salt, 32, N, r, p, dk, 64))
+    if (ScryptKeyDerivationFunction(passwd, (size_t)strlen((char *)passwd), salt, 32, N, r, p, dk, 64))
         return (3);
 
     /* Check header signature (i.e., verify password). */
