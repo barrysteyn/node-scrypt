@@ -28,13 +28,13 @@
 #include <sys/types.h>
 #include "crypto_scrypt.h"
 
-/*
- * This is the actual key derivation function. 
- * It is binary safe and is exposed to this module for those that need
- * access to the underlying key derivation function of Scrypt
- */
+//
+// This is the actual key derivation function. 
+// It is binary safe and is exposed to this module for those that need
+// access to the underlying key derivation function of Scrypt
+//
 int
-KeyDerivationFunction(const uint8_t* key, size_t keylen, const uint8_t *salt, size_t saltlen, uint64_t N, uint32_t r, uint32_t p,uint8_t * buf, size_t buflen) {
+ScryptKeyDerivationFunction(const uint8_t* key, size_t keylen, const uint8_t *salt, size_t saltlen, uint64_t N, uint32_t r, uint32_t p,uint8_t *buf, size_t buflen) {
     if (crypto_scrypt(key, keylen, salt, saltlen, N, r, p, buf, buflen))
         return (3);
     
