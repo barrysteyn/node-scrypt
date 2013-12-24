@@ -31,6 +31,7 @@ Barry Steyn barry.steyn@gmail.com
 
 using namespace v8;
 #include "src/node-boilerplate/scrypt_params.h"
+#include "src/node-boilerplate/scrypt_kdf.h"
 #include "src/node-boilerplate/scrypt_passwordhash.h"
 #include "src/node-boilerplate/scrypt_passwordverify.h"
 #include "src/node-boilerplate/scrypt_error.h"
@@ -42,6 +43,10 @@ void RegisterModule(Handle<Object> target) {
     //Translation function
     target->Set(String::NewSymbol("params"),
         FunctionTemplate::New(Params)->GetFunction());
+
+	//Key derivation function
+    target->Set(String::NewSymbol("KDF"),
+        FunctionTemplate::New(KDF)->GetFunction());
 
 	//Password Hash function
     target->Set(String::NewSymbol("passwordHash"),
