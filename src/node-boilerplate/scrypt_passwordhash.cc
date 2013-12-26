@@ -25,17 +25,14 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
+#include <v8.h>
 #include <node.h>
 #include <node_buffer.h>
-#include <v8.h>
 #include <string>
-#include <cstring>
-#include <algorithm>
 
 //C Linkings
 extern "C" {
     #include "passwordhash.h"
-    #include "base64.h"
 }
 
 using namespace v8;
@@ -50,20 +47,28 @@ namespace
 struct ScryptInfo {
 	//Async callback function
 	Persistent<Function> callback;
+	Handle<Value> password, passwordHash;
 
 	//Custom data for scrypt
-	bool base64;
 	int result;
-	std::string password;
-	uint8_t* output;
-	size_t outputLength;
+	
+	char *password_ptr, *passwordHash_ptr;
+	size_t passwordSize, passwordHashSize;
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : base64(true), output(NULL) { callback.Clear(); }
+	ScryptInfo() : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) { 
+		result = 3;
+		callback.Clear(); 
+		password.Clear();
+		passwordHash.Clear();
+	}
 	~ScryptInfo() {
-		if (output) delete output;
-		callback.Dispose(); //V8 persistent object clean up
+		if (!callback.IsEmpty()) {
+			Persistent<Value>(password).Dispose();
+			Persistent<Value>(passwordHash).Dispose();
+		}
+		callback.Dispose();
 	}
 };
 
@@ -73,35 +78,58 @@ struct ScryptInfo {
 int 
 AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
     if (args.Length() < 2) {
-        errMessage = "Wrong number of arguments: At least two arguments are needed - password and max_time";
+        errMessage = "Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object";
         return 1;
     }
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time";
+		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - password and scrypt parameters JSON object";
 		return 1;
 	}
 
     for (int i=0; i < args.Length(); i++) {
-		Local<Value> currentVal = args[i];
+		Handle<Value> currentVal = args[i];
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			scryptInfo.password = Persistent<Value>::New(scryptInfo.password);
 			return 0;
 		}
 
         switch(i) {
             case 0: //Password
-                if (!currentVal->IsString()) {
-                    errMessage = "password must be a string";
-                    return 1;
+                if (!currentVal->IsString() && !currentVal->IsObject()) {
+					errMessage = "password must be a buffer or a string";
+					return 1;
+				}
+				
+				if (currentVal->IsString() || currentVal->IsStringObject()) {
+					if (currentVal->ToString()->Length() == 0) {
+						errMessage = "password must be a string";
+						return 1;
+					}
+
+					currentVal = node::Buffer::New(currentVal->ToString());
                 }
-                
-                if (currentVal->ToString()->Length() == 0) {
-                    errMessage = "password string cannot be empty";
-                    return 1;
-                }
-               
-				scryptInfo.password = *String::Utf8Value(currentVal->ToString());
+
+				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
+					if (!node::Buffer::HasInstance(currentVal)) {
+						errMessage = "password must a buffer or string object";
+						return 1;
+					}
+
+					if (node::Buffer::Length(currentVal) == 0) {
+						errMessage = "password buffer cannot be empty";
+						return 1;
+					}
+				}
+		
+				scryptInfo.password = currentVal;
+				scryptInfo.password_ptr = node::Buffer::Data(currentVal);
+				scryptInfo.passwordSize = node::Buffer::Length(currentVal);
+		
+				Internal::CreateBuffer(scryptInfo.passwordHash, scryptInfo.passwordHashSize);
+				scryptInfo.passwordHash_ptr = node::Buffer::Data(scryptInfo.passwordHash);
+
                 break;
 
             case 1: //Scrypt parameters
@@ -115,17 +143,8 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				}
                	
 				scryptInfo.params = currentVal->ToObject();
-                break;   
 
-			case 2: //Encoding
-				if (currentVal->IsString()) {
-					std::string encoding(*String::Utf8Value(currentVal));
-					std::transform(encoding.begin(), encoding.end(), encoding.begin(), ::tolower);
-				
-					if (encoding == "buffer") {
-						scryptInfo.base64 = false; 
-					}
-				}
+                break;   
         }
     }
 
@@ -133,54 +152,16 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 }
 
 //
-// Create a NodeJS Buffer 
-//
-void 
-CreateBuffer(Local<Value> &buffer, const char* data, const size_t &dataLength) {
-	//Return data in a NodeJS Buffer. This will allow native ability
-	//to convert between encodings and will allow the user to take
-	//advantage of Node's buffer functions (excellent article: http://www.samcday.com.au/blog/2011/03/03/creating-a-proper-buffer-in-a-node-c-addon/)
-
-	node::Buffer *slowBuffer = node::Buffer::New(dataLength);
-	memcpy(node::Buffer::Data(slowBuffer), data, dataLength);
-
-	//Create the node JS "fast" buffer
-	Local<Object> globalObj = Context::GetCurrent()->Global();	
-	Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-
-	//Constructor arguments for "fast" buffer:
-    // First argument is the JS object handle for the "slow buffer"
-    // Second argument is the length of the slow buffer
-    // Third argument is the offset in the "slow buffer" that "fast buffer" should start at
-	Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
-
-	//Create the "fast buffer"
-	buffer = bufferConstructor->NewInstance(3, constructorArgs);
-}
-
-//
-// Creates the password hash passed to JS land
-//
-void
-CreatePasswordHash(Local<Value>& passwordHash, const ScryptInfo* scryptInfo) {
-	if (scryptInfo->base64) {
-		passwordHash = String::New((const char*)scryptInfo->output, scryptInfo->outputLength);
-	} else {
-		CreateBuffer(passwordHash, (const char*)scryptInfo->output, scryptInfo->outputLength);
-	}
-}
-
-//
 // Synchronous: After work function
 //
 void
-PasswordHashSyncAfterWork(Local<Value> &passwordHash, const ScryptInfo* scryptInfo) {
+PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const ScryptInfo* scryptInfo) {
     if (scryptInfo->result) { //There has been an error
         ThrowException(
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
         );
 	} else {
-		CreatePasswordHash(passwordHash, scryptInfo);
+		passwordHash = scryptInfo->passwordHash;
 	}
 }
 
@@ -190,18 +171,13 @@ PasswordHashSyncAfterWork(Local<Value> &passwordHash, const ScryptInfo* scryptIn
 void 
 PasswordHashAsyncAfterWork(uv_work_t *req) {
     HandleScope scope;
-	uint8_t argc = 1;
-	Local<Value> passwordHash;
     ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
+	uint8_t argc = (scryptInfo->result) ? 1 : 2;
+	Handle<Value> passwordHash;
 
-	if (!scryptInfo->result) {
-		CreatePasswordHash(passwordHash, scryptInfo);
-		argc++;
-	}
-
-	Local<Value> argv[2] = {
+	Handle<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
-		passwordHash
+		scryptInfo->passwordHash
 	};
 
 	TryCatch try_catch;
@@ -224,18 +200,10 @@ void
 PasswordHashWork(ScryptInfo* scryptInfo) {
     //perform scrypt password hash
     scryptInfo->result = HashPassword(
-        (const uint8_t*)scryptInfo->password.c_str(),
-        &scryptInfo->output,
+        (const uint8_t*)scryptInfo->password_ptr, scryptInfo->passwordSize,
+        (uint8_t*)scryptInfo->passwordHash_ptr,
 		scryptInfo->params.N, scryptInfo->params.r, scryptInfo->params.p
     );
-
-	if (scryptInfo->base64) {
-		uint8_t* hashOutput = scryptInfo->output;
-		scryptInfo->outputLength = base64_encode(hashOutput, 96, (char**)&scryptInfo->output);
-		delete hashOutput;
-	} else {
-		scryptInfo->outputLength = 96;
-	}
 }
 
 //
@@ -257,7 +225,7 @@ PasswordHash(const Arguments& args) {
 	HandleScope scope;
 	std::string validateMessage;
 	ScryptInfo* scryptInfo = new ScryptInfo(); 
-	Local<Value> hash;
+	Handle<Value> passwordHash;
 
 	//Assign and validate arguments
 	if (AssignArguments(args, validateMessage, *scryptInfo)) {
@@ -268,8 +236,10 @@ PasswordHash(const Arguments& args) {
 		if (scryptInfo->callback.IsEmpty()) {
 			//Synchronous 
 			PasswordHashWork(scryptInfo);
-			PasswordHashSyncAfterWork(hash, scryptInfo);
+			PasswordHashSyncAfterWork(passwordHash, scryptInfo);
 		} else {
+			scryptInfo->passwordHash = Persistent<Value>::New(scryptInfo->passwordHash);
+
 			//Work request 
 			uv_work_t *req = new uv_work_t();
 			req->data = scryptInfo;
@@ -285,5 +255,5 @@ PasswordHash(const Arguments& args) {
 		delete scryptInfo;
 	}
 
-	return scope.Close(hash);
+	return scope.Close(passwordHash);
 }
