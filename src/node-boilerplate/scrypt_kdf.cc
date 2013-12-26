@@ -66,7 +66,7 @@ struct ScryptInfo {
 	~ScryptInfo() {
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(key).Dispose();
-			Persistent<Value>(salt).Dispose();
+			if (!salt.IsEmpty()) Persistent<Value>(salt).Dispose();
 			Persistent<Value>(hashBuffer).Dispose();
 		}
 		callback.Dispose();
@@ -119,7 +119,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "key must be a Buffer object";
+						errMessage = "key must be a buffer or a string object";
 						return 1;
 					}
 
