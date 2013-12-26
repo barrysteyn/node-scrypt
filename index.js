@@ -3,107 +3,110 @@ var scrypt = require('./build/Release/scrypt');
 //
 //Parses input arguments for scrypt parameter object or translation function inputs
 //
-function parseScryptParameters(args, scryptInfo, start) {
-	var startIndex = (typeof start == "number" && start >= 0) ? startIndex = start : startIndex = 0,
-		i = 0;
-
-	function translationNeeded() {
-		return (typeof scryptInfo.maxtime != "undefined" || typeof scryptInfo.maxmem != "undefined" || typeof scryptInfo.maxmemfrac != "undefined");
-	}
+function parseScryptParameters(args, startIndex) {
+	var	i = 0,
+		paramsObject = {};
 
 	for (i=startIndex; i < startIndex+3 && typeof args[i] != "undefined"; i++) {
-		if (typeof args[i] != "object" && typeof args[i] != "number") {
-			if (!translationNeeded() && typeof scryptInfo.scryptParams == "undefined") {
-				throw scrypt.errorObject(1,"Argument error: Expecting either maxtime, maxmem and maxmem_frac or scrypt params");
-			}
-
-			return i;
+		if (i - startIndex > 0 && (typeof args[i] === "function" || typeof args[i] === "boolean")) {
+			break;
 		}
 
-		switch(typeof args[i]) {
-			case "object":
-				if (!translationNeeded()) {
-					scryptInfo.scryptParams = args[i];
-					return i;
-				} else {
-					throw scrypt.errorObject(1, "Argument error: Cannot mix params with translation params");
-				}
-			break;
-
+		switch(typeof args[i]) {	
 			case "number": 
-				if (i-startIndex == 0) 
-					scryptInfo.maxtime = args[i];
-
-				if (i-startIndex == 1)
-					scryptInfo.maxmem = args[i];
-
-				if (i-startIndex == 2) {
-					scryptInfo.maxmemfrac = args[i];
-					return i;
+				if (i - startIndex == 0) {
+					paramsObject.maxtime = args[i];
 				}
-			break;
+				
+				if (i - startIndex == 1) {
+					paramsObject.maxmem = args[i];
+				}
+				
+				if (i - startIndex == 2) {
+					paramsObject.maxmemfrac = args[i];
+				}
+
+				break;
+
+			default:
+				if (i-startIndex == 0) {
+					throw scrypt.errorObject(1, "Argument error: expecting maxtime as a number");
+				}
+
+				if (i-startIndex == 1) {
+					throw scrypt.errorObject(1, "Argument error: expecting maxmem as a number");
+				}
+				
+				if (i-startIndex == 2) {
+					throw scrypt.errorObject(1, "Argument error: expecting maxmemfrac as a number");
+				}
+
+				break;
 		}
 	}
-	
-	return i;
-}
 
-//
-//Parses arguments specific to the hash function
-//
-function parsePwdHashArguments(args, scryptArgs) {
-	var startIndex = parseScryptParameters(args, scryptArgs, 1);
-	for (var i = startIndex; i < args.length; i++) {	
-
-		if (typeof args[i] == "function") {
-			scryptArgs.callback = args[i];
-			break;
-		}
-
-		switch (i - startIndex) {
-			case 0:
-				if (typeof args[i] != "string") //must be string if encoding is present
-					throw scrypt.errorObject(1,"Argument error: encoding must be a string");
-
-				scryptArgs.encoding = args[i].toLowerCase();
-				break;
-			case 1:
-				if (typeof args[i] != "number") //must be a number of length is present
-					throw scrypt.errorObject(1,"Argument error: length must be a number");
-
-				scryptArgs.length = args[i];
-				break;
-		}			
-	}
+	return paramsObject;
 }
 
 //
 // Scrypt Password Hash
 //
 scrypt.passwordHash = function(passwordHash, params) {
+	var asyncHandler = function(handler, buffer) {
+		if (typeof buffer === "undefined" || typeof buffer !== "boolean") {
+			buffer = false;
+		}
+
+		return function(err, passwordHash) {
+			if (buffer || typeof passwordHash !== "object") {
+				handler(err, passwordHash);
+			} else {
+				handler(err, passwordHash.toString("base64"));
+			}
+		}
+	}
+
 	return function() {	
-		var password = arguments[0], //Always assume that first argument will be password
-			passwordHashArgs = {};
+		var args = Array.prototype.slice.apply(arguments),
+			paramsObject;
 
-		parsePwdHashArguments(arguments, passwordHashArgs);
+		//Determine if translation function is needed
+		if (typeof args[1] !== "object") {
+			paramsObject = parseScryptParameters(arguments, 1); 
+		}
 
-		if (passwordHashArgs.callback) {
+		if (typeof args[args.length-1] === "function") {
+			var buffer = (typeof args[args.length-2] === "boolean") ? args[args.length-2] : false;
+			if (typeof args[args.length-2] === "boolean") {
+				args.splice(args.length-2,1);
+			}
 
-			//Asynchronous
-			if (!passwordHashArgs.scryptParams) {
-				params(passwordHashArgs.maxtime, passwordHashArgs.maxmem, passwordHashArgs.maxmemfrac, function(err, scryptParams) {
-					passwordHash(password, scryptParams, passwordHashArgs.encoding, passwordHashArgs.length, passwordHashArgs.callback);
+			args[args.length-1] = asyncHandler(args[args.length-1], buffer);
+
+			if (typeof paramsObject !== "undefined") {
+				params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac, function(err, scryptParams) {
+					args.splice(1,Object.keys(paramsObject).length,scryptParams);
+					passwordHash.apply(this, args);
 				});
 			} else {
-				passwordHash(password, passwordHashArgs.scryptParams, passwordHashArgs.encoding, passwordHashArgs.length, passwordHashArgs.callback);
+				passwordHash.apply(this, args);
 			}
 		} else {
+			var buffer = (typeof args[args.length-1] === "boolean") ? args[args.length-1] : false;
+			if (typeof args[args.length-1] === "boolean") {
+				args.splice(args.length-1,1);
+			}
 
-			//Synchronous
-			if (!passwordHashArgs.scryptParams) // translation function is needed
-				passwordHashArgs.scryptParams = params(passwordHashArgs.maxtime, passwordHashArgs.maxmem, passwordHashArgs.maxmemfrac);
+			if (typeof paramsObject !== "undefined") {
+				var scryptParams = params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac);
+				args.splice(1, Object.keys(paramsObject).length, scryptParams);
+			}
 
-			return passwordHash(password, passwordHashArgs.scryptParams, passwordHashArgs.encoding, passwordHashArgs.length);
+			if (buffer) {
+				return passwordHash.apply(this, args);
+			} else {
+				return passwordHash.apply(this, args).toString("base64");
+			}
 		}
 	}
 }(scrypt.passwordHash, scrypt.params);
