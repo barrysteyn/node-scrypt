@@ -142,7 +142,7 @@ VerifyHashWork(PasswordHash* passwordHash) {
 		hash = (uint8_t*)passwordHash->hash.c_str();
 	}
 
-	passwordHash->result = VerifyHash((const uint8_t*)hash, 96, (const uint8_t*)passwordHash->password.c_str());
+	passwordHash->result = VerifyHash((const uint8_t*)hash, (const uint8_t*)passwordHash->password.c_str(), passwordHash->password.size());
 		
 	if (passwordHash->base64 && hash) {
 		delete hash;
