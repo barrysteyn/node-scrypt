@@ -92,6 +92,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			scryptInfo.password = Persistent<Value>::New(scryptInfo.password);
+			scryptInfo.passwordHash = Persistent<Value>::New(scryptInfo.passwordHash);
 			return 0;
 		}
 
@@ -238,8 +239,6 @@ PasswordHash(const Arguments& args) {
 			PasswordHashWork(scryptInfo);
 			PasswordHashSyncAfterWork(passwordHash, scryptInfo);
 		} else {
-			scryptInfo->passwordHash = Persistent<Value>::New(scryptInfo->passwordHash);
-
 			//Work request 
 			uv_work_t *req = new uv_work_t();
 			req->data = scryptInfo;
