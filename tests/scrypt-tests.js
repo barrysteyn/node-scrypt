@@ -5,16 +5,18 @@ var maxtime_passwordhash = 0.05;
 var maxtime_crypto = 0.05; 
 var message = "This is a message";
 
-/* Translation Function (Parameter) Tests */
+//
+// Translation Function (Parameter) Tests */
+//
 
-//General
+//General (applies to both async and sync)
 test("Pick Parameters (Translation function): Pick parameters with incorrect argument - no arguments are present", function(t) {
 	console.log("Pick parameters (translation function)\nTesting of arguments\n");
 	try {
 		scrypt.params();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least argument is needed - in this case, no arguments were given");
-		t.equal(err.message,"Wrong number of arguments: At least one argument is needed - the maxtime", "The correct message is displayed, namely: "+err.message);
+		t.deepEqual(err, scrypt.errorObject(2, "Wrong number of arguments: At least one argument is needed - the maxtime"), 'The correct message object is displayed, namely:'+ JSON.stringify(err));
 		t.end();
 	}
 });
@@ -24,7 +26,7 @@ test("Pick Parameters (Translation function): Pick parameters with incorrect arg
 		scrypt.params("abc");
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxtime was passed as a string, but a number is expected");
-		t.equal(err.message,"maxtime argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.deepEqual(err,scrypt.errorObject(2,"maxtime argument must be a number"), "The correct message is displayed, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -34,7 +36,7 @@ test("Pick Parameters (Translation function): Pick parameters with incorrect arg
 		scrypt.params(0);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because maxtime was passed as a number <= 0");
-		t.equal(err.message,"maxtime must be greater than 0", "The correct message is displayed, namely: "+err.message);
+		t.deepEqual(err, scrypt.errorObject(2, "maxtime must be greater than 0"), "The correct message is displayed, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -43,8 +45,8 @@ test("Pick Parameters (Translation function): Pick parameters with incorrect arg
 	try {
 		scrypt.params(1, "abc");
 	} catch (err) {
-		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmemfrac was passed as a string, but a number is expected");
-		t.equal(err.message,"max_memfrac argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmem was passed as a string, but a number is expected");
+		t.deepEqual(err,scrypt.errorObject(2, "maxmem argument must be a number"), "The correct message is displayed, namely: "+ JSON.stringify(err));
 		t.end();
 	}
 });
@@ -53,8 +55,8 @@ test("Pick Parameters (Translation function): Pick parameters with incorrect arg
 	try {
 		scrypt.params(1, 0.5, "abc");
 	} catch (err) {
-		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxtime was passed as a string, but a number is expected");
-		t.equal(err.message,"maxmem argument must be a number", "The correct message is displayed, namely: "+err.message);
+		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmemfrac was passed as a string, but a number is expected");
+		t.deepEqual(err, scrypt.errorObject(2, "max_memfrac argument must be a number"), "The correct message is displayed, namely: " + JSON.stringify(err.message));
 		t.end();
 	}
 });
@@ -65,7 +67,7 @@ test("Asynchronous: Pick parameters with incorrect argument - no arguments befor
 		scrypt.params(function(){});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least argument is needed before the callback - in this case, no arguments were given");
-		t.equal(err.message,"Wrong number of arguments: At least one argument is needed before the callback - the maxtime", "The correct message is displayed, namely: "+err.message);
+		t.deepEqual(err,scrypt.errorObject(2,"Wrong number of arguments: At least one argument is needed before the callback - the maxtime"), "The correct message is displayed, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -129,7 +131,7 @@ test("Synchronous: Pick parameters returns an object given correct inputs of max
 });
 
 /* Password Hash Tests */
-
+/*
 //General (both async and sync)
 
 //Asynchronous
@@ -283,4 +285,4 @@ test("Synchronous: Password hashing: Salt means same passwords hash to different
     var hash2 = scrypt.passwordHashSync(password, maxtime_passwordhash);
     t.notEqual(hash1,hash2,"Same passwords are correctly hashed to different values due to salt");
     t.end();
-});
+});*/
