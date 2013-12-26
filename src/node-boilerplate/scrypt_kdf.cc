@@ -197,21 +197,31 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
     return 0;
 }
 
+//
+// Creates the JSON object returned to JS land
+//
+void
+CreateJSONResult(Handle<Value> &result, const ScryptInfo* scryptInfo) {
+	Local<Object> resultObject = Object::New();
+	resultObject->Set(String::NewSymbol("hash"), scryptInfo->hashBuffer);
+	resultObject->Set(String::NewSymbol("salt"), scryptInfo->salt);
+
+	result = resultObject;
+}
 
 //
 // Synchronous: After work function
 //
 void
-KDFSyncAfterWork(Handle<Value>& hashBuffer, const ScryptInfo* scryptInfo) {
+KDFSyncAfterWork(Handle<Value>& kdf, const ScryptInfo* scryptInfo) {
     if (scryptInfo->result) { //There has been an error
         ThrowException(
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
         );
 	} else {
-		hashBuffer = scryptInfo->hashBuffer;
+		CreateJSONResult(kdf, scryptInfo);
 	}
 }
-
 
 //
 // Asynchronous: After work function
@@ -220,12 +230,15 @@ void
 KDFAsyncAfterWork(uv_work_t *req) {
     HandleScope scope;
     ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
-	Local<Value> hash;
+	Local<Value> kdfResult;
 	uint8_t argc = (scryptInfo->result) ? 1 : 2;
+	if (!scryptInfo->result) {
+		CreateJSONResult(kdfResult, scryptInfo);
+	}
 	
 	Handle<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
-		scryptInfo->hashBuffer
+		kdfResult
 	};
 
 	TryCatch try_catch;
@@ -272,7 +285,7 @@ KDF(const Arguments& args) {
     HandleScope scope;
     std::string validateMessage;
 	ScryptInfo* scryptInfo = new ScryptInfo(); 
-	Local<Value> hashBuffer;
+	Local<Value> kdf;
 
 	//Assign and validate arguments
     if (AssignArguments(args, validateMessage, *scryptInfo)) {
@@ -286,7 +299,7 @@ KDF(const Arguments& args) {
 		if (scryptInfo->callback.IsEmpty()) {
 			//Synchronous 
 			KDFWork(scryptInfo);
-			KDFSyncAfterWork(hashBuffer, scryptInfo);
+			KDFSyncAfterWork(kdf, scryptInfo);
 		} else {
 			//Asynchronous
 			scryptInfo->hashBuffer = Persistent<Value>::New(scryptInfo->hashBuffer);
@@ -306,5 +319,5 @@ KDF(const Arguments& args) {
 		delete scryptInfo;
 	}
 
-	return scope.Close(hashBuffer);
+	return scope.Close(kdf);
 }
