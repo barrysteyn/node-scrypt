@@ -67,10 +67,10 @@ scrypt.passwordHash = function(passwordHash, params) {
 		var args = Array.prototype.slice.apply(arguments),
 			paramsObject;
 
-        //Determine if there are too little arguments
-        if (args.length < 2) {
-            throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object");
-        }
+//Determine if there are too little arguments
+		if (args.length < 2) {
+			throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object");
+		}
 
 		//Determine if translation function is needed
 		if (args.length > 1 && typeof args[1] !== "object" && typeof args[1] !== "function") {

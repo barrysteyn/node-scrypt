@@ -7,6 +7,7 @@ node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt utility.
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
 
 ##Table Of Contents
+
  * [Scrypt](#scrypt)
  * [Installation Instructions](#installation-instructions)
  * [Introducing Node-scrypt version 2.X](#introducing-node-scrypt-version-2)
@@ -46,12 +47,15 @@ To test, go to the folder where Scrypt was installed, and type:
 
 ##Introducing Node-Scrypt Version 2
 This module is a complete rewrite of the previous module. It's main highlights are:
+
+
  * Access to the underlying key derivation function
  * Extensive use of node's buffers
  * Easy configuration
  * Removal of scrypt encryption/decryption (this will soon be moved to another module)
 
 The module consists of four functions:
+
  1. [params](#params) - a translation function that produces scrypt parameters
  2. [hash](#hash) - produces a 256 bit hash using scrypt's key derivation function
  3. [verify](#verify) - verify's a hash produced by this module
@@ -61,6 +65,7 @@ It also consists of four extra functions that provide [backward compatbility](#b
 
 ####Encodings
 The following encodings are accepted:
+
  1. **ascii**
  2. **utf8**
  3. **base64**
@@ -75,11 +80,13 @@ The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. 
 The [params function](#params-1) translates human understandable parameters to Scrypt's internal parameters. 
 
 The human understandable parameters are as follows:
+
  1. **maxtime**: the maximum amount of time scrypt will spend when computing the derived key.
  2. **maxmemfrac**: the maximum fraction of the available RAM used when computing the derived key.
  3. **maxmem**: the maximum number of bytes of RAM used when computing the derived encryption key. 
 
 Scrypt's internal parameters are as follows:
+
  1. **N** - general work factor, iteration count.
  2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
  3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
@@ -95,12 +102,14 @@ Therefore at the very least, 1MiB of ram will be used.
 
 ###Hash
 The [hash function](#hash-1) does the following:
+
  * Adds random salt.
  * Creates a HMAC to protect against active attack.
  * Uses the Scrypt key derivation function to derive a hash for a key.
 
 ####Hash Format
 All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key for the HMAC being produced by the scrypt key derivation function. The result is a 768 bit (96 byte) output:
+
  1. **bytes 0-5**: The word *"scrypt"*
  2. **bytes 6-15**: Scrypt parameters N, r, and p
  3. **bytes 16-47**: 32 bits of random salt
@@ -122,6 +131,7 @@ In short: If you are going to use this module to store keys, then use the hash f
 
 ###Backward Compatibility For User's Of Version 1.x
 Four extra functions are provided for means of backward compatibility:
+
  1. [passwordHash](#passwordhash)
  2. [passwordHashSync](#passwordhashsync)
  3. [verifyHash](#verifyhash)
@@ -215,7 +225,7 @@ The return value will be a `boolean` representing if the hash can be derived fro
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
 
 The return value will be a JSON object with the following properties:
- 
+
  1. **hash** - the resulting scrypt KDF hash
  2. **salt** - the salt used to make the hash
 
@@ -477,6 +487,7 @@ It is probably the most advanced key derivation function available. This is is q
 
 #### What Are The Pros And Cons For Using Scrypt
 #####Pros
+
 * The Scrypt algorithm has been published by [IETF](http://en.wikipedia.org/wiki/IETF) as an [Internet Draft](http://en.wikipedia.org/wiki/Internet_Draft) and is thus on track to becoming a standard. See [here](https://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00) for the draft.
 * It is being actively used in production at [Tarsnap](http://www.tarsnap.com/).
 * It is much more secure than bcrypt.
