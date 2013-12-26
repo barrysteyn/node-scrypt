@@ -29,9 +29,9 @@
 #define _SCRYPTHASH_H_
 
 int
-HashPassword(const uint8_t*, uint8_t**, uint32_t, uint32_t, uint32_t);
+HashPassword(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t);
 
 int
-VerifyHash(const uint8_t*, size_t, const uint8_t*);
+VerifyHash(const uint8_t*, const uint8_t*, size_t);
 
 #endif /* !_SCRYPTHASH_H_ */
