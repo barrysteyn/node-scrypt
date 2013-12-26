@@ -25,17 +25,14 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
+#include <v8.h>
 #include <node.h>
 #include <node_buffer.h>
-#include <v8.h>
 #include <string>
-#include <algorithm>
-#include <stdlib.h>
 
 //Scrypt is a C library
 extern "C" {
 	#include "passwordhash.h"
-	#include "base64.h"
 }
 
 using namespace v8;
@@ -47,15 +44,21 @@ namespace {
 struct PasswordHash {
     //Async callback function
     Persistent<Function> callback;
+	Handle<Value> hash, password;
 
     //Custom data
     int result;
-	bool base64;
-	std::string hash;
-    std::string password;
+	char *hash_ptr, *password_ptr;
+	size_t passwordSize;
 
-	PasswordHash() : base64(true) { callback.Clear(); }
-	~PasswordHash() { callback.Dispose(); }
+	PasswordHash() : hash_ptr(NULL), password_ptr(NULL), passwordSize(0) { callback.Clear(); hash.Clear(); password.Clear(); }
+	~PasswordHash() { 
+		if (!callback.IsEmpty()) {
+			Persistent<Value>(hash).Dispose();
+			Persistent<Value>(password).Dispose();
+		}
+		callback.Dispose(); 
+	}
 };
 
 int
@@ -70,33 +73,35 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
         return 1;
     }
 
-    for (int i=0; i < args.Length(); i++) {
-		Local<Value> currentVal = args[i];
+	for (int i=0; i < args.Length(); i++) {
+		Handle<Value> currentVal = args[i];
         if (i > 1 && currentVal->IsFunction()) {
             passwordHash.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			passwordHash.hash = Persistent<Value>::New(passwordHash.hash);
+			passwordHash.password = Persistent<Value>::New(passwordHash.password);
             return 0;
         }
 
         switch(i) {
-            case 0: //The hash
+            case 0: //Hash
                 if (!currentVal->IsString() && !currentVal->IsObject()) {
                     errMessage = "hash must be a string or a buffer";
                     return 1;
                 }
 				
-				if (currentVal->IsString()) {
+				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "hash string cannot be empty";
 						return 1;
 					}
                
-					passwordHash.hash = std::string(*String::Utf8Value(currentVal), currentVal->ToString()->Length());
+					currentVal = node::Buffer::New(currentVal->ToString());
 				}
 
-				if (currentVal->IsObject()) {
+				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "hash must be a Buffer object";
+						errMessage = "hash must be a buffer or string object";
 						return 1;
 					}
 
@@ -104,28 +109,48 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 						errMessage = "hash buffer cannot be empty";
 						return 1;
 					}
-
-					passwordHash.hash = std::string(node::Buffer::Data(currentVal->ToObject()), node::Buffer::Length(currentVal->ToObject()));
-					passwordHash.base64 = false;
 				}
+				
+				passwordHash.hash = currentVal;
+				passwordHash.hash_ptr = node::Buffer::Data(currentVal);
 
 			break;
-            
-            case 1: //The password
-                if (!currentVal->IsString()) {
-                    errMessage = "password must be a string";
-                    return 1;
-                }
-                
-                if (currentVal->ToString()->Length() == 0) {
-                    errMessage = "password cannot be empty";
-                    return 1;
-                }
-                
-				passwordHash.password = *String::Utf8Value(currentVal); 
-                break;
+
+		case 1: //Password
+			if (!currentVal->IsString() && !currentVal->IsObject()) {
+				errMessage = "password must be a string or a buffer";
+				return 1;
+			}
+			
+			if (currentVal->IsString() || currentVal->IsStringObject()) {
+				
+				if (currentVal->ToString()->Length() == 0) {
+					errMessage = "password string cannot be empty";
+					return 1;
+				}
+		   
+				currentVal = node::Buffer::New(currentVal->ToString());
+			}
+
+			if (currentVal->IsObject() && !currentVal->IsStringObject()) {
+				if (!node::Buffer::HasInstance(currentVal)) {
+					errMessage = "password must be a buffer or string object";
+					return 1;
+				}
+
+				if (node::Buffer::Length(currentVal->ToObject()) == 0) {
+					errMessage = "password buffer cannot be empty";
+					return 1;
+				}
+			}
+			
+			passwordHash.password = currentVal;
+			passwordHash.password_ptr = node::Buffer::Data(currentVal);
+			passwordHash.passwordSize = node::Buffer::Length(currentVal);
+
+			break;
 		}
-    }
+	}
 
     return 0;
 }
@@ -135,18 +160,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 //
 void
 VerifyHashWork(PasswordHash* passwordHash) {
-	uint8_t *hash = NULL;
-	if (passwordHash->base64) {
-		base64_decode(passwordHash->hash.c_str(), &hash);
-	} else {
-		hash = (uint8_t*)passwordHash->hash.c_str();
-	}
-
-	passwordHash->result = VerifyHash((const uint8_t*)hash, (const uint8_t*)passwordHash->password.c_str(), passwordHash->password.size());
-		
-	if (passwordHash->base64 && hash) {
-		delete hash;
-	}
+	passwordHash->result = VerifyHash(
+		(const uint8_t*)passwordHash->hash_ptr,
+		(const uint8_t*)passwordHash->password_ptr, 
+		passwordHash->passwordSize
+	);
 }
 
 //
@@ -156,7 +174,6 @@ void
 VerifyHashAsyncWork(uv_work_t* req) {
     VerifyHashWork(static_cast<PasswordHash*>(req->data));
 }
-
 
 //
 // Synchronous: After work function
