@@ -1,28 +1,27 @@
 /*
-scrypt_params.cc 
+	scrypt_params.cc 
 
-Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-This source code is provided 'as-is', without any express or implied
-warranty. In no event will the author be held liable for any damages
-arising from the use of this software.
+	This source code is provided 'as-is', without any express or implied
+	warranty. In no event will the author be held liable for any damages
+	arising from the use of this software.
 
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-1. The origin of this source code must not be misrepresented; you must not
-claim that you wrote the original source code. If you use this source code
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+	1. The origin of this source code must not be misrepresented; you must not
+	claim that you wrote the original source code. If you use this source code
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
 
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original source code.
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original source code.
 
-3. This notice may not be removed or altered from any source distribution.
+	3. This notice may not be removed or altered from any source distribution.
 
-Barry Steyn barry.steyn@gmail.com
-
+	Barry Steyn barry.steyn@gmail.com
 */
 
 #include <node.h>
@@ -36,7 +35,7 @@ using namespace v8;
 
 //Scrypt is a C library and there needs c linkings
 extern "C" {
-    #include "pickparams.h"
+	#include "pickparams.h"
 }
 
 namespace {
@@ -71,75 +70,69 @@ struct TranslationInfo {
 //
 int 
 AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
-    if (args.Length() == 0) {
-        errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
-        return 1;
-    }
+	if (args.Length() == 0) {
+		errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
+		return 1;
+	}
 
 	if (args.Length() > 0 && args[0]->IsFunction()) {
 		errMessage = "Wrong number of arguments: At least one argument is needed before the callback - the maxtime";
 		return 1;
 	}
 
-    for (int i=0; i < args.Length(); i++) {
+	for (int i=0; i < args.Length(); i++) {
 		v8::Handle<v8::Value> currentVal = args[i];
 		if (i > 0 && currentVal->IsFunction()) { //An async signature
-            translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			return 0;
 		}
 
-        switch(i) {
-            case 0:
-                //Check maxtime is a number
-                if (!currentVal->IsNumber()) {
-                    errMessage = "maxtime argument must be a number";
-                    return 1;
-                }
+		switch(i) {
+			case 0: //maxtime
+				if (!currentVal->IsNumber()) {
+					errMessage = "maxtime argument must be a number";
+					return 1;
+				}
 
-                //Check that maxtime is not less than or equal to zero (which would not make much sense)
-                translationInfo.maxtime = currentVal->ToNumber()->Value();
-                if (translationInfo.maxtime <= 0) {
-                    errMessage = "maxtime must be greater than 0";
-                    return 1;
-                }
-                
-                break;   
+				translationInfo.maxtime = currentVal->ToNumber()->Value();
+				if (translationInfo.maxtime <= 0) {
+					errMessage = "maxtime must be greater than 0";
+					return 1;
+				}
 
-			case 1:
-                //Check maxmem
+				break;
+
+			case 1: //maxmem
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
 						errMessage = "maxmem argument must be a number";
 						return 1;
 					}
 
-					//Set mexmem if possible, else set it to default
 					if (currentVal->ToNumber()->Value() > 0) {
 						translationInfo.maxmem = Local<Number>(args[i]->ToNumber())->Value();
 					}
 				}
- 
+
 				break;
-            
-			case 2:
-                //Check max_memfac is a number
+
+			case 2: //maxmemfrac
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
 						errMessage = "max_memfrac argument must be a number";
 						return 1;
 					}
 
-					//Set mexmemfrac if possible, else set it to default
 					if (currentVal->ToNumber()->Value() > 0) {
 						translationInfo.maxmemfrac = Local<Number>(args[i]->ToNumber())->Value();
 					}
 				}
 
-                break; 
-        }
-    }
+				break; 
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 //
@@ -175,22 +168,21 @@ ParamsAsyncWork(uv_work_t* req) {
 void
 ParamsSyncAfterWork(Local<Object>& obj, const TranslationInfo *translationInfo) {
 	if (translationInfo->result) { //There has been an error
-        ThrowException(
+		ThrowException(
 			Internal::MakeErrorObject(SCRYPT,translationInfo->result)
-        );
-	} else { 
+		);
+	} else {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
 	}
 }
-
 
 //
 // Asynchronous: After work function
 //
 void
 ParamsAsyncAfterWork(uv_work_t* req) {
-    HandleScope scope;
-    TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
+	HandleScope scope;
+	TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 	uint8_t argc = 1;
 	Local<Object> obj;
 	
@@ -198,7 +190,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
 		argc++;
 	}
-	
+
 	Local<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,translationInfo->result),
 		Local<Value>::New(obj)
@@ -210,9 +202,9 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 		node::FatalException(try_catch);
 	}
 
-    //Clean up
-    delete translationInfo;
-    delete req;
+	//Clean up
+	delete translationInfo;
+	delete req;
 }
 
 } //unnamed namespace
@@ -230,9 +222,9 @@ Params(const Arguments& args) {
 
 	//Validate arguments and determine function type
 	if (AssignArguments(args, validateMessage, *translationInfo)) {
-        ThrowException(
+		ThrowException(
 			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
-        );
+		);
 	} else {
 		if (translationInfo->callback.IsEmpty()) { 
 			//Synchronous
