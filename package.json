@@ -1,44 +1,44 @@
 {
-    "name": "scrypt",
-    "description": "The scrypt crypto library for NodeJS",
-    "version": "1.7.4",
-    "keywords": [
-        "scrypt",
-        "password",
-        "auth",
-        "authentication",
-        "encryption",
-        "crypto",
+	"name": "scrypt",
+	"description": "The scrypt crypto library for NodeJS",
+	"version": "2.0.0",
+	"keywords": [
+		"scrypt",
+		"password",
+		"auth",
+		"authentication",
+		"encryption",
+		"crypto",
 		"secret",
 		"key",
 		"secret key",
 		"hash",
 		"verify"
-    ],
-    "author": {
-        "name": "Barry Steyn",
-        "email": "barry.steyn@gmail.com",
-        "url": "http://doctrina.org"
-    },
-    "engines" : {
-        "node": ">= 0.8.0"
-    },
-    "repository" : {
-        "type": "git",
-        "url": "https://github.com/barrysteyn/node-scrypt.git"
-    },
-    "devDependencies": {
-        "tap": "*"
-    },
-    "licenses": [
-        {
-            "type": "MIT"
-        }
-    ],
-    "bugs": {
-        "url": "https://github.com/barrysteyn/node-scrypt/issues"
-    },
-    "scripts" : {
-        "test": "npm install && node tests/scrypt-tests.js"
-    }
+	],
+	"author": {
+		"name": "Barry Steyn",
+		"email": "barry.steyn@gmail.com",
+		"url": "http://doctrina.org"
+	},
+	"engines" : {
+		"node": ">= 0.10.0"
+	},
+	"repository" : {
+		"type": "git",
+		"url": "https://github.com/barrysteyn/node-scrypt.git"
+	},
+	"devDependencies": {
+		"tap": "*"
+	},
+	"licenses": [
+		{
+			"type": "MIT"
+		}
+	],
+	"bugs": {
+		"url": "https://github.com/barrysteyn/node-scrypt/issues"
+	},
+	"scripts" : {
+		"test": "npm install && node tests/scrypt-tests.js"
+	}
 }

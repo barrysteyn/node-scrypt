@@ -41,19 +41,19 @@ using namespace v8;
 void RegisterModule(Handle<Object> target) {
 	//Params (Translation function)
 	target->Set(String::NewSymbol("Params"), 
-            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
+		FunctionTemplate::New(CreateParameterFunction)->GetFunction());
     
 	//KDF
 	target->Set(String::NewSymbol("KDF"), 
-            FunctionTemplate::New(CreateKeyDerivationFunction)->GetFunction());
+		FunctionTemplate::New(CreateKeyDerivationFunction)->GetFunction());
 
 	//Hash function
 	target->Set(String::NewSymbol("Hash"), 
-            FunctionTemplate::New(CreateHashFunction)->GetFunction());
+		FunctionTemplate::New(CreateHashFunction)->GetFunction());
 
 	//Verify hash
 	target->Set(String::NewSymbol("Verify"), 
-            FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
+		FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
 
 	//Error Object
 	target->Set(String::NewSymbol("errorObject"),

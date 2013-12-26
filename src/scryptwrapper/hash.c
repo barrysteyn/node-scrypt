@@ -80,9 +80,9 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uin
 	return 0; //success
 }
 
-/*
- * Verifies password hash (also ensures hash integrity at same time)
- */
+//
+//  Verifies password hash (also ensures hash integrity at same time)
+//
 int
 Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
 	uint64_t N=0;
