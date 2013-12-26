@@ -30,11 +30,10 @@ const uint8_t JSARG=1; //Error in JavaScript land: Argument mismatch
 const uint8_t INTERNARG=2; //Error resulting from argument mismatch in index.js
 const uint8_t SCRYPT=3; //Scrypt generated errors
 
-//
-//  Holds N,r and p parameters
-//
-
 namespace Internal {
+	//
+	//  Holds N,r and p parameters
+	//
 	struct ScryptParams {
 		int N;
 		uint32_t r;
@@ -49,4 +48,5 @@ namespace Internal {
 	int CheckScryptParameters(const v8::Local<v8::Object>&, std::string&);
 	v8::Local<v8::Value> MakeErrorObject(int, const char*);
 	v8::Local<v8::Value> MakeErrorObject(int, int);
+	void CreateBuffer(v8::Handle<v8::Value>&, size_t);
 }
