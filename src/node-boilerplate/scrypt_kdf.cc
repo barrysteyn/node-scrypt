@@ -25,6 +25,8 @@ Barry Steyn barry.steyn@gmail.com
 
 */
 
+#include <iostream>
+
 #include <node.h>
 #include <node_buffer.h>
 #include <v8.h>
@@ -72,30 +74,6 @@ struct ScryptInfo {
 };
 
 //
-// Create a NodeJS Buffer 
-//
-char* 
-CreateBuffer(Handle<Value> &buffer, size_t dataLength) {
-	node::Buffer *slowBuffer = node::Buffer::New(dataLength);
-
-	//Create the node JS "fast" buffer
-	Local<Object> globalObj = Context::GetCurrent()->Global();	
-	Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-	Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
-
-	//Create the "fast buffer"
-	buffer = bufferConstructor->NewInstance(3, constructorArgs);
-	
-	return node::Buffer::Data(buffer);
-}
-
-char*
-CreateBuffer(Handle<Value> &buffer, const Handle<String> &v8String) {
-	buffer = node::Buffer::New(v8String);
-	return node::Buffer::Data(buffer);
-}	
-
-//
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
@@ -111,7 +89,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 	}
 
     for (int i=0; i < args.Length(); i++) {
-		Local<Value> currentVal = args[i];
+		Handle<Value> currentVal = args[i];
 		
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
@@ -130,16 +108,16 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
                     return 1;
                 }
                
-				if (currentVal->IsString()) {
+				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "key string cannot be empty";
 						return 1;
 					}
-
-					scryptInfo.salt_ptr = CreateBuffer(scryptInfo.salt, currentVal->ToString());
+				
+					currentVal = node::Buffer::New(currentVal->ToString());	
 				}
 
-				if (currentVal->IsObject()) {
+				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "key must be a Buffer object";
 						return 1;
@@ -149,11 +127,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 						errMessage = "key buffer cannot be empty";
 						return 1;
 					}
-					scryptInfo.key = currentVal;
-					scryptInfo.key_ptr = node::Buffer::Data(currentVal);
 				}
 				
-				scryptInfo.keySize = node::Buffer::Length(scryptInfo.key);
+				scryptInfo.key = currentVal;
+				scryptInfo.key_ptr = node::Buffer::Data(currentVal);
+				scryptInfo.keySize = node::Buffer::Length(currentVal);
                	
 				break;
 
@@ -171,22 +149,34 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
                 break;   
 
-			case 2: //salt
+			case 2: //length
+				if (!currentVal->IsNumber()) {
+					errMessage = "length must be a number";
+					return 1;
+				} 
+			
+				if (currentVal->ToNumber()->Value() > 64) {
+					scryptInfo.hashBufferSize = currentVal->ToNumber()->Value();
+				}
+			
+				break;
+
+			case 3: //salt
                 if (!currentVal->IsString() && !currentVal->IsObject()) {
                     errMessage = "salt must be a buffer or a string";
                     return 1;
                 }
                
-				if (currentVal->IsString()) {
+				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "salt string cannot be empty";
 						return 1;
 					}
 					
-					scryptInfo.salt_ptr = CreateBuffer(scryptInfo.salt, currentVal->ToString());
+					currentVal = node::Buffer::New(currentVal->ToString());	
 				}
 
-				if (currentVal->IsObject()) {
+				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "salt must be a Buffer object";
 						return 1;
@@ -196,24 +186,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 						errMessage = "salt buffer cannot be empty";
 						return 1;
 					}
-
-					scryptInfo.salt = currentVal;
-					scryptInfo.salt_ptr = node::Buffer::Data(currentVal);
 				} 
 				
+				scryptInfo.salt = currentVal;
+				scryptInfo.salt_ptr = node::Buffer::Data(currentVal);
 				scryptInfo.saltSize = node::Buffer::Length(scryptInfo.salt);
-
-				break;
-               
-			case 3: //length
-				if (!currentVal->IsNumber()) {
-					errMessage = "length must be a number";
-					return 1;
-				} 
-			
-				if (currentVal->ToNumber()->Value() > 64) {
-					scryptInfo.hashBufferSize = currentVal->ToNumber()->Value();
-				}
         }
     }
 
@@ -303,7 +280,8 @@ KDF(const Arguments& args) {
 			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
         );
     } else {
-		scryptInfo->hashBuffer_ptr = CreateBuffer(scryptInfo->hashBuffer, scryptInfo->hashBufferSize);
+		Internal::CreateBuffer(scryptInfo->hashBuffer, scryptInfo->hashBufferSize);
+		scryptInfo->hashBuffer_ptr = node::Buffer::Data(scryptInfo->hashBuffer);
 
 		if (scryptInfo->callback.IsEmpty()) {
 			//Synchronous 
