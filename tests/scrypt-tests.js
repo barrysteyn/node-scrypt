@@ -5,6 +5,12 @@ var maxtime_passwordhash = 0.05;
 var message = "This is a message";
 var scryptParams = {"N":1, "r":1, "p":1}
 
+//These error results are taken verbatim from src/node-boilerplate/scrypt_common.h
+var JSARG=1; //Error in JavaScript land: Argument mismatch
+var ADDONARG=2; //Error resulting from argument mismatch in the node addon module
+var PARMOBJ=3; //Scrypt generated errors
+var SCRYPT=4; //Scrypt generated errors
+
 //
 // Translation Function (Parameter) Tests */
 //
@@ -15,7 +21,7 @@ test("Pick Parameters (Translation function): - no arguments are present", funct
 		scrypt.params();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least argument is needed - in this case, no arguments were given");
-		t.deepEqual(err, scrypt.errorObject(2, "Wrong number of arguments: At least one argument is needed - the maxtime"), "The correct message object is returned, namely:"+ JSON.stringify(err));
+		t.deepEqual(err, scrypt.errorObject(ADDONARG, "Wrong number of arguments: At least one argument is needed - the maxtime"), "The correct message object is returned, namely:"+ JSON.stringify(err));
 		t.end();
 	}
 });
@@ -25,7 +31,7 @@ test("Pick Parameters (Translation function): incorrect argument type", function
 		scrypt.params("abc");
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxtime was passed as a string, but a number is expected");
-		t.deepEqual(err,scrypt.errorObject(2,"maxtime argument must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"maxtime argument must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -35,7 +41,7 @@ test("Pick Parameters (Translation function): incorrect argument type", function
 		scrypt.params(0);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because maxtime was passed as a number <= 0");
-		t.deepEqual(err, scrypt.errorObject(2, "maxtime must be greater than 0"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err, scrypt.errorObject(ADDONARG, "maxtime must be greater than 0"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -45,7 +51,7 @@ test("Pick Parameters (Translation function): incorrect argument type", function
 		scrypt.params(1, "abc");
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmem was passed as a string, but a number is expected");
-		t.deepEqual(err,scrypt.errorObject(2, "maxmem argument must be a number"), "The correct object is returned, namely: "+ JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG, "maxmem argument must be a number"), "The correct object is returned, namely: "+ JSON.stringify(err));
 		t.end();
 	}
 });
@@ -55,7 +61,7 @@ test("Pick Parameters (Translation function): incorrect argument type", function
 		scrypt.params(1, 0.5, "abc");
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because an incorrect type was passed to the function - in this case, the maxmemfrac was passed as a string, but a number is expected");
-		t.deepEqual(err, scrypt.errorObject(2, "max_memfrac argument must be a number"), "The correct object is returned, namely: " + JSON.stringify(err.message));
+		t.deepEqual(err, scrypt.errorObject(ADDONARG, "max_memfrac argument must be a number"), "The correct object is returned, namely: " + JSON.stringify(err.message));
 		t.end();
 	}
 });
@@ -66,7 +72,7 @@ test("Pick Parameters (Asynchronous): incorrect argument - no arguments before c
 		scrypt.params(function(){});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least argument is needed before the callback - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(2,"Wrong number of arguments: At least one argument is needed before the callback - the maxtime"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"Wrong number of arguments: At least one argument is needed before the callback - the maxtime"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -139,7 +145,7 @@ test("Password Hash: incorrect arguments - no arguments present", function(t) {
 		scrypt.passwordHash();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(2,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -149,7 +155,7 @@ test("Password Hash: incorrect arguments - only one argument present", function(
 		scrypt.passwordHash(password);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, only one was present, namely the password");
-		t.deepEqual(err,scrypt.errorObject(2,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -159,7 +165,7 @@ test("Password Hash: incorrect arguments - expected password is not a string", f
 		scrypt.passwordHash(1232, scryptParams);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
-		t.deepEqual(err,scrypt.errorObject(2,"password must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -169,7 +175,7 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 		scrypt.passwordHash("password", {});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it is an empty object");
-		t.deepEqual(err,scrypt.errorObject(2,"N value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -179,7 +185,7 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 		scrypt.passwordHash("password", {"N":1});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it has one property, only N (but r and p are also needed)");
-		t.deepEqual(err,scrypt.errorObject(2,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -189,7 +195,47 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 		scrypt.passwordHash("password", {"N":1,"r":1});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and r (but p is also needed)");
-		t.deepEqual(err,scrypt.errorObject(2,"p value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
+
+test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
+	try {
+		scrypt.passwordHash("password", {"N":1,"p":1});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and p (but r is also needed)");
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
+
+test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
+	try {
+		scrypt.passwordHash("password", {"N":"hello","r":1, "p":1});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, N type is a string (it should be a numeric)");
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
+
+test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
+	try {
+		scrypt.passwordHash("password", {"N":1,"r":"hello", "p":1});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, r type is a string (it should be a numeric)");
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
+
+test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
+	try {
+		scrypt.passwordHash("password", {"N":1,"r":1, "p":"hello"});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, p type is a string (it should be a numeric)");
+		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
