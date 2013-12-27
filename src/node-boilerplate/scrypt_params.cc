@@ -72,12 +72,12 @@ int
 AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
 	if (args.Length() == 0) {
 		errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
-		return 1;
+		return ADDONARG;
 	}
 
 	if (args.Length() > 0 && args[0]->IsFunction()) {
 		errMessage = "Wrong number of arguments: At least one argument is needed before the callback - the maxtime";
-		return 1;
+		return ADDONARG;
 	}
 
 	for (int i=0; i < args.Length(); i++) {
@@ -91,13 +91,13 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 			case 0: //maxtime
 				if (!currentVal->IsNumber()) {
 					errMessage = "maxtime argument must be a number";
-					return 1;
+					return ADDONARG;
 				}
 
 				translationInfo.maxtime = currentVal->ToNumber()->Value();
 				if (translationInfo.maxtime <= 0) {
 					errMessage = "maxtime must be greater than 0";
-					return 1;
+					return ADDONARG;
 				}
 
 				break;
@@ -106,7 +106,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
 						errMessage = "maxmem argument must be a number";
-						return 1;
+						return ADDONARG;
 					}
 
 					if (currentVal->ToNumber()->Value() > 0) {
@@ -120,7 +120,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
 						errMessage = "max_memfrac argument must be a number";
-						return 1;
+						return ADDONARG;
 					}
 
 					if (currentVal->ToNumber()->Value() > 0) {
@@ -215,15 +215,16 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 //
 Handle<Value> 
 Params(const Arguments& args) {
+	uint8_t parseResult = 0;
 	HandleScope scope;
 	Local<Object> params;
 	std::string validateMessage;
 	TranslationInfo* translationInfo = new TranslationInfo();
 
 	//Validate arguments and determine function type
-	if (AssignArguments(args, validateMessage, *translationInfo)) {
+	if ((parseResult = AssignArguments(args, validateMessage, *translationInfo))) {
 		ThrowException(
-			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
+			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
 	} else {
 		if (translationInfo->callback.IsEmpty()) { 

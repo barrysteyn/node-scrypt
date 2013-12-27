@@ -1,31 +1,29 @@
 /*
-scrypt_kdf.cc 
+	scrypt_kdf.cc 
 
-Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-This source code is provided 'as-is', without any express or implied
-warranty. In no event will the author be held liable for any damages
-arising from the use of this software.
+	This source code is provided 'as-is', without any express or implied
+	warranty. In no event will the author be held liable for any damages
+	arising from the use of this software.
 
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-1. The origin of this source code must not be misrepresented; you must not
-claim that you wrote the original source code. If you use this source code
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+	1. The origin of this source code must not be misrepresented; you must not
+	claim that you wrote the original source code. If you use this source code
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
 
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original source code.
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original source code.
 
-3. This notice may not be removed or altered from any source distribution.
+	3. This notice may not be removed or altered from any source distribution.
 
-Barry Steyn barry.steyn@gmail.com
+	Barry Steyn barry.steyn@gmail.com
 
 */
-
-#include <iostream>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -35,7 +33,7 @@ Barry Steyn barry.steyn@gmail.com
 
 //C Linkings
 extern "C" {
-    #include "keyderivation.h"
+	#include "keyderivation.h"
 }
 
 using namespace v8;
@@ -78,19 +76,20 @@ struct ScryptInfo {
 //
 int 
 AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
-    if (args.Length() < 2) {
-        errMessage = "Wrong number of arguments: At least two arguments are needed - key and a json object representing the scrypt parameters";
-        return 1;
-    }
+	uint8_t scryptParameterParseResult = 0;
+	if (args.Length() < 2) {
+		errMessage = "Wrong number of arguments: At least two arguments are needed - key and a json object representing the scrypt parameters";
+		return ADDONARG;
+	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
 		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - key and a json object representing the scrypt parameters";
-		return 1;
+		return ADDONARG;
 	}
 
-    for (int i=0; i < args.Length(); i++) {
+	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
-		
+
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			scryptInfo.key = Persistent<Value>::New(scryptInfo.key);
@@ -101,58 +100,59 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 			return 0;
 		}
 
-        switch(i) {
-            case 0: //key
-                if (!currentVal->IsString() && !currentVal->IsObject()) {
-                    errMessage = "key must be a buffer or a string";
-                    return 1;
-                }
-               
+		switch(i) {
+			case 0: //key
+				if (!currentVal->IsString() && !currentVal->IsObject()) {
+					errMessage = "key must be a buffer or a string";
+					return ADDONARG;
+				}
+
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "key string cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
-				
+
 					currentVal = node::Buffer::New(currentVal->ToString());	
 				}
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "key must be a buffer or a string object";
-						return 1;
+						return ADDONARG;
 					}
 
 					if (node::Buffer::Length(currentVal) == 0) {
 						errMessage = "key buffer cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
 				}
 				
 				scryptInfo.key = currentVal;
 				scryptInfo.key_ptr = node::Buffer::Data(currentVal);
 				scryptInfo.keySize = node::Buffer::Length(currentVal);
-               	
+
 				break;
 
-            case 1: //Scrypt parameters
-                if (!currentVal->IsObject()) {
-                    errMessage = "expecting scrypt parameters JSON object";
-                    return 1;
-                }
-				
-				if (Internal::CheckScryptParameters(currentVal->ToObject(), errMessage)) {
-					return 1;
+			case 1: //Scrypt parameters
+				if (!currentVal->IsObject()) {
+					errMessage = "expecting scrypt parameters JSON object";
+					return ADDONARG;
 				}
-               	
+
+				scryptParameterParseResult = Internal::CheckScryptParameters(currentVal->ToObject(), errMessage);
+				if (scryptParameterParseResult) {
+					return scryptParameterParseResult;
+				}
+
 				scryptInfo.params = currentVal->ToObject();
 
-                break;   
+				break;
 
 			case 2: //length
 				if (!currentVal->IsNumber()) {
 					errMessage = "length must be a number";
-					return 1;
+					return ADDONARG;
 				} 
 			
 				if (currentVal->ToNumber()->Value() > 64) {
@@ -162,15 +162,15 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				break;
 
 			case 3: //salt
-                if (!currentVal->IsString() && !currentVal->IsObject()) {
-                    errMessage = "salt must be a buffer or a string";
-                    return 1;
-                }
-               
+				if (!currentVal->IsString() && !currentVal->IsObject()) {
+					errMessage = "salt must be a buffer or a string";
+					return ADDONARG;
+				}
+
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "salt string cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
 					
 					currentVal = node::Buffer::New(currentVal->ToString());	
@@ -179,22 +179,22 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "salt must be a Buffer object";
-						return 1;
+						return ADDONARG;
 					}
 
 					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
 						errMessage = "salt buffer cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
 				} 
 				
 				scryptInfo.salt = currentVal;
 				scryptInfo.salt_ptr = node::Buffer::Data(currentVal);
 				scryptInfo.saltSize = node::Buffer::Length(scryptInfo.salt);
-        }
-    }
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 //
@@ -214,10 +214,10 @@ CreateJSONResult(Handle<Value> &result, const ScryptInfo* scryptInfo) {
 //
 void
 KDFSyncAfterWork(Handle<Value>& kdf, const ScryptInfo* scryptInfo) {
-    if (scryptInfo->result) { //There has been an error
-        ThrowException(
+	if (scryptInfo->result) { //There has been an error
+		ThrowException(
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
-        );
+		);
 	} else {
 		CreateJSONResult(kdf, scryptInfo);
 	}
@@ -228,8 +228,8 @@ KDFSyncAfterWork(Handle<Value>& kdf, const ScryptInfo* scryptInfo) {
 //
 void 
 KDFAsyncAfterWork(uv_work_t *req) {
-    HandleScope scope;
-    ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
+	HandleScope scope;
+	ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
 	Local<Value> kdfResult;
 	uint8_t argc = (scryptInfo->result) ? 1 : 2;
 	if (!scryptInfo->result) {
@@ -248,10 +248,9 @@ KDFAsyncAfterWork(uv_work_t *req) {
 	}
 
 	//Cleanup
-    delete scryptInfo; 
-    delete req;
+	delete scryptInfo; 
+	delete req;
 }
-
 
 //
 // Work Function: Actual scrypt key derivation performed here
@@ -282,17 +281,18 @@ KDFAsyncWork(uv_work_t* req) {
 //
 Handle<Value> 
 KDF(const Arguments& args) {
-    HandleScope scope;
-    std::string validateMessage;
+	uint8_t parseResult = 0;
+	HandleScope scope;
+	std::string validateMessage;
 	ScryptInfo* scryptInfo = new ScryptInfo(); 
 	Local<Value> kdf;
 
 	//Assign and validate arguments
-    if (AssignArguments(args, validateMessage, *scryptInfo)) {
-        ThrowException(
-			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
-        );
-    } else {
+	if ((parseResult = AssignArguments(args, validateMessage, *scryptInfo))) {
+		ThrowException(
+			Internal::MakeErrorObject(parseResult, validateMessage)
+		);
+	} else {
 		Internal::CreateBuffer(scryptInfo->hashBuffer, scryptInfo->hashBufferSize);
 		scryptInfo->hashBuffer_ptr = node::Buffer::Data(scryptInfo->hashBuffer);
 

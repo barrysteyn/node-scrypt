@@ -1,27 +1,27 @@
 /*
-scrypt_passwordverify.cc 
+	scrypt_passwordverify.cc 
 
-Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-This source code is provided 'as-is', without any express or implied
-warranty. In no event will the author be held liable for any damages
-arising from the use of this software.
+	This source code is provided 'as-is', without any express or implied
+	warranty. In no event will the author be held liable for any damages
+	arising from the use of this software.
 
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-1. The origin of this source code must not be misrepresented; you must not
-claim that you wrote the original source code. If you use this source code
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+	1. The origin of this source code must not be misrepresented; you must not
+	claim that you wrote the original source code. If you use this source code
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
 
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original source code.
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original source code.
 
-3. This notice may not be removed or altered from any source distribution.
+	3. This notice may not be removed or altered from any source distribution.
 
-Barry Steyn barry.steyn@gmail.com
+	Barry Steyn barry.steyn@gmail.com
 
 */
 
@@ -42,12 +42,12 @@ using namespace v8;
 namespace {
 
 struct PasswordHash {
-    //Async callback function
-    Persistent<Function> callback;
+	//Async callback function
+	Persistent<Function> callback;
 	Handle<Value> hash, password;
 
-    //Custom data
-    int result;
+	//Custom data
+	int result;
 	char *hash_ptr, *password_ptr;
 	size_t passwordSize;
 
@@ -63,96 +63,96 @@ struct PasswordHash {
 
 int
 AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& passwordHash) {
-    if (args.Length() < 2) {
-        errMessage = "Wrong number of arguments: At least two arguments are needed - hash and password";
-        return 1;
-    }
+	if (args.Length() < 2) {
+		errMessage = "Wrong number of arguments: At least two arguments are needed - hash and password";
+		return ADDONARG;
+	}
 
-    if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-        errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - hash and password";
-        return 1;
-    }
+	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
+		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - hash and password";
+		return ADDONARG;
+	}
 
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
-        if (i > 1 && currentVal->IsFunction()) {
-            passwordHash.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+		if (i > 1 && currentVal->IsFunction()) {
+			passwordHash.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			passwordHash.hash = Persistent<Value>::New(passwordHash.hash);
 			passwordHash.password = Persistent<Value>::New(passwordHash.password);
-            return 0;
-        }
+			return 0;
+		}
 
-        switch(i) {
-            case 0: //Hash
-                if (!currentVal->IsString() && !currentVal->IsObject()) {
-                    errMessage = "hash must be a string or a buffer";
-                    return 1;
-                }
-				
+		switch(i) {
+			case 0: //Hash
+				if (!currentVal->IsString() && !currentVal->IsObject()) {
+					errMessage = "hash must be a string or a buffer";
+					return ADDONARG;
+				}
+
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					
 					if (currentVal->ToString()->Length() == 0) {
 						errMessage = "hash string cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
-               
+
 					currentVal = node::Buffer::New(currentVal->ToString());
 				}
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "hash must be a buffer or string object";
-						return 1;
+						return ADDONARG;
 					}
 
 					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
 						errMessage = "hash buffer cannot be empty";
-						return 1;
+						return ADDONARG;
 					}
 				}
 				
 				passwordHash.hash = currentVal;
 				passwordHash.hash_ptr = node::Buffer::Data(currentVal);
 
-			break;
+				break;
 
-		case 1: //Password
-			if (!currentVal->IsString() && !currentVal->IsObject()) {
-				errMessage = "password must be a string or a buffer";
-				return 1;
-			}
-			
-			if (currentVal->IsString() || currentVal->IsStringObject()) {
-				
-				if (currentVal->ToString()->Length() == 0) {
-					errMessage = "password string cannot be empty";
-					return 1;
-				}
-		   
-				currentVal = node::Buffer::New(currentVal->ToString());
-			}
-
-			if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-				if (!node::Buffer::HasInstance(currentVal)) {
-					errMessage = "password must be a buffer or string object";
-					return 1;
+			case 1: //Password
+				if (!currentVal->IsString() && !currentVal->IsObject()) {
+					errMessage = "password must be a string or a buffer";
+					return ADDONARG;
 				}
 
-				if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-					errMessage = "password buffer cannot be empty";
-					return 1;
-				}
-			}
-			
-			passwordHash.password = currentVal;
-			passwordHash.password_ptr = node::Buffer::Data(currentVal);
-			passwordHash.passwordSize = node::Buffer::Length(currentVal);
+				if (currentVal->IsString() || currentVal->IsStringObject()) {
 
-			break;
+					if (currentVal->ToString()->Length() == 0) {
+						errMessage = "password string cannot be empty";
+						return ADDONARG;
+					}
+
+					currentVal = node::Buffer::New(currentVal->ToString());
+				}
+
+				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
+					if (!node::Buffer::HasInstance(currentVal)) {
+						errMessage = "password must be a buffer or string object";
+						return ADDONARG;
+					}
+
+					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
+						errMessage = "password buffer cannot be empty";
+						return ADDONARG;
+					}
+				}
+
+				passwordHash.password = currentVal;
+				passwordHash.password_ptr = node::Buffer::Data(currentVal);
+				passwordHash.passwordSize = node::Buffer::Length(currentVal);
+
+				break;
 		}
 	}
 
-    return 0;
+	return 0;
 }
 
 //
@@ -181,9 +181,9 @@ VerifyHashAsyncWork(uv_work_t* req) {
 void
 VerifyHashSyncAfterWork(Local<Value>& result, const PasswordHash* passwordHash) {
 	if (passwordHash->result && passwordHash->result != 11) {
-        ThrowException(
-            Internal::MakeErrorObject(SCRYPT,passwordHash->result)
-        );		
+		ThrowException(
+			Internal::MakeErrorObject(SCRYPT,passwordHash->result)
+		);
 	} else {
 		result = Local<Value>::New(Boolean::New(passwordHash->result == 0));
 	}
@@ -194,25 +194,24 @@ VerifyHashSyncAfterWork(Local<Value>& result, const PasswordHash* passwordHash) 
 //
 void
 VerifyHashAsyncAfterWork(uv_work_t* req) {
-    HandleScope scope;
-    PasswordHash* passwordHash = static_cast<PasswordHash*>(req->data);
-	const unsigned argc = 2;
+	HandleScope scope;
+	PasswordHash* passwordHash = static_cast<PasswordHash*>(req->data);
 
-	Local<Value> argv[argc] = {
+	Local<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,passwordHash->result),
 		Local<Value>::New(Boolean::New(passwordHash->result == 0))
 	};
 
 	TryCatch try_catch;
-	passwordHash->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+	passwordHash->callback->Call(Context::GetCurrent()->Global(), 2, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}
 
-    //Clean up
-    delete passwordHash;
-    delete req;
+	//Clean up
+	delete passwordHash;
+	delete req;
 }
 
 } //end of anon namespace
@@ -223,17 +222,18 @@ VerifyHashAsyncAfterWork(uv_work_t* req) {
 //
 Handle<Value> 
 VerifyPasswordHash(const Arguments& args) {
-    HandleScope scope;
-    std::string validateMessage;
+	uint8_t parseResult = 0;
+	HandleScope scope;
+	std::string validateMessage;
 	PasswordHash* passwordHash = new PasswordHash();
 	Local<Value> result;
 
-    //Assign and validate arguments
-	if (AssignArguments(args, validateMessage, *passwordHash)) {
-        ThrowException(
-			Internal::MakeErrorObject(INTERNARG, validateMessage.c_str())
-        );
-    } else {
+	//Assign and validate arguments
+	if ((parseResult = AssignArguments(args, validateMessage, *passwordHash))) {
+		ThrowException(
+			Internal::MakeErrorObject(parseResult, validateMessage)
+		);
+	} else {
 		if (passwordHash->callback.IsEmpty()) {
 			//Synchronous
 			VerifyHashWork(passwordHash);
@@ -248,10 +248,10 @@ VerifyPasswordHash(const Arguments& args) {
 			assert(status == 0); 
 		}
 	}
-   
+
 	if (passwordHash->callback.IsEmpty()) {
 		delete passwordHash;
 	}
-	 
-    return scope.Close(result);   
+
+	return scope.Close(result);
 }
