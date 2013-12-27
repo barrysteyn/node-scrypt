@@ -1,27 +1,27 @@
 /*
-scrypt_common.cc
+	scrypt_common.cc
 
-Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-This source code is provided 'as-is', without any express or implied
-warranty. In no event will the author be held liable for any damages
-arising from the use of this software.
+	This source code is provided 'as-is', without any express or implied
+	warranty. In no event will the author be held liable for any damages
+	arising from the use of this software.
 
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-1. The origin of this source code must not be misrepresented; you must not
-claim that you wrote the original source code. If you use this source code
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+	1. The origin of this source code must not be misrepresented; you must not
+	claim that you wrote the original source code. If you use this source code
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
 
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original source code.
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original source code.
 
-3. This notice may not be removed or altered from any source distribution.
+	3. This notice may not be removed or altered from any source distribution.
 
-Barry Steyn barry.steyn@gmail.com
+	Barry Steyn barry.steyn@gmail.com
 
 */
 
@@ -87,32 +87,35 @@ namespace Internal {
 		Local<Value> val;
 		if (!obj->Has(String::New("N"))) {
 			errMessage = "N value is not present";
-			return 1;
+			return PARMOBJ;
 		}
 
 		if (!obj->Has(String::New("r"))) {
 			errMessage = "r value is not present";
-			return 1;
+			return PARMOBJ;
 		}
 
 		if (!obj->Has(String::New("p"))) {
 			errMessage = "p value is not present";
-			return 1;
+			return PARMOBJ;
 		}
 
 		val = obj->Get(String::New("N"));
 		if (!val->IsNumber()) {
 			errMessage = "N must be a numeric value";
+			return PARMOBJ;
 		}
 		
 		val = obj->Get(String::New("r"));
 		if (!val->IsNumber()) {
 			errMessage = "r must be a numeric value";
+			return PARMOBJ;
 		}
 		
 		val = obj->Get(String::New("p"));
 		if (!val->IsNumber()) {
 			errMessage = "p must be a numeric value";
+			return PARMOBJ;
 		}
 		
 		return 0;
@@ -130,21 +133,30 @@ namespace Internal {
 	//
 	// Produces a JSON error object
 	//
-	Local<Value> MakeErrorObject(int errorCode, const char* errorMessage) {
+	Local<Value> MakeErrorObject(int errorCode, std::string& errorMessage) {
 
 		if (errorCode) {
 			Local<Object> errorObject = Object::New();
+			
+			switch (errorCode) {
+				case ADDONARG:
+						errorMessage = "Module addon argument error: "+errorMessage;
+					break;
 
-			if (errorCode == INTERNARG || errorCode == JSARG) {
-				errorObject->Set(String::NewSymbol("err_code"), Integer::New(errorCode));
-				errorObject->Set(String::NewSymbol("err_message"), String::New(errorMessage));
-			} else {
-				errorObject->Set(String::NewSymbol("err_code"), Integer::New(500));
-				if (errorMessage) {
-					errorObject->Set(String::NewSymbol("internal_message"), String::New(errorMessage));
-				}
-				errorObject->Set(String::NewSymbol("err_message"), String::New("Unknown internal error - please report this error to make this module better. Details about reporting the error can be found at..."));
+				case JSARG:
+						errorMessage = "JavaScrip wrapper argument error: "+errorMessage;
+					break;
+
+				case PARMOBJ:
+						errorMessage = "Scrypt parameter object error: "+errorMessage;
+					break;
+
+				default:
+					errorCode = 500;
+					errorMessage = "Unknown internal error - please report this error to make this module better. Details about error reporting can be found at the GitHub repo: https://github.com/barrysteyn/node-scrypt#report-errors";
 			}
+			errorObject->Set(String::NewSymbol("err_code"), Integer::New(errorCode));
+			errorObject->Set(String::NewSymbol("err_message"), String::New(errorMessage.c_str()));
 
 			return errorObject;
 		}
@@ -161,7 +173,7 @@ namespace Internal {
 		if (scryptErrorCode) { 
 			Local<Object> errorObject = Object::New();
 			errorObject->Set(String::NewSymbol("err_code"), Integer::New(errorCode));
-			errorObject->Set(String::NewSymbol("err_message"), String::New("Scrypt message"));
+			errorObject->Set(String::NewSymbol("err_message"), String::New("Scrypt error"));
 			errorObject->Set(String::NewSymbol("scrypt_err_code"),Integer::New(scryptErrorCode));
 			errorObject->Set(String::NewSymbol("scrypt_err_message"),String::New(ScryptErrorDescr(scryptErrorCode).c_str()));
 			return errorObject;
