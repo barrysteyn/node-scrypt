@@ -3,7 +3,7 @@ var scrypt = require('../');
 var password = "This is the test password";
 var maxtime_passwordhash = 0.05; 
 var message = "This is a message";
-var scryptParams = {"N":1, "r":1, "p":1}
+var scryptParameters = {"N":1, "r":1, "p":1}
 
 //These error results are taken verbatim from src/node-boilerplate/scrypt_common.h
 var JSARG=1; //Error in JavaScript land: Argument mismatch
@@ -162,7 +162,7 @@ test("Password Hash: incorrect arguments - only one argument present", function(
 
 test("Password Hash: incorrect arguments - expected password is not a string", function(t) {
 	try {
-		scrypt.passwordHash(1232, scryptParams);
+		scrypt.passwordHash(1232, scryptParameters);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -238,6 +238,21 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
+});
+
+//Synchronous
+test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
+	var hash = scrypt.passwordHash(password, scryptParameters);
+	t.ok(true, "The password was hashed successfully, as expected");
+	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+	t.end();
+});
+
+test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object, but expecting a buffer to be returned", function(t) {
+	var hash = scrypt.passwordHash(password, scryptParameters, true);
+	t.ok(true, "The password was hashed successfully, as expected");
+	t.type(hash, "object", "The hash that was returned is of type 'object', as expected because it was specified that a buffer must be returned");
+	t.end();
 });
 
 /*
