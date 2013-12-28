@@ -144,7 +144,7 @@ namespace Internal {
 					break;
 
 				case JSARG:
-						errorMessage = "JavaScrip wrapper argument error: "+errorMessage;
+						errorMessage = "JavaScript wrapper argument error: "+errorMessage;
 					break;
 
 				case PARMOBJ:
