@@ -30,15 +30,15 @@ function parseScryptParameters(args, startIndex) {
 
 			default:
 				if (i-startIndex == 0) {
-					throw scrypt.errorObject(1, "Argument error: expecting maxtime as a number");
+					throw scrypt.errorObject(1, "expecting maxtime as a number");
 				}
 
 				if (i-startIndex == 1) {
-					throw scrypt.errorObject(1, "Argument error: expecting maxmem as a number");
+					throw scrypt.errorObject(1, "expecting maxmem as a number");
 				}
 				
 				if (i-startIndex == 2) {
-					throw scrypt.errorObject(1, "Argument error: expecting maxmemfrac as a number");
+					throw scrypt.errorObject(1, "expecting maxmemfrac as a number");
 				}
 
 				break;
