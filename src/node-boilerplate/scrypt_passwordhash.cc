@@ -106,7 +106,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "password must be a string";
+						errMessage = "password cannot be empty";
 						return ADDONARG;
 					}
 
@@ -120,7 +120,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 					}
 
 					if (node::Buffer::Length(currentVal) == 0) {
-						errMessage = "password buffer cannot be empty";
+						errMessage = "password cannot be empty";
 						return ADDONARG;
 					}
 				}
