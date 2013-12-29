@@ -108,22 +108,12 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				}
 
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "key string cannot be empty";
-						return ADDONARG;
-					}
-
 					currentVal = node::Buffer::New(currentVal->ToString());	
 				}
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "key must be a buffer or a string object";
-						return ADDONARG;
-					}
-
-					if (node::Buffer::Length(currentVal) == 0) {
-						errMessage = "key buffer cannot be empty";
 						return ADDONARG;
 					}
 				}
@@ -168,22 +158,12 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				}
 
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "salt string cannot be empty";
-						return ADDONARG;
-					}
-					
 					currentVal = node::Buffer::New(currentVal->ToString());	
 				}
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
 						errMessage = "salt must be a Buffer object";
-						return ADDONARG;
-					}
-
-					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-						errMessage = "salt buffer cannot be empty";
 						return ADDONARG;
 					}
 				} 
