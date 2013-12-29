@@ -79,12 +79,12 @@ int
 AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
 	uint8_t scryptParameterParseResult = 0;	
 	if (args.Length() < 2) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object";
+		errMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - password and scrypt parameters JSON object";
+		errMessage = "wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 

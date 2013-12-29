@@ -71,7 +71,7 @@ scrypt.passwordHash = function(passwordHash, params) {
 			paramsObject;
 
 		//Determine if translation function is needed
-		if (args.length > 1 && typeof args[1] !== "object") {
+		if (args.length > 1 && typeof args[1] !== "object" && typeof args[1] !== "function") {
 			paramsObject = parseScryptParameters(arguments, 1); 
 		}
 

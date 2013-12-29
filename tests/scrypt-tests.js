@@ -147,7 +147,7 @@ test("Password Hash: incorrect arguments - no arguments present", function(t) {
 		scrypt.passwordHash();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -157,7 +157,7 @@ test("Password Hash: incorrect arguments - only one argument present", function(
 		scrypt.passwordHash(passwordString);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, only one was present, namely the password");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"Wrong number of arguments: At least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -282,6 +282,15 @@ test("Password Hash: incorrect arguments - password buffer is empty", function(t
 	}
 });
 
+test("Password Hash: incorrect arguments - only two arguments present, password and callback function" , function(t) {
+	try {
+		scrypt.passwordHash(passwordString, function(){});
+	} catch (err) {
+		t.ok(err, "An error was correctly thrown because there was no scrypt parameters object");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
 //Synchronous
 test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
 	var hash = scrypt.passwordHash(passwordString, scryptParameters);
@@ -333,12 +342,76 @@ test("Password Hash (Synchronous): hash password with correct arguments: passwor
 });
 
 test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object, but buffer value given of type 'string'", function(t) {
-	var hash = scrypt.passwordHash(passwordString, scryptParameters, "wrong");
+	var hash = scrypt.passwordHash(passwordString, scryptParameters, "this will work");
 	t.ok(true, "The password was hashed successfully, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because a 'true' value could not be ascertained for buffer, so it assumed it was set to false)");
 	t.end();
 });
 
+//Asynchronous
+test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
+	scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password string and maxtime number", function(t) {
+	scrypt.passwordHash(passwordString, 1, function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Aynchronous): hash password with correct arguments: password string, maxtime number and maxmem number", function(t) {
+	scrypt.passwordHash(passwordString, 1, 0.05, function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password string,maxtime number, maxmemnumber and maxmem_frac number", function(t) {
+	scrypt.passwordHash(passwordString, 1, 0.05, 0.05, function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password string object and scrypt parameters object", function(t) {
+	scrypt.passwordHash(passwordStringObject, scryptParameters, function(err, hash) {
+		t.ok(true, "The password was hashed successfully with a string object, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password buffer and scrypt parameters object", function(t) {
+	scrypt.passwordHash(passwordBuffer, scryptParameters,function (err, hash) {
+		t.ok(true, "The password was hashed successfully with a buffer, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object, but expecting a buffer to be returned", function(t) {
+	scrypt.passwordHash(passwordString, scryptParameters, true, function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.ok(Buffer.isBuffer(hash), "The hash that was returned is of type 'Buffer', as expected because it was specified that a buffer must be returned");
+		t.end();
+	});
+});
+
+test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object, but buffer value given of type 'string'", function(t) {
+	scrypt.passwordHash(passwordString, scryptParameters, "this should work", function(err, hash) {
+		t.ok(true, "The password was hashed successfully, as expected");
+		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because a 'true' value could not be ascertained for buffer, so it assumed it was set to false)");
+		t.end();
+	});
+});
 /*
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 /*
