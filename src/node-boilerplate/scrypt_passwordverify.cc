@@ -64,12 +64,12 @@ struct PasswordHash {
 int
 AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& passwordHash) {
 	if (args.Length() < 2) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed - hash and password";
+		errMessage = "both hash and password are needed";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - hash and password";
+		errMessage = "both hash and password are needed before the callback function";
 		return ADDONARG;
 	}
 

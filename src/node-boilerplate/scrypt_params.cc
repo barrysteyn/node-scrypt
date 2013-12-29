@@ -71,12 +71,12 @@ struct TranslationInfo {
 int 
 AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
 	if (args.Length() == 0) {
-		errMessage = "Wrong number of arguments: At least one argument is needed - the maxtime";
+		errMessage = "at least one argument is needed - the maxtime";
 		return ADDONARG;
 	}
 
 	if (args.Length() > 0 && args[0]->IsFunction()) {
-		errMessage = "Wrong number of arguments: At least one argument is needed before the callback - the maxtime";
+		errMessage = "at least one argument is needed before the callback - the maxtime";
 		return ADDONARG;
 	}
 
