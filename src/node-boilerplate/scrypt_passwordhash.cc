@@ -58,7 +58,6 @@ struct ScryptInfo {
 
 	//Construtor / destructor   
 	ScryptInfo() : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) { 
-		result = 3;
 		callback.Clear(); 
 		password.Clear();
 		passwordHash.Clear();
