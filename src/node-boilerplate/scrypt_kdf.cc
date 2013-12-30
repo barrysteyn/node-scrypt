@@ -24,6 +24,7 @@
 	Barry Steyn barry.steyn@gmail.com
 
 */
+#include <iostream>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -34,6 +35,7 @@
 //C Linkings
 extern "C" {
 	#include "keyderivation.h"
+	#include "salt.h"
 }
 
 using namespace v8;
@@ -57,7 +59,7 @@ struct ScryptInfo {
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltSize(0), hashBufferSize(64) { 
+	ScryptInfo() : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltSize(32), hashBufferSize(64) { 
 		callback.Clear(); key.Clear(); salt.Clear(); hashBuffer.Clear(); 
 	}
 
@@ -78,12 +80,12 @@ int
 AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
 	uint8_t scryptParameterParseResult = 0;
 	if (args.Length() < 2) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed - key and a json object representing the scrypt parameters";
+		errMessage = "at least two arguments are needed - key and a json object representing the scrypt parameters";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "Wrong number of arguments: At least two arguments are needed before the callback function - key and a json object representing the scrypt parameters";
+		errMessage = "at least two arguments are needed before the callback function - key and a json object representing the scrypt parameters";
 		return ADDONARG;
 	}
 
@@ -181,9 +183,13 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 // Creates the JSON object returned to JS land
 //
 void
-CreateJSONResult(Handle<Value> &result, const ScryptInfo* scryptInfo) {
+CreateJSONResult(Handle<Value> &result, ScryptInfo* scryptInfo) {
 	Local<Object> resultObject = Object::New();
 	resultObject->Set(String::NewSymbol("hash"), scryptInfo->hashBuffer);
+
+	if (scryptInfo->salt.IsEmpty()) {
+		Internal::CreateBuffer(scryptInfo->salt, scryptInfo->salt_ptr, scryptInfo->saltSize);
+	}
 	resultObject->Set(String::NewSymbol("salt"), scryptInfo->salt);
 
 	result = resultObject;
@@ -193,7 +199,7 @@ CreateJSONResult(Handle<Value> &result, const ScryptInfo* scryptInfo) {
 // Synchronous: After work function
 //
 void
-KDFSyncAfterWork(Handle<Value>& kdf, const ScryptInfo* scryptInfo) {
+KDFSyncAfterWork(Handle<Value>& kdf, ScryptInfo* scryptInfo) {
 	if (scryptInfo->result) { //There has been an error
 		ThrowException(
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
@@ -237,6 +243,11 @@ KDFAsyncAfterWork(uv_work_t *req) {
 //
 void 
 KDFWork(ScryptInfo* scryptInfo) {
+	if (!scryptInfo->salt_ptr) {
+		scryptInfo->salt_ptr = new char[scryptInfo->saltSize];
+		getsalt((uint8_t*)scryptInfo->salt_ptr, scryptInfo->saltSize);
+	}
+
 	scryptInfo->result = ScryptKeyDerivationFunction(
 		(uint8_t*)scryptInfo->key_ptr, scryptInfo->keySize,
 		(uint8_t*)scryptInfo->salt_ptr, scryptInfo->saltSize,
