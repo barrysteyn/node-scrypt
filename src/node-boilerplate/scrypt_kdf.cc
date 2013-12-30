@@ -95,7 +95,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 		if (i > 1 && currentVal->IsFunction()) {
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			scryptInfo.key = Persistent<Value>::New(scryptInfo.key);
-			if (scryptInfo.saltSize) {
+			if (!scryptInfo.salt.IsEmpty()) {
 				scryptInfo.salt = Persistent<Value>::New(scryptInfo.salt);
 			}
 
@@ -128,7 +128,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 			case 1: //Scrypt parameters
 				if (!currentVal->IsObject()) {
-					errMessage = "expecting scrypt parameters JSON object";
+					errMessage = "expecting JSON object representing scrypt parameters";
 					return ADDONARG;
 				}
 
@@ -165,7 +165,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
 					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "salt must be a Buffer object";
+						errMessage = "salt must be a buffer or string object";
 						return ADDONARG;
 					}
 				} 
