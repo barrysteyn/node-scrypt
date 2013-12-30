@@ -92,7 +92,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 					
 					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "hash string cannot be empty";
+						errMessage = "hash cannot be empty";
 						return ADDONARG;
 					}
 
@@ -106,7 +106,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 					}
 
 					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-						errMessage = "hash buffer cannot be empty";
+						errMessage = "hash cannot be empty";
 						return ADDONARG;
 					}
 				}
@@ -125,7 +125,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 				if (currentVal->IsString() || currentVal->IsStringObject()) {
 
 					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "password string cannot be empty";
+						errMessage = "password cannot be empty";
 						return ADDONARG;
 					}
 
@@ -139,7 +139,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 					}
 
 					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-						errMessage = "password buffer cannot be empty";
+						errMessage = "password cannot be empty";
 						return ADDONARG;
 					}
 				}
