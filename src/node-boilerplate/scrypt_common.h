@@ -49,4 +49,5 @@ namespace Internal {
 	v8::Local<v8::Value> MakeErrorObject(int, std::string&);
 	v8::Local<v8::Value> MakeErrorObject(int, int);
 	void CreateBuffer(v8::Handle<v8::Value>&, size_t);
+    void CreateBuffer(v8::Handle<v8::Value> &buffer, char* data, size_t dataLength);
 }
