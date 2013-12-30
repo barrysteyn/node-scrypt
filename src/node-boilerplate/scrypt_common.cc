@@ -76,6 +76,14 @@ namespace Internal {
 		}
 	}
 
+	//
+	// Used for Buffer constructor, needed so that data can be used and not deep copied
+	// for an excellent example by Ben Noordhuis, see https://groups.google.com/forum/#!topic/nodejs/gz8YF3oLit0
+	//
+	void FreeCallback(char* data, void* hint) {
+		delete [] data;
+	} 
+
 	} //end anon namespace
 
 	using namespace v8;
@@ -188,6 +196,22 @@ namespace Internal {
 	void
 	CreateBuffer(Handle<Value> &buffer, size_t dataLength) {
 		node::Buffer *slowBuffer = node::Buffer::New(dataLength);
+
+		//Create the node JS "fast" buffer
+		Local<Object> globalObj = Context::GetCurrent()->Global();  
+		Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
+		Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
+
+		//Create the "fast buffer"
+		buffer = bufferConstructor->NewInstance(3, constructorArgs);
+	}
+	
+	//
+	// Create a "fast" NodeJS Buffer from an already declared memory heap
+	//
+	void
+	CreateBuffer(Handle<Value> &buffer, char* data, size_t dataLength) {
+		node::Buffer *slowBuffer = node::Buffer::New(data, dataLength, FreeCallback, NULL);
 
 		//Create the node JS "fast" buffer
 		Local<Object> globalObj = Context::GetCurrent()->Global();  
