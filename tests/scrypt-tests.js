@@ -51,6 +51,45 @@ test("KDF - Test vector 3", function(t) {
 	});
 });
 
+test("KDF - Random salt added by default", function(t) {
+	var key = new Buffer("key");	
+	var hash1 = scrypt.KDF(key, scryptParameters);
+	var hash2 = scrypt.KDF(key, scryptParameters);
+	t.notEqual(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are not equal. This is correct due to random salt that was added");
+	t.notEqual(hash1.salt.toString(), hash2.salt.toString(), "Synchronous: salts that are returned are not equal");
+
+	scrypt.KDF(key, scryptParameters, function(err, hash1) {
+		scrypt.KDF(key, scryptParameters, function(err, hash2) {
+			t.notEqual(hash1.hash.toString(), hash2.hash.toString(), "Asynchronous: hashes that are returned are not equal. This is correct due to random salt that was added");
+			t.notEqual(hash1.salt.toString(), hash2.salt.toString(), "Asynchronous: salts that are returned are not equal");
+			t.end();
+		});
+	});
+});
+
+test("KDF - Deterministic non-random salt added manually", function(t) {
+	var key = new Buffer("key");
+	var salt = "salt";	
+	console.log(scryptParameters);
+	var hash1 = scrypt.KDF(key, scryptParameters, 64, "salt");
+	var hash2 = scrypt.KDF(key, scryptParameters, 64, "salt");
+	t.equal(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
+	t.equal(hash1.salt.toString(), hash2.salt.toString(), "Synchronous: salts that are returned are identical");
+
+	scrypt.KDF(key, scryptParameters, 64, salt, function(err, hash1) {
+		scrypt.KDF(key, scryptParameters, 64, salt, function(err, hash2) {
+			t.equal(hash1.hash.toString(), hash2.hash.toString(), "Asynchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
+			t.equal(hash1.salt.toString(), hash2.salt.toString(), "Asynchronous: salts that are returned are identical");
+			t.end();
+		});
+	});
+});
+
+//test("KDF - Consistency test", function(t) {
+//	var key = new Buffer("key");
+	
+//});
+
 /*test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
 	var res = scrypt.KDF("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
 	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
@@ -61,6 +100,17 @@ test("KDF - Test vector 3", function(t) {
 	});
 });*/
 
+/*test("Password Hash/Verify - Consistency", function(t) {
+	var buf = new Buffer("pleaseletmein");
+	var salt = new Buffer("SodiumChloride");
+	var res = scrypt.KDF(buf,{"N":16384,"r":8,"p":1},64,salt);
+	t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Synchronous test: third test vector is correctly returned");	
+
+	scrypt.KDF(buf, {"N":16384,"r":8,"p":1},64,salt, function(err, res) {
+		t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Asynchronous test: third test vector is correctly returned");
+		t.end();
+	})
+});*/
 /*
  * Argument Tests
  */
