@@ -112,6 +112,20 @@ scrypt.passwordHash = function(passwordHash, params) {
 }(scrypt.passwordHash, scrypt.params);
 
 //
+// Scrypt Password Hash
+//
+scrypt.verifyHash = function(verifyHash) {
+	return function() {
+		if (typeof arguments[0] == "string") {
+			//Assume its a base64 encoded string
+			arguments[0] = new Buffer(arguments[0], "base64");
+		}
+
+		return verifyHash.apply(this, arguments);
+	}
+}(scrypt.verifyHash);
+
+//
 // Backward Compatbility
 //
 scrypt.passwordHashSync = scrypt.passwordHash;
