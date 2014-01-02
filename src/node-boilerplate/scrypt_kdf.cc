@@ -24,7 +24,6 @@
 	Barry Steyn barry.steyn@gmail.com
 
 */
-#include <iostream>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -56,17 +55,18 @@ struct ScryptInfo {
 	int result;
 	char *key_ptr, *salt_ptr, *hashBuffer_ptr;
 	size_t keySize, saltSize, hashBufferSize;
+	bool saltPersist;
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltSize(32), hashBufferSize(64) { 
+	ScryptInfo() : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltSize(32), hashBufferSize(64), saltPersist(false) { 
 		callback.Clear(); key.Clear(); salt.Clear(); hashBuffer.Clear(); 
 	}
 
 	~ScryptInfo() {
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(key).Dispose();
-			if (!salt.IsEmpty()) Persistent<Value>(salt).Dispose();
+			if (this->saltPersist) Persistent<Value>(salt).Dispose();
 			Persistent<Value>(hashBuffer).Dispose();
 		}
 		callback.Dispose();
@@ -96,6 +96,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			scryptInfo.key = Persistent<Value>::New(scryptInfo.key);
 			if (!scryptInfo.salt.IsEmpty()) {
+				scryptInfo.saltPersist = true;
 				scryptInfo.salt = Persistent<Value>::New(scryptInfo.salt);
 			}
 
@@ -145,7 +146,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				if (!currentVal->IsNumber()) {
 					errMessage = "length must be a number";
 					return ADDONARG;
-				} 
+				}
 			
 				if (currentVal->ToNumber()->Value() > 64) {
 					scryptInfo.hashBufferSize = currentVal->ToNumber()->Value();
