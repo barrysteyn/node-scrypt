@@ -62,19 +62,20 @@ struct PasswordHash {
 };
 
 int
-AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& passwordHash) {
+AssignArguments(const Arguments& args, std::string& errorMessage, PasswordHash& passwordHash) {
 	if (args.Length() < 2) {
-		errMessage = "both hash and password are needed";
+		errorMessage = "both hash and password are needed";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "both hash and password are needed before the callback function";
+		errorMessage = "both hash and password are needed before the callback function";
 		return ADDONARG;
 	}
 
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
+
 		if (i > 1 && currentVal->IsFunction()) {
 			passwordHash.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			passwordHash.hash = Persistent<Value>::New(passwordHash.hash);
@@ -84,64 +85,18 @@ AssignArguments(const Arguments& args, std::string& errMessage, PasswordHash& pa
 
 		switch(i) {
 			case 0: //Hash
-				if (!currentVal->IsString() && !currentVal->IsObject()) {
-					errMessage = "hash must be a string or a buffer";
+				if (Internal::ProduceBuffer(currentVal, "hash", errorMessage, node::BASE64)) {
 					return ADDONARG;
 				}
 
-				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					
-					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "hash cannot be empty";
-						return ADDONARG;
-					}
-
-					currentVal = node::Buffer::New(currentVal->ToString());
-				}
-
-				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "hash must be a buffer or string object";
-						return ADDONARG;
-					}
-
-					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-						errMessage = "hash cannot be empty";
-						return ADDONARG;
-					}
-				}
-				
 				passwordHash.hash = currentVal;
 				passwordHash.hash_ptr = node::Buffer::Data(currentVal);
 
 				break;
 
 			case 1: //Password
-				if (!currentVal->IsString() && !currentVal->IsObject()) {
-					errMessage = "password must be a string or a buffer";
+				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, node::ASCII)) {
 					return ADDONARG;
-				}
-
-				if (currentVal->IsString() || currentVal->IsStringObject()) {
-
-					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "password cannot be empty";
-						return ADDONARG;
-					}
-
-					currentVal = node::Buffer::New(currentVal->ToString());
-				}
-
-				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "password must be a buffer or string object";
-						return ADDONARG;
-					}
-
-					if (node::Buffer::Length(currentVal->ToObject()) == 0) {
-						errMessage = "password cannot be empty";
-						return ADDONARG;
-					}
 				}
 
 				passwordHash.password = currentVal;

@@ -75,15 +75,15 @@ struct ScryptInfo {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
+AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &scryptInfo) {
 	uint8_t scryptParameterParseResult = 0;	
 	if (args.Length() < 2) {
-		errMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
+		errorMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object";
+		errorMessage = "wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
@@ -98,48 +98,25 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 		switch(i) {
 			case 0: //Password
-				if (!currentVal->IsString() && !currentVal->IsObject()) {
-					errMessage = "password must be a buffer or a string";
+				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, node::ASCII)) {
 					return ADDONARG;
 				}
-
-				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					if (currentVal->ToString()->Length() == 0) {
-						errMessage = "password cannot be empty";
-						return ADDONARG;
-					}
-
-					currentVal = node::Buffer::New(currentVal->ToString());
-				}
-
-				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "password must a buffer or string object";
-						return ADDONARG;
-					}
-
-					if (node::Buffer::Length(currentVal) == 0) {
-						errMessage = "password cannot be empty";
-						return ADDONARG;
-					}
-				}
-		
 				scryptInfo.password = currentVal;
 				scryptInfo.password_ptr = node::Buffer::Data(currentVal);
 				scryptInfo.passwordSize = node::Buffer::Length(currentVal);
-		
+
+				//Create hash buffer - note that it is the same size as the password buffer
 				Internal::CreateBuffer(scryptInfo.passwordHash, scryptInfo.passwordHashSize);
 				scryptInfo.passwordHash_ptr = node::Buffer::Data(scryptInfo.passwordHash);
-
 				break;
 
 			case 1: //Scrypt parameters
 				if (!currentVal->IsObject()) {
-					errMessage = "expecting scrypt parameters JSON object";
+					errorMessage = "expecting scrypt parameters JSON object";
 					return ADDONARG;
 				}
 
-				scryptParameterParseResult = Internal::CheckScryptParameters(currentVal->ToObject(), errMessage);
+				scryptParameterParseResult = Internal::CheckScryptParameters(currentVal->ToObject(), errorMessage);
 				if (scryptParameterParseResult) {
 					return scryptParameterParseResult;
 				}
