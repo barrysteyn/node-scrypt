@@ -34,7 +34,7 @@
 #include <node.h>
 #include <node_buffer.h>
 #include <string>
-#include "scrypt_common.h"
+#include "common.h"
 
 namespace Internal {
 	namespace {

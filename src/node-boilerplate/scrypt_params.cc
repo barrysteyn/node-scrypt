@@ -30,7 +30,7 @@
 
 using namespace v8;
 
-#include "scrypt_common.h"
+#include "common.h"
 #include "scrypt_params.h"
 
 //Scrypt is a C library and there needs c linkings

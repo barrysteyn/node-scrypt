@@ -36,7 +36,7 @@ extern "C" {
 }
 
 using namespace v8;
-#include "scrypt_common.h"
+#include "common.h"
 #include "scrypt_passwordverify.h"
 
 namespace {
@@ -177,8 +177,8 @@ VerifyHashAsyncAfterWork(uv_work_t* req) {
 //
 Handle<Value> 
 VerifyPasswordHash(const Arguments& args) {
-	uint8_t parseResult = 0;
 	HandleScope scope;
+	uint8_t parseResult = 0;
 	std::string validateMessage;
 	PasswordHash* passwordHash = new PasswordHash();
 	Local<Value> result;
