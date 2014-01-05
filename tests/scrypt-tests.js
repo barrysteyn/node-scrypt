@@ -3,7 +3,6 @@ var scrypt = require('../');
 var passwordString = "This is the test password";
 var passwordStringObject = new String(passwordString);
 var passwordBuffer = new Buffer(passwordString);
-var maxtime_passwordhash = 0.05; 
 var message = "This is a message";
 var scryptParameters = {"N":1, "r":1, "p":1}
 
@@ -51,6 +50,16 @@ test("KDF - Test vector 3", function(t) {
 	});
 });
 
+/*test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
+	var res = scrypt.KDF("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
+	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
+
+	scrypt.KDF("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
+		t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4","Asynchronous test: fourth test vector is correctly returned");
+		t.end();
+	});
+});*/
+
 test("KDF - Random salt added by default", function(t) {
 	var key = new Buffer("key");	
 	var hash1 = scrypt.KDF(key, scryptParameters);
@@ -71,8 +80,8 @@ test("KDF - Deterministic non-random salt added manually", function(t) {
 	var key = new Buffer("key");
 	var salt = "salt";	
 	console.log(scryptParameters);
-	var hash1 = scrypt.KDF(key, scryptParameters, 64, "salt");
-	var hash2 = scrypt.KDF(key, scryptParameters, 64, "salt");
+	var hash1 = scrypt.KDF(key, scryptParameters, 64, salt);
+	var hash2 = scrypt.KDF(key, scryptParameters, 64, salt);
 	t.equal(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
 	t.equal(hash1.salt.toString(), hash2.salt.toString(), "Synchronous: salts that are returned are identical");
 
@@ -85,32 +94,49 @@ test("KDF - Deterministic non-random salt added manually", function(t) {
 	});
 });
 
-//test("KDF - Consistency test", function(t) {
-//	var key = new Buffer("key");
+test("Password hashing: Salt means same passwords hash to different values", function(t) {
+    var hash1 = scrypt.passwordHashSync(passwordString, scryptParameters);
+    var hash2 = scrypt.passwordHashSync(passwordString, scryptParameters);
+    t.notEqual(hash1,hash2,"Synchronous: same passwords are correctly hashed to different values due to salt");
 	
-//});
-
-/*test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
-	var res = scrypt.KDF("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
-	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
-
-	scrypt.KDF("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
-		t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4","Asynchronous test: fourth test vector is correctly returned");
-		t.end();
+	scrypt.passwordHash(passwordString, scryptParameters, function(err, hash1) {
+		scrypt.passwordHash(passwordString, scryptParameters, function(err, hash2) {
+			t.notEqual(hash1,hash2,"Asynchronous: same passwords are correctly hashed to different values due to salt");
+			t.end();
+		});
 	});
-});*/
+});
 
-/*test("Password Hash/Verify - Consistency", function(t) {
-	var buf = new Buffer("pleaseletmein");
-	var salt = new Buffer("SodiumChloride");
-	var res = scrypt.KDF(buf,{"N":16384,"r":8,"p":1},64,salt);
-	t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Synchronous test: third test vector is correctly returned");	
+test("Password hashing and verifying: Same password verify and hash (Consistency test - Result Must Be True)", function(t) {
+	hash = scrypt.passwordHash(passwordString, scryptParameters);
+	result = scrypt.verifyHash(hash, passwordString);
+	t.equal(result, true,"Synchronous: hash has been verified as true => Result Is True");
 
-	scrypt.KDF(buf, {"N":16384,"r":8,"p":1},64,salt, function(err, res) {
-		t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Asynchronous test: third test vector is correctly returned");
-		t.end();
-	})
-});*/
+    scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
+		t.notOk(err,"Asynchronous: no error hashing result");
+        scrypt.verifyHash(hash, passwordString, function(err, result) {
+            t.notOk(err,"Asynchronous: no error verifying hash");
+            t.equal(result, true,"Asynchronous: hash has been verified as true => Result Is True");
+            t.end();
+        })
+    })
+});
+
+test("Password hashing and verifying: Different passwords do not verify (Result Must Be False)", function(t) {
+	hash = scrypt.passwordHash(passwordString, scryptParameters);
+	result = scrypt.verifyHash(hash, "another password");
+	t.equal(result, false,"Synchronous: hash has been verified as false => Result Is False (as it should be)");
+
+    scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
+		t.notOk(err,"Asynchronous: no error hashing result");
+        scrypt.verifyHash(hash, "another password", function(err, result) {
+            t.ok(err,"Asynchronous: error verifying hash - because hashes are not the same (as expected)");
+            t.equal(result, false,"Asynchronous: hash has been verified as false => Result Is False (as it should be)");
+            t.end();
+        })
+    })
+});
+
 /*
  * Argument Tests
  */
@@ -269,14 +295,14 @@ test("Password Hash: incorrect arguments - expected password is not a string", f
 		scrypt.passwordHash(1232, scryptParameters);
 	} catch (err) {
 		t.ok(err, "Synchronous test: An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	
 	try {
 		scrypt.passwordHash(1232, scryptParameters, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -630,14 +656,14 @@ test("Password Verify: incorrect argument type - hash not a string nor a string 
 		scrypt.verifyHash(123, "string");
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, hash is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a string or a buffer"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash(123, "string", function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, hash is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a string or a buffer"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -647,14 +673,14 @@ test("Password Verify: incorrect argument type - hash is an object, but not a bu
 		scrypt.verifyHash({}, "string");
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, hash is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash({}, "string", function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, hash is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -715,14 +741,14 @@ test("Password Verify: incorrect argument type - password not a string nor a str
 		scrypt.verifyHash("hash", 123);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a string or a buffer"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", 123, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a string or a buffer"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -732,14 +758,14 @@ test("Password Verify: incorrect argument type - password is an object, but not 
 		scrypt.verifyHash("hash",{});
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", {}, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, password is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -824,14 +850,14 @@ test("Scrypt KDF: Incorrect arguments - key is not of type string, string object
 		scrypt.KDF(123, scryptParameters);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.KDF(123, scryptParameters, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -841,14 +867,14 @@ test("Scrypt KDF: Incorrect arguments - key is an object, not a string object no
 		scrypt.KDF({}, scryptParameters);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or a string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.KDF({}, scryptParameters, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or a string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -892,14 +918,14 @@ test("Scrypt KDF: Incorrect arguments - salt is not of type string, string objec
 		scrypt.KDF("key", scryptParameters, 32, 123);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.KDF("key", scryptParameters, 32, 123, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or a string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -909,178 +935,14 @@ test("Scrypt KDF: Incorrect arguments - salt is an object, but not a string obje
 		scrypt.KDF("key", scryptParameters, 32, {});
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.KDF("key", scryptParameters, 32, {}, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
-/*
-test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
-/*
-test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
-	try {
-		scrypt.passwordHash("password", {});
-	} catch (err) {
-		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it is an empty object");
-		t.deepEqual(err,scrypt.errorObject(2,"N value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
-		t.end();
-	}
-});*/
-//Asynchronous
-/*test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    console.log("Password Hash Functionality\nTesting of arguments\n");
-    try {
-        scrypt.passwordHash(maxtime_passwordhash, function(err, hash) {} );
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, password was not present");
-        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    try {
-        scrypt.passwordHash(password, function(err, hash) {} );
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, maxtime_passwordhash was not present");
-        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed before the callback function - password and max_time", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing with incorrect arguments - password given an argument that is not a string", function(t) {
-    try {
-        scrypt.passwordHash(1232, maxtime_passwordhash, function(err, hash) {
-        })
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because password was not set as a string (it was set as 1232)");
-        t.equal(err.message,"password must be a string", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing with incorrect arguments - maxtime given an argument that is not a number", function(t) {
-    try {
-        scrypt.passwordHash(password, 'a', function(err, hash) {
-        })
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because maxtime was not set as a number (it was set as 'a')");
-        t.equal(err.message,"maxtime argument must be a number", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Asynchronous: Password hashing and verifying: Same password verify and hash (Result Must Be True)", function(t) {
-    console.log("\nPassword Hash Functionality\nTesting of hashing functionality\n");
-    scrypt.passwordHash(password, maxtime_passwordhash, function(err, hash) {
-        t.notOk(err,'No error hashing password');
-        scrypt.verifyHash(hash, password, function(err, result) {
-            t.notOk(err,'No error verifying hash');
-            t.equal(result, true,'Hash has been verified as true => Result Is True');
-            t.end();
-        })
-    })
-});
-
-test("Asynchronous: Password hashing and verifying: Different password verify and hash (Result Must Be False)", function(t) {
-    scrypt.passwordHash(password, maxtime_passwordhash, function(err, hash) {
-        t.notOk(err,'No error hashing password');
-        scrypt.verifyHash(hash, "Another password", function(err, result) {
-            t.ok(err,'Verification of hash failed because different passwords used');
-            t.equal(result, false,'Hash has not been verified => Result Is False');
-            t.end();
-        })
-    })
-});
-
-test("Asynchronous: Password hashing: Salt means same passwords hash to different values", function(t) {
-    scrypt.passwordHash(password, maxtime_passwordhash, function(err, hash1) {
-        scrypt.passwordHash(password, maxtime_passwordhash, function(err, hash2) {
-            t.notEqual(hash1,hash2,"Same passwords are correctly hashed to different values due to salt");
-            t.end();
-        })
-    })
-});
-
-
-//Synchronous
-test("Synchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    console.log("Password Hash Functionality\nTesting of arguments\n");
-    try {
-        scrypt.passwordHashSync(maxtime_passwordhash);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password, max_time or callback not present - in this case, password was not present");
-        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed - password and max_time", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Synchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    console.log("Password Hash Functionality\nTesting of arguments\n");
-    try {
-        scrypt.passwordHashSync(maxtime_passwordhash);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password or max_time not present - in this case, password was not present");
-        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed - password and max_time", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Synchronous: Password hashing with incorrect arguments - only two arguments present", function(t) {
-    try {
-        scrypt.passwordHashSync(password);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because either password, max_time not present - in this case, maxtime was not present");
-        t.equal(err.message,"Wrong number of arguments: At least two arguments are needed - password and max_time", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-
-test("Synchronous: Password hashing with incorrect arguments - password given an argument that is not a string", function(t) {
-    try {
-        scrypt.passwordHashSync(1232, maxtime_passwordhash);
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because password was not set as a string (it was set as 1232)");
-        t.equal(err.message,"password must be a string", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Synchronous: Password hashing with incorrect arguments - maxtime given an argument that is not a number", function(t) {
-    try {
-        scrypt.passwordHashSync(password, 'a');
-    } catch (err) {
-        t.ok(err,"An error was correctly thrown because maxtime was not set as a number (it was set as 'a')");
-        t.equal(err.message,"maxtime argument must be a number", "The correct object is returned, namely: "+err.message);
-        t.end();
-    }
-});
-
-test("Synchronous: Password hashing and verifying: Same password verify and hash (Result Must Be True)", function(t) {
-    console.log("\nPassword Hash Functionality\nTesting of hashing functionality\n");
-    var hash = scrypt.passwordHashSync(password, maxtime_passwordhash);
-    var result = scrypt.verifyHashSync(hash, password);
-    t.equal(result, true,'Hash has been verified as true => Result Is True');
-    t.end();
-});
-
-test("Synchronous: Password hashing and verifying: Different password verify and hash (Result Must Be False)", function(t) {
-    var hash = scrypt.passwordHashSync(password, maxtime_passwordhash);
-    var result = scrypt.verifyHashSync(hash, "Another password");
-    t.equal(result, false,'Hash has not been verified => Result Is False');
-    t.end();
-});
-
-test("Synchronous: Password hashing: Salt means same passwords hash to different values", function(t) {
-    var hash1 = scrypt.passwordHashSync(password, maxtime_passwordhash);
-    var hash2 = scrypt.passwordHashSync(password, maxtime_passwordhash);
-    t.notEqual(hash1,hash2,"Same passwords are correctly hashed to different values due to salt");
-    t.end();
-});*/
