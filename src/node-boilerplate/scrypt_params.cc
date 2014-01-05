@@ -215,8 +215,8 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 //
 Handle<Value> 
 Params(const Arguments& args) {
-	uint8_t parseResult = 0;
 	HandleScope scope;
+	uint8_t parseResult = 0;
 	Local<Object> params;
 	std::string validateMessage;
 	TranslationInfo* translationInfo = new TranslationInfo();

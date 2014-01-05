@@ -222,4 +222,38 @@ namespace Internal {
 		buffer = bufferConstructor->NewInstance(3, constructorArgs);
 	}
 
+	//
+	// Produces a nodejs Buffer argument
+	//
+	int
+	ProduceBuffer(Handle<Value>& argument, const std::string& argName, std::string& errorMessage, const node::encoding& encoding, bool checkEmpty) {
+		size_t dataLength = 0;
+		char *data = NULL;
+
+		if (!argument->IsString() && !argument->IsStringObject() && !node::Buffer::HasInstance(argument->ToObject())) {
+			errorMessage = argName + " must be a buffer or string";
+			return 1;
+		}
+
+		//Create a buffer with a string
+		if (argument->IsString() || argument->IsStringObject()) {
+			Handle<Value> buffer;
+			size_t dataWritten = 0;
+
+			dataLength = node::DecodeBytes(argument, encoding);
+			data = new char[dataLength];
+			CreateBuffer(buffer, data, dataLength);
+			dataWritten = node::DecodeWrite(data, dataLength, argument, encoding);
+			assert(dataWritten == dataLength);
+			argument = buffer;
+		}
+
+		if (checkEmpty && node::Buffer::Length(argument) == 0) {
+			errorMessage = argName + " cannot be empty";
+			return 1;
+		}
+
+		return 0;
+	}
+
 } //end Internal namespace

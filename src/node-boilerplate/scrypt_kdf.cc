@@ -77,15 +77,15 @@ struct ScryptInfo {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scryptInfo) {
+AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &scryptInfo) {
 	uint8_t scryptParameterParseResult = 0;
 	if (args.Length() < 2) {
-		errMessage = "at least two arguments are needed - key and a json object representing the scrypt parameters";
+		errorMessage = "at least two arguments are needed - key and a json object representing the scrypt parameters";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errMessage = "at least two arguments are needed before the callback function - key and a json object representing the scrypt parameters";
+		errorMessage = "at least two arguments are needed before the callback function - key and a json object representing the scrypt parameters";
 		return ADDONARG;
 	}
 
@@ -105,20 +105,8 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 		switch(i) {
 			case 0: //key
-				if (!currentVal->IsString() && !currentVal->IsObject()) {
-					errMessage = "key must be a buffer or a string";
+				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, node::ASCII, false)) {
 					return ADDONARG;
-				}
-
-				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					currentVal = node::Buffer::New(currentVal->ToString());	
-				}
-
-				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "key must be a buffer or a string object";
-						return ADDONARG;
-					}
 				}
 				
 				scryptInfo.key = currentVal;
@@ -129,11 +117,11 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 			case 1: //Scrypt parameters
 				if (!currentVal->IsObject()) {
-					errMessage = "expecting JSON object representing scrypt parameters";
+					errorMessage = "expecting JSON object representing scrypt parameters";
 					return ADDONARG;
 				}
 
-				scryptParameterParseResult = Internal::CheckScryptParameters(currentVal->ToObject(), errMessage);
+				scryptParameterParseResult = Internal::CheckScryptParameters(currentVal->ToObject(), errorMessage);
 				if (scryptParameterParseResult) {
 					return scryptParameterParseResult;
 				}
@@ -144,7 +132,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 
 			case 2: //length
 				if (!currentVal->IsNumber()) {
-					errMessage = "length must be a number";
+					errorMessage = "length must be a number";
 					return ADDONARG;
 				}
 			
@@ -155,21 +143,9 @@ AssignArguments(const Arguments& args, std::string& errMessage, ScryptInfo &scry
 				break;
 
 			case 3: //salt
-				if (!currentVal->IsString() && !currentVal->IsObject()) {
-					errMessage = "salt must be a buffer or a string";
+				if (Internal::ProduceBuffer(currentVal, "salt", errorMessage, node::ASCII, false)) {
 					return ADDONARG;
 				}
-
-				if (currentVal->IsString() || currentVal->IsStringObject()) {
-					currentVal = node::Buffer::New(currentVal->ToString());	
-				}
-
-				if (currentVal->IsObject() && !currentVal->IsStringObject()) {
-					if (!node::Buffer::HasInstance(currentVal)) {
-						errMessage = "salt must be a buffer or string object";
-						return ADDONARG;
-					}
-				} 
 				
 				scryptInfo.salt = currentVal;
 				scryptInfo.salt_ptr = node::Buffer::Data(currentVal);
