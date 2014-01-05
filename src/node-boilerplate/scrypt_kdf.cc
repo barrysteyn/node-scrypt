@@ -29,7 +29,6 @@
 #include <node_buffer.h>
 #include <v8.h>
 #include <string>
-#include <string.h>
 
 //C Linkings
 extern "C" {
@@ -38,7 +37,7 @@ extern "C" {
 }
 
 using namespace v8;
-#include "scrypt_common.h"
+#include "common.h"
 
 namespace 
 {

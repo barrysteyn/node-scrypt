@@ -31,7 +31,7 @@
 
 using namespace v8;
 
-#include "scrypt_common.h"
+#include "common.h"
 #include "scrypt_error.h"
 
 //

@@ -36,7 +36,7 @@ extern "C" {
 }
 
 using namespace v8;
-#include "scrypt_common.h"
+#include "common.h"
 
 namespace 
 {

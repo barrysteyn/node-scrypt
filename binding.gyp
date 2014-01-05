@@ -67,7 +67,7 @@
                 'src/node-boilerplate/scrypt_kdf.cc',
                 'src/node-boilerplate/scrypt_passwordhash.cc',
                 'src/node-boilerplate/scrypt_passwordverify.cc',
-                'src/node-boilerplate/scrypt_common.cc',
+                'src/node-boilerplate/common.cc',
                 'src/node-boilerplate/scrypt_error.cc',
             ],
             'include_dirs' : [
