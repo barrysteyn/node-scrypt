@@ -28,21 +28,15 @@
 #include <v8.h>
 #include <string>
 
-using namespace v8;
-
-#include "common.h"
-#include "scrypt_params.h"
-
 //Scrypt is a C library and there needs c linkings
 extern "C" {
 	#include "pickparams.h"
 }
 
-namespace {
+using namespace v8;
+#include "common.h"
 
-//Defaults
-const size_t MAXMEM = 0;
-const double MAXMEMFRAC = 0.5;
+namespace {
 
 //
 // Structure to hold information
@@ -61,7 +55,11 @@ struct TranslationInfo {
 	uint32_t p;
 
 	//Constructor / Destructor
-	TranslationInfo() : maxmem(MAXMEM), maxmemfrac(MAXMEMFRAC) { callback.Clear(); }
+	TranslationInfo(Handle<Object> config) { 
+		maxmem = static_cast<node::encoding>(config->Get(v8::String::New("maxmem"))->ToUint32()->Value());
+		maxmemfrac = static_cast<node::encoding>(config->Get(v8::String::New("maxmemfrac"))->ToUint32()->Value());
+		callback.Clear(); 
+	}
 	~TranslationInfo() { callback.Dispose(); }
 };
 
@@ -219,7 +217,7 @@ Params(const Arguments& args) {
 	uint8_t parseResult = 0;
 	Local<Object> params;
 	std::string validateMessage;
-	TranslationInfo* translationInfo = new TranslationInfo();
+	TranslationInfo* translationInfo = new TranslationInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
 
 	//Validate arguments and determine function type
 	if ((parseResult = AssignArguments(args, validateMessage, *translationInfo))) {
