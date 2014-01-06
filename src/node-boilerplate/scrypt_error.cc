@@ -32,7 +32,6 @@
 using namespace v8;
 
 #include "common.h"
-#include "scrypt_error.h"
 
 //
 // Error: Entry point from JavaScript land
