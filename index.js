@@ -66,7 +66,7 @@ scrypt.passwordHash = function(passwordHash, params) {
 		}
 	}
 
-	return function() {	
+	var retFunction = function() {	
 		var args = Array.prototype.slice.apply(arguments),
 			paramsObject;
 
@@ -76,13 +76,6 @@ scrypt.passwordHash = function(passwordHash, params) {
 		}
 
 		if (typeof args[args.length-1] === "function") {
-			var buffer = (typeof args[args.length-2] === "boolean") ? args[args.length-2] : false;
-			if (typeof args[args.length-2] === "boolean") {
-				args.splice(args.length-2,1);
-			}
-
-			args[args.length-1] = asyncHandler(args[args.length-1], buffer);
-
 			if (typeof paramsObject !== "undefined") {
 				params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac, function(err, scryptParams) {
 					args.splice(1,Object.keys(paramsObject).length,scryptParams);
@@ -92,23 +85,17 @@ scrypt.passwordHash = function(passwordHash, params) {
 				passwordHash.apply(this, args);
 			}
 		} else {
-			var buffer = (typeof args[args.length-1] === "boolean") ? args[args.length-1] : false;
-			if (typeof args[args.length-1] === "boolean") {
-				args.splice(args.length-1,1);
-			}
-
 			if (typeof paramsObject !== "undefined") {
 				var scryptParams = params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac);
 				args.splice(1, Object.keys(paramsObject).length, scryptParams);
 			}
 
-			if (buffer) {
-				return passwordHash.apply(this, args);
-			} else {
-				return passwordHash.apply(this, args).toString("base64");
-			}
+			return passwordHash.apply(this, args);
 		}
 	}
+	retFunction.config = passwordHash.config;
+
+	return retFunction;
 }(scrypt.passwordHash, scrypt.params);
 
 //
