@@ -159,6 +159,10 @@ namespace Internal {
 						errorMessage = "Scrypt parameter object error: "+errorMessage;
 					break;
 
+				case CONFIG:
+						errorMessage = "Scrypt config object error: "+errorMessage;
+					break;
+
 				default:
 					errorCode = 500;
 					errorMessage = "Unknown internal error - please report this error to make this module better. Details about error reporting can be found at the GitHub repo: https://github.com/barrysteyn/node-scrypt#report-errors";
@@ -230,8 +234,17 @@ namespace Internal {
 		size_t dataLength = 0;
 		char *data = NULL;
 
+		if (encoding == node::BUFFER && node::Buffer::HasInstance(argument->ToObject())) {
+			return 0;
+		}
+	
 		if (!argument->IsString() && !argument->IsStringObject() && !node::Buffer::HasInstance(argument->ToObject())) {
 			errorMessage = argName + " must be a buffer or string";
+			return 1;
+		}
+
+		if (encoding == node::BUFFER && !node::Buffer::HasInstance(argument->ToObject())) {
+			errorMessage = argName + " must be a buffer as specified by config";
 			return 1;
 		}
 
@@ -255,5 +268,4 @@ namespace Internal {
 
 		return 0;
 	}
-
 } //end Internal namespace

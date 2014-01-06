@@ -44,7 +44,7 @@ namespace
 //
 // Structure to hold information
 //
-struct ScryptInfo {
+struct ScryptInfo : public Internal::Encodings {
 	//Async callback function
 	Persistent<Function> callback;
 	Handle<Value> password, passwordHash;
@@ -57,7 +57,8 @@ struct ScryptInfo {
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) { 
+	ScryptInfo(Handle<Object> config) : Internal::Encodings(config), password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) 
+	{ 
 		callback.Clear(); 
 		password.Clear();
 		passwordHash.Clear();
@@ -80,6 +81,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 	if (args.Length() < 2) {
 		errorMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
 		return ADDONARG;
+
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
@@ -98,7 +100,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 
 		switch(i) {
 			case 0: //Password
-				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, node::ASCII)) {
+				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, scryptInfo.inputEncoding)) {
 					return ADDONARG;
 				}
 				scryptInfo.password = currentVal;
@@ -140,7 +142,7 @@ PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const ScryptInfo* scryptI
 			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
 		);
 	} else {
-		passwordHash = scryptInfo->passwordHash;
+		passwordHash = BUFFER_ENCODED(scryptInfo->passwordHash, scryptInfo->outputEncoding)
 	}
 }
 
@@ -152,11 +154,11 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 	HandleScope scope;
 	ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
 	uint8_t argc = (scryptInfo->result) ? 1 : 2;
-	Handle<Value> passwordHash;
+	Handle<Value> passwordHash = BUFFER_ENCODED(scryptInfo->passwordHash, scryptInfo->outputEncoding)
 
 	Handle<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
-		scryptInfo->passwordHash
+		passwordHash
 	};
 
 	TryCatch try_catch;
@@ -204,7 +206,7 @@ PasswordHash(const Arguments& args) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	ScryptInfo* scryptInfo = new ScryptInfo(); 
+	ScryptInfo* scryptInfo = new ScryptInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config")))); 
 	Handle<Value> passwordHash;
 
 	//Assign and validate arguments
