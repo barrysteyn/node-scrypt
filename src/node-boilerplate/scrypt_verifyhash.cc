@@ -1,5 +1,5 @@
 /*
-	scrypt_passwordverify.cc 
+	scrypt_verifyhash.cc 
 
 	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -37,11 +37,13 @@ extern "C" {
 
 using namespace v8;
 #include "common.h"
-#include "scrypt_passwordverify.h"
 
 namespace {
 
-struct PasswordHash {
+struct HashInfo {
+	//Encodings
+	node::encoding hashEncoding, keyEncoding;
+
 	//Async callback function
 	Persistent<Function> callback;
 	Handle<Value> hash, password;
@@ -51,8 +53,15 @@ struct PasswordHash {
 	char *hash_ptr, *password_ptr;
 	size_t passwordSize;
 
-	PasswordHash() : hash_ptr(NULL), password_ptr(NULL), passwordSize(0) { callback.Clear(); hash.Clear(); password.Clear(); }
-	~PasswordHash() { 
+	HashInfo(Handle<Object> config) : hash_ptr(NULL), password_ptr(NULL), passwordSize(0) { 
+		hashEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_hashEncoding"))->ToUint32()->Value());
+		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		callback.Clear(); 
+		hash.Clear(); 
+		password.Clear(); 
+	}
+
+	~HashInfo() { 
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(hash).Dispose();
 			Persistent<Value>(password).Dispose();
@@ -62,7 +71,7 @@ struct PasswordHash {
 };
 
 int
-AssignArguments(const Arguments& args, std::string& errorMessage, PasswordHash& passwordHash) {
+AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hashInfo) {
 	if (args.Length() < 2) {
 		errorMessage = "both hash and password are needed";
 		return ADDONARG;
@@ -77,31 +86,31 @@ AssignArguments(const Arguments& args, std::string& errorMessage, PasswordHash& 
 		Handle<Value> currentVal = args[i];
 
 		if (i > 1 && currentVal->IsFunction()) {
-			passwordHash.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
-			passwordHash.hash = Persistent<Value>::New(passwordHash.hash);
-			passwordHash.password = Persistent<Value>::New(passwordHash.password);
+			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			hashInfo.hash = Persistent<Value>::New(hashInfo.hash);
+			hashInfo.password = Persistent<Value>::New(hashInfo.password);
 			return 0;
 		}
 
 		switch(i) {
 			case 0: //Hash
-				if (Internal::ProduceBuffer(currentVal, "hash", errorMessage, node::BASE64)) {
+				if (Internal::ProduceBuffer(currentVal, "hash", errorMessage, hashInfo.hashEncoding)) {
 					return ADDONARG;
 				}
 
-				passwordHash.hash = currentVal;
-				passwordHash.hash_ptr = node::Buffer::Data(currentVal);
+				hashInfo.hash = currentVal;
+				hashInfo.hash_ptr = node::Buffer::Data(currentVal);
 
 				break;
 
 			case 1: //Password
-				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, node::ASCII)) {
+				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, hashInfo.keyEncoding)) {
 					return ADDONARG;
 				}
 
-				passwordHash.password = currentVal;
-				passwordHash.password_ptr = node::Buffer::Data(currentVal);
-				passwordHash.passwordSize = node::Buffer::Length(currentVal);
+				hashInfo.password = currentVal;
+				hashInfo.password_ptr = node::Buffer::Data(currentVal);
+				hashInfo.passwordSize = node::Buffer::Length(currentVal);
 
 				break;
 		}
@@ -114,11 +123,11 @@ AssignArguments(const Arguments& args, std::string& errorMessage, PasswordHash& 
 // Work Function: Actual password hash done here
 //
 void
-VerifyHashWork(PasswordHash* passwordHash) {
-	passwordHash->result = VerifyHash(
-		(const uint8_t*)passwordHash->hash_ptr,
-		(const uint8_t*)passwordHash->password_ptr, 
-		passwordHash->passwordSize
+VerifyHashWork(HashInfo* hashInfo) {
+	hashInfo->result = VerifyHash(
+		(const uint8_t*)hashInfo->hash_ptr,
+		(const uint8_t*)hashInfo->password_ptr, 
+		hashInfo->passwordSize
 	);
 }
 
@@ -127,20 +136,20 @@ VerifyHashWork(PasswordHash* passwordHash) {
 //
 void
 VerifyHashAsyncWork(uv_work_t* req) {
-    VerifyHashWork(static_cast<PasswordHash*>(req->data));
+    VerifyHashWork(static_cast<HashInfo*>(req->data));
 }
 
 //
 // Synchronous: After work function
 //
 void
-VerifyHashSyncAfterWork(Local<Value>& result, const PasswordHash* passwordHash) {
-	if (passwordHash->result && passwordHash->result != 11) {
+VerifyHashSyncAfterWork(Local<Value>& result, const HashInfo* hashInfo) {
+	if (hashInfo->result && hashInfo->result != 11) {
 		ThrowException(
-			Internal::MakeErrorObject(SCRYPT,passwordHash->result)
+			Internal::MakeErrorObject(SCRYPT,hashInfo->result)
 		);
 	} else {
-		result = Local<Value>::New(Boolean::New(passwordHash->result == 0));
+		result = Local<Value>::New(Boolean::New(hashInfo->result == 0));
 	}
 }
 
@@ -150,53 +159,53 @@ VerifyHashSyncAfterWork(Local<Value>& result, const PasswordHash* passwordHash) 
 void
 VerifyHashAsyncAfterWork(uv_work_t* req) {
 	HandleScope scope;
-	PasswordHash* passwordHash = static_cast<PasswordHash*>(req->data);
+	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
 
 	Local<Value> argv[2] = {
-		Internal::MakeErrorObject(SCRYPT,passwordHash->result),
-		Local<Value>::New(Boolean::New(passwordHash->result == 0))
+		Internal::MakeErrorObject(SCRYPT,hashInfo->result),
+		Local<Value>::New(Boolean::New(hashInfo->result == 0))
 	};
 
 	TryCatch try_catch;
-	passwordHash->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+	hashInfo->callback->Call(Context::GetCurrent()->Global(), 2, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}
 
 	//Clean up
-	delete passwordHash;
+	delete hashInfo;
 	delete req;
 }
 
 } //end of anon namespace
 
 //
-// VerifyPasswordHash: Parses arguments and determines what type (sync or async) this function is
+// VerifyHash: Parses arguments and determines what type (sync or async) this function is
 // This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
-VerifyPasswordHash(const Arguments& args) {
+VerifyHash(const Arguments& args) {
 	HandleScope scope;
 	uint8_t parseResult = 0;
 	std::string validateMessage;
-	PasswordHash* passwordHash = new PasswordHash();
+	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
 	Local<Value> result;
 
 	//Assign and validate arguments
-	if ((parseResult = AssignArguments(args, validateMessage, *passwordHash))) {
+	if ((parseResult = AssignArguments(args, validateMessage, *hashInfo))) {
 		ThrowException(
 			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
 	} else {
-		if (passwordHash->callback.IsEmpty()) {
+		if (hashInfo->callback.IsEmpty()) {
 			//Synchronous
-			VerifyHashWork(passwordHash);
-			VerifyHashSyncAfterWork(result, passwordHash);
+			VerifyHashWork(hashInfo);
+			VerifyHashSyncAfterWork(result, hashInfo);
 		} else {
 			//Asynchronous work request
 			uv_work_t *req = new uv_work_t();
-			req->data = passwordHash;
+			req->data = hashInfo;
 			
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, VerifyHashAsyncWork, (uv_after_work_cb)VerifyHashAsyncAfterWork);
@@ -204,8 +213,8 @@ VerifyPasswordHash(const Arguments& args) {
 		}
 	}
 
-	if (passwordHash->callback.IsEmpty()) {
-		delete passwordHash;
+	if (hashInfo->callback.IsEmpty()) {
+		delete hashInfo;
 	}
 
 	return scope.Close(result);

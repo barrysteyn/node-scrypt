@@ -31,8 +31,8 @@
 using namespace v8;
 
 #include "src/node-boilerplate/scrypt_kdf.h"
-#include "src/node-boilerplate/scrypt_passwordhash.h"
-#include "src/node-boilerplate/scrypt_passwordverify.h"
+#include "src/node-boilerplate/scrypt_hash.h"
+#include "src/node-boilerplate/scrypt_verifyhash.h"
 #include "src/node-boilerplate/scrypt_params.h"
 #include "src/node-boilerplate/scrypt_error.h"
 #include "src/node-boilerplate/scrypt_config_object.h"
@@ -44,12 +44,12 @@ void RegisterModule(Handle<Object> target) {
 	//Function templates
 	Local<FunctionTemplate> params = FunctionTemplate::New(Params);
 	params->Set("config", CreateScryptConfigObject("params"));
-	Local<FunctionTemplate> hash = FunctionTemplate::New(PasswordHash);
-	hash->Set("config", CreateScryptConfigObject());
-	Local<FunctionTemplate> verify = FunctionTemplate::New(VerifyPasswordHash);
-	verify->Set("config", CreateScryptConfigObject());
+	Local<FunctionTemplate> hash = FunctionTemplate::New(Hash);
+	hash->Set("config", CreateScryptConfigObject("hash"));
+	Local<FunctionTemplate> verify = FunctionTemplate::New(VerifyHash);
+	verify->Set("config", CreateScryptConfigObject("verify"));
 	Local<FunctionTemplate> kdf = FunctionTemplate::New(KDF);
-	kdf->Set("config", CreateScryptConfigObject());
+	kdf->Set("config", CreateScryptConfigObject("kdf"));
 	
 	//Params (Translation function)
 	target->Set(String::NewSymbol("params"), params->GetFunction());
