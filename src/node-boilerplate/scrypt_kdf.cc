@@ -45,7 +45,10 @@ namespace
 //
 // Structure to hold information
 //
-struct ScryptInfo {
+struct KDFInfo {
+    //Encodings
+    node::encoding keyEncoding, saltEncoding, outputEncoding;
+
 	//Async Persistent Values
 	Persistent<Function> callback;
 	Handle<Value> key, salt, hashBuffer;
@@ -53,16 +56,25 @@ struct ScryptInfo {
 	//Custom data for scrypt
 	int result;
 	char *key_ptr, *salt_ptr, *hashBuffer_ptr;
-	size_t keySize, saltSize, hashBufferSize;
+	size_t keySize, saltSize, outputLength;
 	bool saltPersist;
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo() : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltSize(32), hashBufferSize(64), saltPersist(false) { 
-		callback.Clear(); key.Clear(); salt.Clear(); hashBuffer.Clear(); 
+	KDFInfo(Handle<Object> config) : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltPersist(false) { 
+		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		saltEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_saltEncoding"))->ToUint32()->Value());
+		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
+		saltSize = static_cast<node::encoding>(config->Get(v8::String::New("defaultSaltSize"))->ToUint32()->Value());
+		outputLength = static_cast<node::encoding>(config->Get(v8::String::New("outputLength"))->ToUint32()->Value());
+
+		callback.Clear(); 
+		key.Clear(); 
+		salt.Clear(); 
+		hashBuffer.Clear(); 
 	}
 
-	~ScryptInfo() {
+	~KDFInfo() {
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(key).Dispose();
 			if (this->saltPersist) Persistent<Value>(salt).Dispose();
@@ -76,7 +88,7 @@ struct ScryptInfo {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &scryptInfo) {
+AssignArguments(const Arguments& args, std::string& errorMessage, KDFInfo &kdfInfo) {
 	uint8_t scryptParameterParseResult = 0;
 	if (args.Length() < 2) {
 		errorMessage = "at least two arguments are needed - key and a json object representing the scrypt parameters";
@@ -92,11 +104,11 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 		Handle<Value> currentVal = args[i];
 
 		if (i > 1 && currentVal->IsFunction()) {
-			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
-			scryptInfo.key = Persistent<Value>::New(scryptInfo.key);
-			if (!scryptInfo.salt.IsEmpty()) {
-				scryptInfo.saltPersist = true;
-				scryptInfo.salt = Persistent<Value>::New(scryptInfo.salt);
+			kdfInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			kdfInfo.key = Persistent<Value>::New(kdfInfo.key);
+			if (!kdfInfo.salt.IsEmpty()) {
+				kdfInfo.saltPersist = true;
+				kdfInfo.salt = Persistent<Value>::New(kdfInfo.salt);
 			}
 
 			return 0;
@@ -104,13 +116,13 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 
 		switch(i) {
 			case 0: //key
-				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, node::ASCII, false)) {
+				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, kdfInfo.keyEncoding, false)) {
 					return ADDONARG;
 				}
 				
-				scryptInfo.key = currentVal;
-				scryptInfo.key_ptr = node::Buffer::Data(currentVal);
-				scryptInfo.keySize = node::Buffer::Length(currentVal);
+				kdfInfo.key = currentVal;
+				kdfInfo.key_ptr = node::Buffer::Data(currentVal);
+				kdfInfo.keySize = node::Buffer::Length(currentVal);
 
 				break;
 
@@ -125,7 +137,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 					return scryptParameterParseResult;
 				}
 
-				scryptInfo.params = currentVal->ToObject();
+				kdfInfo.params = currentVal->ToObject();
 
 				break;
 
@@ -136,19 +148,19 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 				}
 			
 				if (currentVal->ToNumber()->Value() > 64) {
-					scryptInfo.hashBufferSize = currentVal->ToNumber()->Value();
+					kdfInfo.outputLength = currentVal->ToNumber()->Value();
 				}
 			
 				break;
 
 			case 3: //salt
-				if (Internal::ProduceBuffer(currentVal, "salt", errorMessage, node::ASCII, false)) {
+				if (Internal::ProduceBuffer(currentVal, "salt", errorMessage, kdfInfo.saltEncoding, false)) {
 					return ADDONARG;
 				}
 				
-				scryptInfo.salt = currentVal;
-				scryptInfo.salt_ptr = node::Buffer::Data(currentVal);
-				scryptInfo.saltSize = node::Buffer::Length(scryptInfo.salt);
+				kdfInfo.salt = currentVal;
+				kdfInfo.salt_ptr = node::Buffer::Data(currentVal);
+				kdfInfo.saltSize = node::Buffer::Length(kdfInfo.salt);
 		}
 	}
 
@@ -159,14 +171,14 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 // Creates the JSON object returned to JS land
 //
 void
-CreateJSONResult(Handle<Value> &result, ScryptInfo* scryptInfo) {
+CreateJSONResult(Handle<Value> &result, KDFInfo* kdfInfo) {
 	Local<Object> resultObject = Object::New();
-	resultObject->Set(String::NewSymbol("hash"), scryptInfo->hashBuffer);
+	resultObject->Set(String::NewSymbol("hash"), BUFFER_ENCODED(kdfInfo->hashBuffer, kdfInfo->outputEncoding));
 
-	if (scryptInfo->salt.IsEmpty()) {
-		Internal::CreateBuffer(scryptInfo->salt, scryptInfo->salt_ptr, scryptInfo->saltSize);
+	if (kdfInfo->salt.IsEmpty()) {
+		Internal::CreateBuffer(kdfInfo->salt, kdfInfo->salt_ptr, kdfInfo->saltSize);
 	}
-	resultObject->Set(String::NewSymbol("salt"), scryptInfo->salt);
+	resultObject->Set(String::NewSymbol("salt"), BUFFER_ENCODED(kdfInfo->salt, kdfInfo->outputEncoding));
 
 	result = resultObject;
 }
@@ -175,13 +187,13 @@ CreateJSONResult(Handle<Value> &result, ScryptInfo* scryptInfo) {
 // Synchronous: After work function
 //
 void
-KDFSyncAfterWork(Handle<Value>& kdf, ScryptInfo* scryptInfo) {
-	if (scryptInfo->result) { //There has been an error
+KDFSyncAfterWork(Handle<Value>& kdf, KDFInfo* kdfInfo) {
+	if (kdfInfo->result) { //There has been an error
 		ThrowException(
-			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
+			Internal::MakeErrorObject(SCRYPT,kdfInfo->result)
 		);
 	} else {
-		CreateJSONResult(kdf, scryptInfo);
+		CreateJSONResult(kdf, kdfInfo);
 	}
 }
 
@@ -191,26 +203,26 @@ KDFSyncAfterWork(Handle<Value>& kdf, ScryptInfo* scryptInfo) {
 void 
 KDFAsyncAfterWork(uv_work_t *req) {
 	HandleScope scope;
-	ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
+	KDFInfo* kdfInfo = static_cast<KDFInfo*>(req->data);
 	Local<Value> kdfResult;
-	uint8_t argc = (scryptInfo->result) ? 1 : 2;
-	if (!scryptInfo->result) {
-		CreateJSONResult(kdfResult, scryptInfo);
+	uint8_t argc = (kdfInfo->result) ? 1 : 2;
+	if (!kdfInfo->result) {
+		CreateJSONResult(kdfResult, kdfInfo);
 	}
 	
 	Handle<Value> argv[2] = {
-		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
+		Internal::MakeErrorObject(SCRYPT,kdfInfo->result),
 		kdfResult
 	};
 
 	TryCatch try_catch;
-	scryptInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+	kdfInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}
 
 	//Cleanup
-	delete scryptInfo; 
+	delete kdfInfo; 
 	delete req;
 }
 
@@ -218,17 +230,17 @@ KDFAsyncAfterWork(uv_work_t *req) {
 // Work Function: Actual scrypt key derivation performed here
 //
 void 
-KDFWork(ScryptInfo* scryptInfo) {
-	if (!scryptInfo->salt_ptr) {
-		scryptInfo->salt_ptr = new char[scryptInfo->saltSize];
-		getsalt((uint8_t*)scryptInfo->salt_ptr, scryptInfo->saltSize);
+KDFWork(KDFInfo* kdfInfo) {
+	if (!kdfInfo->salt_ptr) {
+		kdfInfo->salt_ptr = new char[kdfInfo->saltSize];
+		getsalt((uint8_t*)kdfInfo->salt_ptr, kdfInfo->saltSize);
 	}
 
-	scryptInfo->result = ScryptKeyDerivationFunction(
-		(uint8_t*)scryptInfo->key_ptr, scryptInfo->keySize,
-		(uint8_t*)scryptInfo->salt_ptr, scryptInfo->saltSize,
-		scryptInfo->params.N, scryptInfo->params.r, scryptInfo->params.p,
-		(uint8_t*)scryptInfo->hashBuffer_ptr, scryptInfo->hashBufferSize
+	kdfInfo->result = ScryptKeyDerivationFunction(
+		(uint8_t*)kdfInfo->key_ptr, kdfInfo->keySize,
+		(uint8_t*)kdfInfo->salt_ptr, kdfInfo->saltSize,
+		kdfInfo->params.N, kdfInfo->params.r, kdfInfo->params.p,
+		(uint8_t*)kdfInfo->hashBuffer_ptr, kdfInfo->outputLength
 	);
 }
 
@@ -237,7 +249,7 @@ KDFWork(ScryptInfo* scryptInfo) {
 //
 void 
 KDFAsyncWork(uv_work_t* req) {
-	KDFWork(static_cast<ScryptInfo*>(req->data));	
+	KDFWork(static_cast<KDFInfo*>(req->data));	
 }
 
 } //end of unnamed namespace
@@ -251,29 +263,29 @@ KDF(const Arguments& args) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	ScryptInfo* scryptInfo = new ScryptInfo(); 
+	KDFInfo* kdfInfo = new KDFInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
 	Local<Value> kdf;
 
 	//Assign and validate arguments
-	if ((parseResult = AssignArguments(args, validateMessage, *scryptInfo))) {
+	if ((parseResult = AssignArguments(args, validateMessage, *kdfInfo))) {
 		ThrowException(
 			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
 	} else {
-		Internal::CreateBuffer(scryptInfo->hashBuffer, scryptInfo->hashBufferSize);
-		scryptInfo->hashBuffer_ptr = node::Buffer::Data(scryptInfo->hashBuffer);
+		Internal::CreateBuffer(kdfInfo->hashBuffer, kdfInfo->outputLength);
+		kdfInfo->hashBuffer_ptr = node::Buffer::Data(kdfInfo->hashBuffer);
 
-		if (scryptInfo->callback.IsEmpty()) {
+		if (kdfInfo->callback.IsEmpty()) {
 			//Synchronous 
-			KDFWork(scryptInfo);
-			KDFSyncAfterWork(kdf, scryptInfo);
+			KDFWork(kdfInfo);
+			KDFSyncAfterWork(kdf, kdfInfo);
 		} else {
 			//Asynchronous
-			scryptInfo->hashBuffer = Persistent<Value>::New(scryptInfo->hashBuffer);
+			kdfInfo->hashBuffer = Persistent<Value>::New(kdfInfo->hashBuffer);
 
 			//Work request 
 			uv_work_t *req = new uv_work_t();
-			req->data = scryptInfo;
+			req->data = kdfInfo;
 
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, KDFAsyncWork, (uv_after_work_cb)KDFAsyncAfterWork);
@@ -282,8 +294,8 @@ KDF(const Arguments& args) {
 	}
 
 	//Clean up heap only if call is synchronous
-	if (scryptInfo->callback.IsEmpty()) {
-		delete scryptInfo;
+	if (kdfInfo->callback.IsEmpty()) {
+		delete kdfInfo;
 	}
 
 	return scope.Close(kdf);
