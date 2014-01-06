@@ -1,5 +1,5 @@
 /*
-	scrypt_password.cc 
+	scrypt_hash.cc 
 
 	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -44,7 +44,10 @@ namespace
 //
 // Structure to hold information
 //
-struct ScryptInfo : public Internal::Encodings {
+struct HashInfo {
+	//Encodings
+	node::encoding keyEncoding, outputEncoding;
+
 	//Async callback function
 	Persistent<Function> callback;
 	Handle<Value> password, passwordHash;
@@ -57,13 +60,14 @@ struct ScryptInfo : public Internal::Encodings {
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	ScryptInfo(Handle<Object> config) : Internal::Encodings(config), password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) 
-	{ 
+	HashInfo(Handle<Object> config) : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) {
+		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());		 
 		callback.Clear(); 
 		password.Clear();
 		passwordHash.Clear();
 	}
-	~ScryptInfo() {
+	~HashInfo() {
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(password).Dispose();
 			Persistent<Value>(passwordHash).Dispose();
@@ -76,7 +80,7 @@ struct ScryptInfo : public Internal::Encodings {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &scryptInfo) {
+AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo &hashInfo) {
 	uint8_t scryptParameterParseResult = 0;	
 	if (args.Length() < 2) {
 		errorMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
@@ -92,24 +96,24 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
 		if (i > 1 && currentVal->IsFunction()) {
-			scryptInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
-			scryptInfo.password = Persistent<Value>::New(scryptInfo.password);
-			scryptInfo.passwordHash = Persistent<Value>::New(scryptInfo.passwordHash);
+			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			hashInfo.password = Persistent<Value>::New(hashInfo.password);
+			hashInfo.passwordHash = Persistent<Value>::New(hashInfo.passwordHash);
 			return 0;
 		}
 
 		switch(i) {
 			case 0: //Password
-				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, scryptInfo.inputEncoding)) {
+				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, hashInfo.keyEncoding)) {
 					return ADDONARG;
 				}
-				scryptInfo.password = currentVal;
-				scryptInfo.password_ptr = node::Buffer::Data(currentVal);
-				scryptInfo.passwordSize = node::Buffer::Length(currentVal);
+				hashInfo.password = currentVal;
+				hashInfo.password_ptr = node::Buffer::Data(currentVal);
+				hashInfo.passwordSize = node::Buffer::Length(currentVal);
 
 				//Create hash buffer - note that it is the same size as the password buffer
-				Internal::CreateBuffer(scryptInfo.passwordHash, scryptInfo.passwordHashSize);
-				scryptInfo.passwordHash_ptr = node::Buffer::Data(scryptInfo.passwordHash);
+				Internal::CreateBuffer(hashInfo.passwordHash, hashInfo.passwordHashSize);
+				hashInfo.passwordHash_ptr = node::Buffer::Data(hashInfo.passwordHash);
 				break;
 
 			case 1: //Scrypt parameters
@@ -123,7 +127,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 					return scryptParameterParseResult;
 				}
 
-				scryptInfo.params = currentVal->ToObject();
+				hashInfo.params = currentVal->ToObject();
 
 				break;   
 		}
@@ -136,13 +140,13 @@ AssignArguments(const Arguments& args, std::string& errorMessage, ScryptInfo &sc
 // Synchronous: After work function
 //
 void
-PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const ScryptInfo* scryptInfo) {
-	if (scryptInfo->result) { //There has been an error
+PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const HashInfo* hashInfo) {
+	if (hashInfo->result) { //There has been an error
 		ThrowException(
-			Internal::MakeErrorObject(SCRYPT,scryptInfo->result)
+			Internal::MakeErrorObject(SCRYPT,hashInfo->result)
 		);
 	} else {
-		passwordHash = BUFFER_ENCODED(scryptInfo->passwordHash, scryptInfo->outputEncoding)
+		passwordHash = BUFFER_ENCODED(hashInfo->passwordHash, hashInfo->outputEncoding);
 	}
 }
 
@@ -152,24 +156,24 @@ PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const ScryptInfo* scryptI
 void 
 PasswordHashAsyncAfterWork(uv_work_t *req) {
 	HandleScope scope;
-	ScryptInfo* scryptInfo = static_cast<ScryptInfo*>(req->data);
-	uint8_t argc = (scryptInfo->result) ? 1 : 2;
-	Handle<Value> passwordHash = BUFFER_ENCODED(scryptInfo->passwordHash, scryptInfo->outputEncoding)
+	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
+	uint8_t argc = (hashInfo->result) ? 1 : 2;
+	Handle<Value> passwordHash = BUFFER_ENCODED(hashInfo->passwordHash, hashInfo->outputEncoding);
 
 	Handle<Value> argv[2] = {
-		Internal::MakeErrorObject(SCRYPT,scryptInfo->result),
+		Internal::MakeErrorObject(SCRYPT,hashInfo->result),
 		passwordHash
 	};
 
 	TryCatch try_catch;
-	scryptInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+	hashInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}
 
 	//Cleanup
-	delete scryptInfo; 
+	delete hashInfo; 
 	delete req;
 }
 
@@ -178,12 +182,12 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 // Work Function: Actual password hash performed here
 //
 void 
-PasswordHashWork(ScryptInfo* scryptInfo) {
+PasswordHashWork(HashInfo* hashInfo) {
 	//perform scrypt password hash
-	scryptInfo->result = HashPassword(
-		(const uint8_t*)scryptInfo->password_ptr, scryptInfo->passwordSize,
-		(uint8_t*)scryptInfo->passwordHash_ptr,
-		scryptInfo->params.N, scryptInfo->params.r, scryptInfo->params.p
+	hashInfo->result = HashPassword(
+		(const uint8_t*)hashInfo->password_ptr, hashInfo->passwordSize,
+		(uint8_t*)hashInfo->passwordHash_ptr,
+		hashInfo->params.N, hashInfo->params.r, hashInfo->params.p
 	);
 }
 
@@ -192,37 +196,37 @@ PasswordHashWork(ScryptInfo* scryptInfo) {
 //
 void 
 PasswordHashAsyncWork(uv_work_t* req) {
-	PasswordHashWork(static_cast<ScryptInfo*>(req->data));	
+	PasswordHashWork(static_cast<HashInfo*>(req->data));	
 }
 
 } //end of unnamed namespace
 
 //
-// PasswordHash: Parses arguments and determines what type (sync or async) this function is
+// Hash: Parses arguments and determines what type (sync or async) this function is
 // This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
-PasswordHash(const Arguments& args) {
+Hash(const Arguments& args) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	ScryptInfo* scryptInfo = new ScryptInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config")))); 
+	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config")))); 
 	Handle<Value> passwordHash;
 
 	//Assign and validate arguments
-	if ((parseResult = AssignArguments(args, validateMessage, *scryptInfo))) {
+	if ((parseResult = AssignArguments(args, validateMessage, *hashInfo))) {
 		ThrowException(
 			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
 	} else {
-		if (scryptInfo->callback.IsEmpty()) {
+		if (hashInfo->callback.IsEmpty()) {
 			//Synchronous 
-			PasswordHashWork(scryptInfo);
-			PasswordHashSyncAfterWork(passwordHash, scryptInfo);
+			PasswordHashWork(hashInfo);
+			PasswordHashSyncAfterWork(passwordHash, hashInfo);
 		} else {
 			//Work request 
 			uv_work_t *req = new uv_work_t();
-			req->data = scryptInfo;
+			req->data = hashInfo;
 
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, PasswordHashAsyncWork, (uv_after_work_cb)PasswordHashAsyncAfterWork);
@@ -231,8 +235,8 @@ PasswordHash(const Arguments& args) {
 	}
 
 	//Clean up heap only if call is synchronous
-	if (scryptInfo->callback.IsEmpty()) {
-		delete scryptInfo;
+	if (hashInfo->callback.IsEmpty()) {
+		delete hashInfo;
 	}
 
 	return scope.Close(passwordHash);

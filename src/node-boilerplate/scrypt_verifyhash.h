@@ -1,5 +1,5 @@
 /*
-	scrypt_passwordhash.h
+	scrypt_verifyhash.h
 
 	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -24,9 +24,10 @@
 	Barry Steyn barry.steyn@gmail.com
 */
 
-#ifndef _SCRYPT_PASSWORDHASH_H_
-#define _SCRYPT_PASSWORDHASH_H_
+#ifndef _SCRYPT_VERIFY_HASH_H_
+#define _SCRYPT_VERIFY_HASH_H_
 
-Handle<Value> PasswordHash(const Arguments& args);
+Handle<Value>
+VerifyHash(const Arguments& args);
 
-#endif //_SCRYPT_PASSWORDHASH_H_
+#endif //_SCRYPT_VERIFY_HASH_H_
