@@ -24,11 +24,21 @@
 	Barry Steyn barry.steyn@gmail.com
 */
 
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
 //Constants
 const uint8_t JSARG=1; //Error in JavaScript land: Argument mismatch
 const uint8_t ADDONARG=2; //Error resulting from argument mismatch in the node addon module
 const uint8_t PARMOBJ=3; //Scrypt generated errors
 const uint8_t SCRYPT=4; //Scrypt generated errors
+const uint8_t CONFIG=5; //Scrypt generated errors
+
+//Macro expansion to DRY buffer encoding output
+#define BUFFER_ENCODED(buffer, encoding) \
+	(encoding == node::BUFFER) \
+            ? buffer \
+            : node::Encode(node::Buffer::Data(buffer), node::Buffer::Length(buffer), encoding);
 
 namespace Internal {
 	//
@@ -43,6 +53,18 @@ namespace Internal {
 	};
 
 	//
+	// Encodings from config object
+	//
+	struct Encodings {
+		node::encoding inputEncoding, outputEncoding;
+
+		Encodings(v8::Handle<v8::Object> configObject) {
+			inputEncoding = static_cast<node::encoding>(configObject->Get(v8::String::New("_inputEncoding"))->ToUint32()->Value());
+			outputEncoding = static_cast<node::encoding>(configObject->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
+		}
+	};
+
+	//
 	//Declarations
 	//
 	int CheckScryptParameters(const v8::Local<v8::Object>&, std::string&);
@@ -52,3 +74,5 @@ namespace Internal {
     void CreateBuffer(v8::Handle<v8::Value> &buffer, char* data, size_t dataLength);
 	int ProduceBuffer(v8::Handle<v8::Value>&, const std::string&, std::string&, const node::encoding&, bool=true);
 }
+
+#endif /*_COMMON_H_*/

@@ -1,7 +1,7 @@
 /*
-	scrypt_passwordhash.h
+	scrypt_config_object.h
 
-	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+	Copyright (C) 2014 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
 	This source code is provided 'as-is', without any express or implied
 	warranty. In no event will the author be held liable for any damages
@@ -24,9 +24,10 @@
 	Barry Steyn barry.steyn@gmail.com
 */
 
-#ifndef _SCRYPT_PASSWORDHASH_H_
-#define _SCRYPT_PASSWORDHASH_H_
+#ifndef _SCRYPT_CONFIG_OBJECT_H_
+#define _SCRYPT_CONFIG_OBJECT_H_
 
-Handle<Value> PasswordHash(const Arguments& args);
+Handle<Object>
+CreateScryptConfigObject(const char* = "");
 
-#endif //_SCRYPT_PASSWORDHASH_H_
+#endif /*_SCRYPT_CONFIG_OBJECT_H_*/

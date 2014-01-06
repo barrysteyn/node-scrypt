@@ -69,6 +69,7 @@
                 'src/node-boilerplate/scrypt_passwordverify.cc',
                 'src/node-boilerplate/common.cc',
                 'src/node-boilerplate/scrypt_error.cc',
+                'src/node-boilerplate/scrypt_config_object.cc',
             ],
             'include_dirs' : [
                 'src/util',
