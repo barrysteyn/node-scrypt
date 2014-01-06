@@ -33,14 +33,13 @@
 
 using namespace v8;
 #include "common.h"
-#include "scrypt_config_object.h"
 
 Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, const AccessorInfo& info) {
 	Handle<Value> returnValue;
 	std::string errorMessage;
 	std::string property(*String::Utf8Value(propertyString));
 
-	if (property == "inputEncoding" || property == "outputEncoding") {
+	if (property == "inputEncoding" || property == "outputEncoding" || property == "hashEncoding" || property == "keyEncoding") {
 		if (!value->IsString()) {
 			errorMessage = "encoding must be string";
 			ThrowException(
@@ -68,6 +67,38 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 		}
 	}
 
+	if (property == "maxmem" || property == "maxmemfrac") {
+		if (!value->IsNumber()) {
+			errorMessage = property + " must be a number";
+			ThrowException(
+				Internal::MakeErrorObject(CONFIG, errorMessage)
+			);
+		}
+		
+		if (value->ToNumber()->Value() <= 0) {
+			errorMessage = property + " must be greater than zero";
+			ThrowException(
+				Internal::MakeErrorObject(CONFIG, errorMessage)
+			);
+		}
+	}
+	
+	if (property == "defaultSaltSize" || property == "outputLength") {
+		if (!value->IsNumber()) {
+			errorMessage = property + " must be a number";
+			ThrowException(
+				Internal::MakeErrorObject(CONFIG, errorMessage)
+			);
+		}
+		
+		if (value->ToUint32()->Value() <= 0) {
+			errorMessage = property + " must be greater than zero";
+			ThrowException(
+				Internal::MakeErrorObject(CONFIG, errorMessage)
+			);
+		}
+	}
+
 	return returnValue;
 }
 
@@ -78,8 +109,24 @@ CreateScryptConfigObject(const char* objectType) {
 	configTemplate->SetNamedPropertyHandler(NULL, configSetter); //Ignoring accessor callback
 
 	Local<Object> config = configTemplate->NewInstance();
-	config->Set(String::New("inputEncoding"), String::New("buffer"));
-	config->Set(String::New("outputEncoding"), String::New("buffer"));
+
+	if (!strcmp(objectType,"kdf")) {
+		config->Set(String::New("saltEncoding"), String::New("buffer"));
+		config->Set(String::New("keyEncoding"), String::New("buffer"));
+		config->Set(String::New("outputEncoding"), String::New("buffer"));
+		config->Set(String::New("defaultSaltSize"), Integer::New(32));
+		config->Set(String::New("outputLength"), Integer::New(64));
+	}
+	
+	if (!strcmp(objectType,"hash") || !strcmp(objectType,"kdf")) {
+		config->Set(String::New("keyEncoding"), String::New("buffer"));
+		config->Set(String::New("outputEncoding"), String::New("buffer"));
+	}
+
+	if (!strcmp(objectType,"verify")) {
+		config->Set(String::New("hashEncoding"), String::New("buffer"));
+		config->Set(String::New("keyEncoding"), String::New("buffer"));
+	}
 
 	if (!strcmp(objectType,"params")) {
 		config->Set(String::New("maxmem"), Number::New(0.5));
