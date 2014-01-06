@@ -36,9 +36,9 @@ const uint8_t CONFIG=5; //Scrypt generated errors
 
 //Macro expansion to DRY buffer encoding output
 #define BUFFER_ENCODED(buffer, encoding) \
-	(encoding == node::BUFFER) \
+	((encoding == node::BUFFER) \
             ? buffer \
-            : node::Encode(node::Buffer::Data(buffer), node::Buffer::Length(buffer), encoding);
+            : node::Encode(node::Buffer::Data(buffer), node::Buffer::Length(buffer), encoding))
 
 namespace Internal {
 	//
@@ -50,18 +50,6 @@ namespace Internal {
 		uint32_t p;
 
 		void operator=(const v8::Local<v8::Object>& rhs);
-	};
-
-	//
-	// Encodings from config object
-	//
-	struct Encodings {
-		node::encoding inputEncoding, outputEncoding;
-
-		Encodings(v8::Handle<v8::Object> configObject) {
-			inputEncoding = static_cast<node::encoding>(configObject->Get(v8::String::New("_inputEncoding"))->ToUint32()->Value());
-			outputEncoding = static_cast<node::encoding>(configObject->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
-		}
 	};
 
 	//
