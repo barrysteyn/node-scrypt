@@ -27,7 +27,6 @@
 #ifndef _SCRYPT_VERIFY_HASH_H_
 #define _SCRYPT_VERIFY_HASH_H_
 
-Handle<Value>
-VerifyHash(const Arguments& args);
+Handle<Value> CreateVerifyHashFunction(const Arguments&);
 
 #endif //_SCRYPT_VERIFY_HASH_H_

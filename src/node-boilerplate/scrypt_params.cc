@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace v8;
 #include "common.h"
-
+#include "scrypt_config_object.h"
 namespace {
 
 //
@@ -205,11 +205,8 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 	delete req;
 }
 
-} //unnamed namespace
-
 //
 // Params: Parses arguments and determines what type (sync or async) this function is
-//         This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
 Params(const Arguments& args) {
@@ -247,4 +244,20 @@ Params(const Arguments& args) {
     }	
 
 	return scope.Close(params);
+}
+
+} //unnamed namespace
+
+//
+// The Construtor That Is Exposed To JavaScript
+//
+Handle<Value>
+CreateParameterFunction(const Arguments& arguments) {
+	HandleScope scope;
+
+	Local<ObjectTemplate> params = ObjectTemplate::New();
+	params->SetCallAsFunctionHandler(Params);
+	params->Set(String::New("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
+
+	return scope.Close(params->NewInstance());
 }

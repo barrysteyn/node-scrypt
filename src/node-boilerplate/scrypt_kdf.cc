@@ -38,6 +38,7 @@ extern "C" {
 
 using namespace v8;
 #include "common.h"
+#include "scrypt_config_object.h"
 
 namespace 
 {
@@ -252,11 +253,8 @@ KDFAsyncWork(uv_work_t* req) {
 	KDFWork(static_cast<KDFInfo*>(req->data));	
 }
 
-} //end of unnamed namespace
-
 //
-// PasswordHash: Parses arguments and determines what type (sync or async) this function is
-// This function is the "entry" point from JavaScript land
+// KDF: Parses arguments and determines what type (sync or async) this function is
 //
 Handle<Value> 
 KDF(const Arguments& args) {
@@ -299,4 +297,20 @@ KDF(const Arguments& args) {
 	}
 
 	return scope.Close(kdf);
+}
+
+} //end of unnamed namespace
+
+//
+// The Constructor Exposed To JavaScript
+//
+Handle<Value>
+CreateKeyDerivationFunction(const Arguments& arguments) {
+    HandleScope scope;
+
+    Local<ObjectTemplate> kdf = ObjectTemplate::New();
+    kdf->SetCallAsFunctionHandler(KDF);
+    kdf->Set(String::New("config"), CreateScryptConfigObject("kdf"), v8::ReadOnly);
+
+    return scope.Close(kdf->NewInstance());
 }

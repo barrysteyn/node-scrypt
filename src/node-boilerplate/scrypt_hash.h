@@ -27,6 +27,6 @@
 #ifndef _SCRYPT_HASH_H_
 #define _SCRYPT_HASH_H_
 
-Handle<Value> Hash(const Arguments& args);
+Handle<Value> CreateHashFunction(const Arguments&);
 
 #endif //_SCRYPT_HASH_H_

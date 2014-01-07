@@ -27,6 +27,7 @@
 #ifndef _SCRYPT_KDF_H_
 #define _SCRYPT_KDF_H_
 
-Handle<Value> KDF(const Arguments& args);
+
+Handle<Value> CreateKeyDerivationFunction(const Arguments&);
 
 #endif /*_SCRYPT_KDF_H_*/ 
