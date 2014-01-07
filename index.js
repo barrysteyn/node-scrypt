@@ -83,22 +83,24 @@ scrypt.passwordHash = function(passwordHash, params) {
 			paramsObject = parseScryptParameters(arguments, 1); 
 		}
 
+		//Asyc
 		if (typeof args[args.length-1] === "function") {
 			if (typeof paramsObject !== "undefined") {
 				params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac, function(err, scryptParams) {
 					args.splice(1,Object.keys(paramsObject).length,scryptParams);
-					passwordHash.apply(this, args);
+					passwordHash(args[0], args[1], args[2]);
 				});
 			} else {
-				passwordHash.apply(this, args);
+				passwordHash(args[0], args[1], args[2]);
 			}
+		//Sync
 		} else {
 			if (typeof paramsObject !== "undefined") {
 				var scryptParams = params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac);
 				args.splice(1, Object.keys(paramsObject).length, scryptParams);
 			}
 
-			return passwordHash.apply(this, args);
+			return passwordHash(undefined,undefined);
 		}
 	}
 	retFunction.config = passwordHash.config;
@@ -109,6 +111,11 @@ scrypt.passwordHash = function(passwordHash, params) {
 //
 // Backward Compatbility
 //
+scrypt.passwordHash.config.keyEncoding = "ascii";
+scrypt.passwordHash.config.outputEncoding = "base64";
+scrypt.verifyHash.config.hashEncoding = "base64";
+scrypt.verifyHash.config.keyEncoding = "ascii";
+
 scrypt.passwordHashSync = scrypt.passwordHash;
 scrypt.verifyHashSync = scrypt.verifyHash;
 
