@@ -37,6 +37,7 @@ extern "C" {
 
 using namespace v8;
 #include "common.h"
+#include "scrypt_config_object.h"
 
 namespace 
 {
@@ -199,11 +200,8 @@ PasswordHashAsyncWork(uv_work_t* req) {
 	PasswordHashWork(static_cast<HashInfo*>(req->data));	
 }
 
-} //end of unnamed namespace
-
 //
 // Hash: Parses arguments and determines what type (sync or async) this function is
-// This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
 Hash(const Arguments& args) {
@@ -240,4 +238,20 @@ Hash(const Arguments& args) {
 	}
 
 	return scope.Close(passwordHash);
+}
+
+} //end of unnamed namespace
+
+//
+// Constructor For Object Exposed To JavaScript
+//
+Handle<Value>
+CreateHashFunction(const Arguments& arguments) {
+	HandleScope scope;
+
+	Local<ObjectTemplate> hash = ObjectTemplate::New();
+	hash->SetCallAsFunctionHandler(Hash);
+	hash->Set(String::New("config"), CreateScryptConfigObject("hash"), v8::ReadOnly);
+
+	return scope.Close(hash->NewInstance());
 }

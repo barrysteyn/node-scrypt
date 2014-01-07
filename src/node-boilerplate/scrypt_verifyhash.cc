@@ -37,6 +37,7 @@ extern "C" {
 
 using namespace v8;
 #include "common.h"
+#include "scrypt_config_object.h"
 
 namespace {
 
@@ -178,11 +179,8 @@ VerifyHashAsyncAfterWork(uv_work_t* req) {
 	delete req;
 }
 
-} //end of anon namespace
-
 //
 // VerifyHash: Parses arguments and determines what type (sync or async) this function is
-// This function is the "entry" point from JavaScript land
 //
 Handle<Value> 
 VerifyHash(const Arguments& args) {
@@ -218,4 +216,20 @@ VerifyHash(const Arguments& args) {
 	}
 
 	return scope.Close(result);
+}
+
+} //end of anon namespace
+
+//
+// Object Constructor That Is Exposed To JavaScript
+//
+Handle<Value>
+CreateVerifyHashFunction(const Arguments& arguments) {
+	HandleScope scope;
+
+	Local<ObjectTemplate> verify = ObjectTemplate::New();
+	verify->SetCallAsFunctionHandler(VerifyHash);
+	verify->Set(String::New("config"), CreateScryptConfigObject("verify"), v8::ReadOnly);
+
+	return scope.Close(verify->NewInstance());
 }
