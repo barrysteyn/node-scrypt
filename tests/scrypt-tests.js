@@ -18,43 +18,47 @@ var SCRYPT=4; //Scrypt generated errors
 
 test("KDF - Test vector 1", function(t) {
 	var buf = new Buffer("");
-	var res = scrypt.KDF(buf,{"N":16,"r":1,"p":1},64,"");
+	var res = scrypt.kdf(buf,{"N":16,"r":1,"p":1},64,"");
 	t.equal(res.hash.toString("hex"),"77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906","Synchronous test: first test vector is correctly returned");	
 
-	scrypt.KDF(buf, {"N":16,"r":1,"p":1},64,"", function(err, res) {
+	scrypt.kdf(buf, {"N":16,"r":1,"p":1},64,"", function(err, res) {
 		t.equal(res.hash.toString("hex"),"77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906","Asynchronous test: first test vector is correctly returned");
 		t.end();
 	});
 });
 
 test("KDF - Test vector 2", function(t) {
+	var kdf = scrypt.KDF();
+	kdf.config.keyEncoding = "ascii";
 	var buf = new Buffer("NaCl");
-	var res = scrypt.KDF("password",{"N":1024,"r":8,"p":16},64,buf);
+	var res = kdf("password",{"N":1024,"r":8,"p":16},64,buf);
 	t.equal(res.hash.toString("hex"),"fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640","Synchronous test: second test vector is correctly returned");	
 
-	scrypt.KDF("password", {"N":1024,"r":8,"p":16},64,buf, function(err, res) {
+	kdf("password", {"N":1024,"r":8,"p":16},64,buf, function(err, res) {
 		t.equal(res.hash.toString("hex"),"fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640","Synchronous test: second test vector is correctly returned");	
 		t.end();
 	});
 });
 
 test("KDF - Test vector 3", function(t) {
+	var kdf = scrypt.KDF();
+	kdf.config.outputEncoding = "hex";
 	var buf = new Buffer("pleaseletmein");
 	var salt = new Buffer("SodiumChloride");
-	var res = scrypt.KDF(buf,{"N":16384,"r":8,"p":1},64,salt);
-	t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Synchronous test: third test vector is correctly returned");	
+	var res = kdf(buf,{"N":16384,"r":8,"p":1},64,salt);
+	t.equal(res.hash, "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Synchronous test: third test vector is correctly returned");	
 
-	scrypt.KDF(buf, {"N":16384,"r":8,"p":1},64,salt, function(err, res) {
-		t.equal(res.hash.toString("hex"),"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Asynchronous test: third test vector is correctly returned");
+	kdf(buf, {"N":16384,"r":8,"p":1},64,salt, function(err, res) {
+		t.equal(res.hash,"7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887","Asynchronous test: third test vector is correctly returned");
 		t.end();
 	});
 });
 
 /*test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
-	var res = scrypt.KDF("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
+	var res = scrypt.kdf("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
 	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
 
-	scrypt.KDF("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
+	scrypt.kdf("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
 		t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4","Asynchronous test: fourth test vector is correctly returned");
 		t.end();
 	});
@@ -62,13 +66,13 @@ test("KDF - Test vector 3", function(t) {
 
 test("KDF - Random salt added by default", function(t) {
 	var key = new Buffer("key");	
-	var hash1 = scrypt.KDF(key, scryptParameters);
-	var hash2 = scrypt.KDF(key, scryptParameters);
+	var hash1 = scrypt.kdf(key, scryptParameters);
+	var hash2 = scrypt.kdf(key, scryptParameters);
 	t.notEqual(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are not equal. This is correct due to random salt that was added");
 	t.notEqual(hash1.salt.toString(), hash2.salt.toString(), "Synchronous: salts that are returned are not equal");
 
-	scrypt.KDF(key, scryptParameters, function(err, hash1) {
-		scrypt.KDF(key, scryptParameters, function(err, hash2) {
+	scrypt.kdf(key, scryptParameters, function(err, hash1) {
+		scrypt.kdf(key, scryptParameters, function(err, hash2) {
 			t.notEqual(hash1.hash.toString(), hash2.hash.toString(), "Asynchronous: hashes that are returned are not equal. This is correct due to random salt that was added");
 			t.notEqual(hash1.salt.toString(), hash2.salt.toString(), "Asynchronous: salts that are returned are not equal");
 			t.end();
@@ -79,14 +83,13 @@ test("KDF - Random salt added by default", function(t) {
 test("KDF - Deterministic non-random salt added manually", function(t) {
 	var key = new Buffer("key");
 	var salt = "salt";	
-	console.log(scryptParameters);
-	var hash1 = scrypt.KDF(key, scryptParameters, 64, salt);
-	var hash2 = scrypt.KDF(key, scryptParameters, 64, salt);
+	var hash1 = scrypt.kdf(key, scryptParameters, 64, salt);
+	var hash2 = scrypt.kdf(key, scryptParameters, 64, salt);
 	t.equal(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
 	t.equal(hash1.salt.toString(), hash2.salt.toString(), "Synchronous: salts that are returned are identical");
 
-	scrypt.KDF(key, scryptParameters, 64, salt, function(err, hash1) {
-		scrypt.KDF(key, scryptParameters, 64, salt, function(err, hash2) {
+	scrypt.kdf(key, scryptParameters, 64, salt, function(err, hash1) {
+		scrypt.kdf(key, scryptParameters, 64, salt, function(err, hash2) {
 			t.equal(hash1.hash.toString(), hash2.hash.toString(), "Asynchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
 			t.equal(hash1.salt.toString(), hash2.salt.toString(), "Asynchronous: salts that are returned are identical");
 			t.end();
@@ -279,7 +282,7 @@ test("Password Hash: incorrect arguments - no arguments present", function(t) {
 		t.end();
 	}
 });
-
+/*
 test("Password Hash: incorrect arguments - only one argument present", function(t) {
 	try {
 		scrypt.passwordHash(passwordString);
@@ -617,7 +620,7 @@ test("Password Hash (Asynchronous): hash password with correct arguments: passwo
 	});
 });
 
-
+/*
 //
 // Password Verify
 //
@@ -827,7 +830,7 @@ test("Password Verify: incorrect argument type - password an empty buffer", func
 //
 test("Scrypt KDF: Incorrect arguments - no arguments present", function(t) {
 	try {
-		scrypt.KDF();
+		scrypt.kdf();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because there were no arguments present");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"at least two arguments are needed - key and a json object representing the scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -837,7 +840,7 @@ test("Scrypt KDF: Incorrect arguments - no arguments present", function(t) {
 
 test("Scrypt KDF: Incorrect arguments - callback in incorrect position", function(t) {
 	try {
-		scrypt.KDF("string",function(){});
+		scrypt.kdf("string",function(){});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the callback function preceeded other needed arguments");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"at least two arguments are needed before the callback function - key and a json object representing the scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -847,14 +850,14 @@ test("Scrypt KDF: Incorrect arguments - callback in incorrect position", functio
 
 test("Scrypt KDF: Incorrect arguments - key is not of type string, string object nor buffer", function(t) {
 	try {
-		scrypt.KDF(123, scryptParameters);
+		scrypt.kdf(123, scryptParameters);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF(123, scryptParameters, function() {});
+		scrypt.kdf(123, scryptParameters, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -864,14 +867,14 @@ test("Scrypt KDF: Incorrect arguments - key is not of type string, string object
 
 test("Scrypt KDF: Incorrect arguments - key is an object, not a string object nor a buffer", function(t) {
 	try {
-		scrypt.KDF({}, scryptParameters);
+		scrypt.kdf({}, scryptParameters);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF({}, scryptParameters, function() {});
+		scrypt.kdf({}, scryptParameters, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -881,14 +884,14 @@ test("Scrypt KDF: Incorrect arguments - key is an object, not a string object no
 
 test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", function(t) {
 	try {
-		scrypt.KDF("key", 123);
+		scrypt.kdf("key", 123);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the scrypt parameters JSON object is passed as a number");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"expecting JSON object representing scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF("key", 123, function() {});
+		scrypt.kdf("key", 123, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the scrypt parameters JSON object is passed as a number");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"expecting JSON object representing scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -898,14 +901,14 @@ test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", fun
 
 test("Scrypt KDF: Incorrect arguments - length is not a number", function(t) {
 	try {
-		scrypt.KDF("key", scryptParameters, "this should be a number");
+		scrypt.kdf("key", scryptParameters, "this should be a number");
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the length parameter was of type string");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF("key", scryptParameters, "this should be a number", function() {});
+		scrypt.kdf("key", scryptParameters, "this should be a number", function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the length parameter was of type string");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -915,14 +918,14 @@ test("Scrypt KDF: Incorrect arguments - length is not a number", function(t) {
 
 test("Scrypt KDF: Incorrect arguments - salt is not of type string, string object nor buffer", function(t) {
 	try {
-		scrypt.KDF("key", scryptParameters, 32, 123);
+		scrypt.kdf("key", scryptParameters, 32, 123);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF("key", scryptParameters, 32, 123, function(){});
+		scrypt.kdf("key", scryptParameters, 32, 123, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -932,17 +935,19 @@ test("Scrypt KDF: Incorrect arguments - salt is not of type string, string objec
 
 test("Scrypt KDF: Incorrect arguments - salt is an object, but not a string object nor a buffer", function(t) {
 	try {
-		scrypt.KDF("key", scryptParameters, 32, {});
+		scrypt.kdf("key", scryptParameters, 32, {});
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.KDF("key", scryptParameters, 32, {}, function(){});
+		scrypt.kdf("key", scryptParameters, 32, {}, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
+
+*/
