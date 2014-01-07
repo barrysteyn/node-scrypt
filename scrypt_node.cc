@@ -49,11 +49,11 @@ void RegisterModule(Handle<Object> target) {
 
 	//Hash function
 	target->Set(String::NewSymbol("Hash"), 
-            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
+            FunctionTemplate::New(CreateHashFunction)->GetFunction());
 
 	//Verify hash
 	target->Set(String::NewSymbol("VerifyHash"), 
-            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
+            FunctionTemplate::New(CreateVerifyHashFunction)->GetFunction());
 
 	//Error Object
 	target->Set(String::NewSymbol("errorObject"),
