@@ -210,7 +210,7 @@ Hash(const Arguments& args) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config")))); 
+	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config")))); 
 	Handle<Value> passwordHash;
 
 	//Assign and validate arguments

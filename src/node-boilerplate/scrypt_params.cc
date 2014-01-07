@@ -217,7 +217,7 @@ Params(const Arguments& args) {
 	uint8_t parseResult = 0;
 	Local<Object> params;
 	std::string validateMessage;
-	TranslationInfo* translationInfo = new TranslationInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
+	TranslationInfo* translationInfo = new TranslationInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config"))));
 
 	//Validate arguments and determine function type
 	if ((parseResult = AssignArguments(args, validateMessage, *translationInfo))) {
@@ -244,7 +244,7 @@ Params(const Arguments& args) {
 	//Only clean up heap if synchronous
 	if (translationInfo->callback.IsEmpty()) {
 		delete translationInfo;
-	}	
-	
+    }	
+
 	return scope.Close(params);
 }

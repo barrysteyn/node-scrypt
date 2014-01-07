@@ -25,6 +25,8 @@
 
 */
 
+#include <iostream>
+
 #include <v8.h>
 #include <node.h>
 #include <string>
@@ -33,6 +35,8 @@
 
 using namespace v8;
 #include "common.h"
+
+namespace {
 
 Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, const AccessorInfo& info) {
 	Handle<Value> returnValue;
@@ -101,6 +105,8 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 
 	return returnValue;
 }
+
+} //end anon namespace
 
 Handle<Object>
 CreateScryptConfigObject(const char* objectType) {

@@ -189,7 +189,7 @@ VerifyHash(const Arguments& args) {
 	HandleScope scope;
 	uint8_t parseResult = 0;
 	std::string validateMessage;
-	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
+	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config"))));
 	Local<Value> result;
 
 	//Assign and validate arguments

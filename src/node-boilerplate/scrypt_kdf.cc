@@ -263,7 +263,7 @@ KDF(const Arguments& args) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	KDFInfo* kdfInfo = new KDFInfo(Local<Object>::Cast(args.Callee()->Get(String::New("config"))));
+	KDFInfo* kdfInfo = new KDFInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config"))));
 	Local<Value> kdf;
 
 	//Assign and validate arguments
