@@ -45,29 +45,27 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 
 	if (property == "inputEncoding" || property == "outputEncoding" || property == "hashEncoding" || property == "keyEncoding") {
 		if (!value->IsString()) {
-			errorMessage = "encoding must be string";
-			ThrowException(
-				Internal::MakeErrorObject(CONFIG, errorMessage)
-			);
+			value = String::New("buffer");
 		}
+
 		property.insert(property.begin(), '_');	
 		std::string propertyValue(*String::Utf8Value(value->ToString()));
 		std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(), ::tolower);
 		
 		if (propertyValue == "ascii") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::ASCII));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::ASCII), v8::DontDelete);
 		} else if (propertyValue == "utf8") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UTF8));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UTF8), v8::DontDelete);
 		} else if (propertyValue == "base64") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BASE64));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BASE64), v8::DontDelete);
 		} else if (propertyValue == "ucs2") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UCS2));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UCS2), v8::DontDelete);
 		} else if (propertyValue == "binary") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BINARY));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BINARY), v8::DontDelete);
 		} else if (propertyValue == "hex") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::HEX));
+			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::HEX), v8::DontDelete);
 		} else {
-			info.This()->Set(String::New(property.c_str()), Integer::New(node::BUFFER));
+			info.This()->Set(String::New(property.c_str()), Integer::New(node::BUFFER), v8::DontDelete);
 		}
 	}
 
@@ -117,26 +115,26 @@ CreateScryptConfigObject(const char* objectType) {
 	Local<Object> config = configTemplate->NewInstance();
 
 	if (!strcmp(objectType,"kdf")) {
-		config->Set(String::New("saltEncoding"), String::New("buffer"));
-		config->Set(String::New("keyEncoding"), String::New("buffer"));
-		config->Set(String::New("outputEncoding"), String::New("buffer"));
-		config->Set(String::New("defaultSaltSize"), Integer::New(32));
-		config->Set(String::New("outputLength"), Integer::New(64));
+		config->Set(String::New("saltEncoding"), String::New("buffer"), v8::DontDelete);
+		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
+		config->Set(String::New("outputEncoding"), String::New("buffer"), v8::DontDelete);
+		config->Set(String::New("defaultSaltSize"), Integer::New(32), v8::DontDelete);
+		config->Set(String::New("outputLength"), Integer::New(64), v8::DontDelete);
 	}
 	
 	if (!strcmp(objectType,"hash") || !strcmp(objectType,"kdf")) {
-		config->Set(String::New("keyEncoding"), String::New("buffer"));
-		config->Set(String::New("outputEncoding"), String::New("buffer"));
+		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
+		config->Set(String::New("outputEncoding"), String::New("buffer"), v8::DontDelete);
 	}
 
 	if (!strcmp(objectType,"verify")) {
-		config->Set(String::New("hashEncoding"), String::New("buffer"));
-		config->Set(String::New("keyEncoding"), String::New("buffer"));
+		config->Set(String::New("hashEncoding"), String::New("buffer"), v8::DontDelete);
+		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
 	}
 
 	if (!strcmp(objectType,"params")) {
-		config->Set(String::New("maxmem"), Number::New(0.5));
-		config->Set(String::New("maxmemfrac"), Number::New(0.5));
+		config->Set(String::New("maxmem"), Number::New(0.5), v8::DontDelete);
+		config->Set(String::New("maxmemfrac"), Number::New(0.5), v8::DontDelete);
 	}
 
 	return scope.Close(config);
