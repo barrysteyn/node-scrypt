@@ -258,6 +258,12 @@ namespace Internal {
 			CreateBuffer(buffer, data, dataLength);
 			dataWritten = node::DecodeWrite(data, dataLength, argument, encoding);
 			assert(dataWritten == dataLength);
+
+			if (dataWritten != dataLength) {
+				errorMessage = argName + " is probably encoded differently to what was specified";
+				return 1;
+			}
+
 			argument = buffer;
 		}
 
