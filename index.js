@@ -1,6 +1,14 @@
 var scrypt = require('./build/Release/scrypt');
 
 //
+//Create function instances
+//
+scrypt.passwordHash = scrypt.Hash();
+scrypt.verifyHash = scrypt.VerifyHash();
+scrypt.params = scrypt.Params();
+scrypt.kdf = scrypt.KDF();
+
+//
 //Parses input arguments for scrypt parameter object or translation function inputs
 //
 function parseScryptParameters(args, startIndex) {
