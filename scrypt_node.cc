@@ -29,7 +29,6 @@
 #include <v8.h>
 
 using namespace v8;
-
 #include "src/node-boilerplate/scrypt_kdf.h"
 #include "src/node-boilerplate/scrypt_hash.h"
 #include "src/node-boilerplate/scrypt_verifyhash.h"
@@ -38,30 +37,71 @@ using namespace v8;
 #include "src/node-boilerplate/scrypt_config_object.h"
 
 //
+// Function Instance Creators
+//
+Handle<Value>
+CreateParameterFunction(const Arguments& arguments) {
+    HandleScope scope;
+
+	Local<ObjectTemplate> params = ObjectTemplate::New();
+    params->SetCallAsFunctionHandler(Params);
+	params->Set(String::New("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
+    
+    return scope.Close(params->NewInstance());
+}
+
+Handle<Value>
+CreateHashFunction(const Arguments& arguments) {
+    HandleScope scope;
+
+	Local<ObjectTemplate> hash = ObjectTemplate::New();
+    hash->SetCallAsFunctionHandler(Hash);
+	hash->Set(String::New("config"), CreateScryptConfigObject("hash"), v8::ReadOnly);
+    
+    return scope.Close(hash->NewInstance());
+}
+
+Handle<Value>
+CreateKeyDerivationFunction(const Arguments& arguments) {
+    HandleScope scope;
+
+	Local<ObjectTemplate> kdf = ObjectTemplate::New();
+    kdf->SetCallAsFunctionHandler(KDF);
+	kdf->Set(String::New("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
+    
+    return scope.Close(kdf->NewInstance());
+}
+
+Handle<Value>
+CreateVerifyHashFunction(const Arguments& arguments) {
+    HandleScope scope;
+
+	Local<ObjectTemplate> verify = ObjectTemplate::New();
+    verify->SetCallAsFunctionHandler(VerifyHash);
+	verify->Set(String::New("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
+    
+    return scope.Close(verify->NewInstance());
+}
+
+//
 // Module initialisation function
 //
 void RegisterModule(Handle<Object> target) {
-	//Function templates
-	Local<FunctionTemplate> params = FunctionTemplate::New(Params);
-	params->Set("config", CreateScryptConfigObject("params"));
-	Local<FunctionTemplate> hash = FunctionTemplate::New(Hash);
-	hash->Set("config", CreateScryptConfigObject("hash"));
-	Local<FunctionTemplate> verify = FunctionTemplate::New(VerifyHash);
-	verify->Set("config", CreateScryptConfigObject("verify"));
-	Local<FunctionTemplate> kdf = FunctionTemplate::New(KDF);
-	kdf->Set("config", CreateScryptConfigObject("kdf"));
-	
 	//Params (Translation function)
-	target->Set(String::NewSymbol("params"), params->GetFunction());
-
+	target->Set(String::NewSymbol("params"), 
+            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
+    
 	//KDF
-	target->Set(String::NewSymbol("KDF"), kdf->GetFunction());
+	target->Set(String::NewSymbol("KDF"), 
+            FunctionTemplate::New(CreateKeyDerivationFunction)->GetFunction());
 
-	//Password Hash function
-	target->Set(String::NewSymbol("passwordHash"), hash->GetFunction());
+	//Hash function
+	target->Set(String::NewSymbol("passwordHash"), 
+            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
 
-	//Verify password hash
-	target->Set(String::NewSymbol("verifyHash"), verify->GetFunction());
+	//Verify hash
+	target->Set(String::NewSymbol("verifyHash"), 
+            FunctionTemplate::New(CreateParameterFunction)->GetFunction());
 
 	//Error Object
 	target->Set(String::NewSymbol("errorObject"),
