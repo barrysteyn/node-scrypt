@@ -86,6 +86,11 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
 
+        if (currentVal->IsUndefined() || currentVal->IsNull()) {
+            errorMessage = "argument is undefined or null";
+            return ADDONARG;
+        } 
+
 		if (i > 1 && currentVal->IsFunction()) {
 			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			hashInfo.hash = Persistent<Value>::New(hashInfo.hash);
@@ -124,7 +129,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 // Work Function: Actual password hash done here
 //
 void
-VerifyHashWork(HashInfo* hashInfo) {
+VerifyWork(HashInfo* hashInfo) {
 	hashInfo->result = VerifyHash(
 		(const uint8_t*)hashInfo->hash_ptr,
 		(const uint8_t*)hashInfo->password_ptr, 
@@ -136,15 +141,15 @@ VerifyHashWork(HashInfo* hashInfo) {
 // Asynchronous: Wrapper to actual work function
 //
 void
-VerifyHashAsyncWork(uv_work_t* req) {
-    VerifyHashWork(static_cast<HashInfo*>(req->data));
+VerifyAsyncWork(uv_work_t* req) {
+    VerifyWork(static_cast<HashInfo*>(req->data));
 }
 
 //
 // Synchronous: After work function
 //
 void
-VerifyHashSyncAfterWork(Local<Value>& result, const HashInfo* hashInfo) {
+VerifySyncAfterWork(Local<Value>& result, const HashInfo* hashInfo) {
 	if (hashInfo->result && hashInfo->result != 11) {
 		ThrowException(
 			Internal::MakeErrorObject(SCRYPT,hashInfo->result)
@@ -158,7 +163,7 @@ VerifyHashSyncAfterWork(Local<Value>& result, const HashInfo* hashInfo) {
 // Asynchonous: After work function
 //
 void
-VerifyHashAsyncAfterWork(uv_work_t* req) {
+VerifyAsyncAfterWork(uv_work_t* req) {
 	HandleScope scope;
 	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
 
@@ -180,10 +185,10 @@ VerifyHashAsyncAfterWork(uv_work_t* req) {
 }
 
 //
-// VerifyHash: Parses arguments and determines what type (sync or async) this function is
+// Verify: Parses arguments and determines what type (sync or async) this function is
 //
 Handle<Value> 
-VerifyHash(const Arguments& args) {
+Verify(const Arguments& args) {
 	HandleScope scope;
 	uint8_t parseResult = 0;
 	std::string validateMessage;
@@ -198,15 +203,15 @@ VerifyHash(const Arguments& args) {
 	} else {
 		if (hashInfo->callback.IsEmpty()) {
 			//Synchronous
-			VerifyHashWork(hashInfo);
-			VerifyHashSyncAfterWork(result, hashInfo);
+			VerifyWork(hashInfo);
+			VerifySyncAfterWork(result, hashInfo);
 		} else {
 			//Asynchronous work request
 			uv_work_t *req = new uv_work_t();
 			req->data = hashInfo;
 			
 			//Schedule work request
-			int status = uv_queue_work(uv_default_loop(), req, VerifyHashAsyncWork, (uv_after_work_cb)VerifyHashAsyncAfterWork);
+			int status = uv_queue_work(uv_default_loop(), req, VerifyAsyncWork, (uv_after_work_cb)VerifyAsyncAfterWork);
 			assert(status == 0); 
 		}
 	}
@@ -224,11 +229,11 @@ VerifyHash(const Arguments& args) {
 // Object Constructor That Is Exposed To JavaScript
 //
 Handle<Value>
-CreateVerifyHashFunction(const Arguments& arguments) {
+CreateVerifyFunction(const Arguments& arguments) {
 	HandleScope scope;
 
 	Local<ObjectTemplate> verify = ObjectTemplate::New();
-	verify->SetCallAsFunctionHandler(VerifyHash);
+	verify->SetCallAsFunctionHandler(Verify);
 	verify->Set(String::New("config"), CreateScryptConfigObject("verify"), v8::ReadOnly);
 
 	return scope.Close(verify->NewInstance());

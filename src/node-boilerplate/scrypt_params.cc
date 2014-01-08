@@ -67,20 +67,25 @@ struct TranslationInfo {
 // Assigns and validates arguments from JavaScript land
 //
 int 
-AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo &translationInfo) {
+AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInfo &translationInfo) {
 	if (args.Length() == 0) {
-		errMessage = "at least one argument is needed - the maxtime";
+		errorMessage = "at least one argument is needed - the maxtime";
 		return ADDONARG;
 	}
 
 	if (args.Length() > 0 && args[0]->IsFunction()) {
-		errMessage = "at least one argument is needed before the callback - the maxtime";
+		errorMessage = "at least one argument is needed before the callback - the maxtime";
 		return ADDONARG;
 	}
 
 	for (int i=0; i < args.Length(); i++) {
 		v8::Handle<v8::Value> currentVal = args[i];
-		if (i > 0 && currentVal->IsFunction()) { //An async signature
+
+        if (currentVal->IsUndefined() || currentVal->IsNull()) {
+            continue;
+        } 
+
+        if (i > 0 && currentVal->IsFunction()) { //An async signature
 			translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			return 0;
 		}
@@ -88,13 +93,13 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 		switch(i) {
 			case 0: //maxtime
 				if (!currentVal->IsNumber()) {
-					errMessage = "maxtime argument must be a number";
+					errorMessage = "maxtime argument must be a number";
 					return ADDONARG;
 				}
 
 				translationInfo.maxtime = currentVal->ToNumber()->Value();
 				if (translationInfo.maxtime <= 0) {
-					errMessage = "maxtime must be greater than 0";
+					errorMessage = "maxtime must be greater than 0";
 					return ADDONARG;
 				}
 
@@ -103,7 +108,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 			case 1: //maxmem
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
-						errMessage = "maxmem argument must be a number";
+						errorMessage = "maxmem argument must be a number";
 						return ADDONARG;
 					}
 
@@ -117,7 +122,7 @@ AssignArguments(const Arguments& args, std::string& errMessage, TranslationInfo 
 			case 2: //maxmemfrac
 				if (!currentVal->IsUndefined()) {
 					if (!currentVal->IsNumber()) {
-						errMessage = "max_memfrac argument must be a number";
+						errorMessage = "max_memfrac argument must be a number";
 						return ADDONARG;
 					}
 

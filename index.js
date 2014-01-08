@@ -60,23 +60,15 @@ function parseScryptParameters(args, startIndex) {
 // Scrypt Password Hash
 //
 scrypt.passwordHash = function(passwordHash, params) {
-	var asyncHandler = function(handler, buffer) {
-		if (typeof buffer === "undefined" || typeof buffer !== "boolean") {
-			buffer = false;
-		}
-
-		return function(err, passwordHash) {
-			if (buffer || typeof passwordHash !== "object") {
-				handler(err, passwordHash);
-			} else {
-				handler(err, passwordHash.toString("base64"));
-			}
-		}
-	}
 
 	var retFunction = function() {	
 		var args = Array.prototype.slice.apply(arguments),
 			paramsObject;
+
+        //Determine if there are too little arguments
+        if (args.length < 2) {
+            throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object");
+        }
 
 		//Determine if translation function is needed
 		if (args.length > 1 && typeof args[1] !== "object" && typeof args[1] !== "function") {
@@ -100,7 +92,7 @@ scrypt.passwordHash = function(passwordHash, params) {
 				args.splice(1, Object.keys(paramsObject).length, scryptParams);
 			}
 
-			return passwordHash(undefined,undefined);
+			return passwordHash(args[0], args[1]);
 		}
 	}
 	retFunction.config = passwordHash.config;

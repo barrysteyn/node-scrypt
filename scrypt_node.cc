@@ -31,7 +31,7 @@
 using namespace v8;
 #include "src/node-boilerplate/scrypt_kdf.h"
 #include "src/node-boilerplate/scrypt_hash.h"
-#include "src/node-boilerplate/scrypt_verifyhash.h"
+#include "src/node-boilerplate/scrypt_verify.h"
 #include "src/node-boilerplate/scrypt_params.h"
 #include "src/node-boilerplate/scrypt_error.h"
 
@@ -53,7 +53,7 @@ void RegisterModule(Handle<Object> target) {
 
 	//Verify hash
 	target->Set(String::NewSymbol("VerifyHash"), 
-            FunctionTemplate::New(CreateVerifyHashFunction)->GetFunction());
+            FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
 
 	//Error Object
 	target->Set(String::NewSymbol("errorObject"),

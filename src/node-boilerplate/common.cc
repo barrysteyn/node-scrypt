@@ -80,18 +80,20 @@ namespace Internal {
 	// Used for Buffer constructor, needed so that data can be used and not deep copied
 	// for an excellent example by Ben Noordhuis, see https://groups.google.com/forum/#!topic/nodejs/gz8YF3oLit0
 	//
-	void FreeCallback(char* data, void* hint) {
+	void
+    FreeCallback(char* data, void* hint) {
 		delete [] data;
 	} 
 
 	} //end anon namespace
 
 	using namespace v8;
-	
+
 	//
 	// Checks that ScryptParams object is "Kosher"
 	//
-	int CheckScryptParameters(const Local<Object> &obj, std::string& errMessage) {
+	uint32_t
+    CheckScryptParameters(const Local<Object> &obj, std::string& errMessage) {
 		Local<Value> val;
 		if (!obj->Has(String::New("N"))) {
 			errMessage = "N value is not present";
@@ -132,7 +134,8 @@ namespace Internal {
 	//
 	// Definition for assignment operator
 	//
-	void ScryptParams::operator=(const Local<Object> &rhs) {
+	void
+    ScryptParams::operator=(const Local<Object> &rhs) {
 		this->N = rhs->Get(String::New("N"))->ToNumber()->Value();
 		this->r = rhs->Get(String::New("r"))->ToNumber()->Value();
 		this->p = rhs->Get(String::New("p"))->ToNumber()->Value();
@@ -141,7 +144,8 @@ namespace Internal {
 	//
 	// Produces a JSON error object
 	//
-	Local<Value> MakeErrorObject(int errorCode, std::string& errorMessage) {
+	Local<Value>
+    MakeErrorObject(int errorCode, std::string& errorMessage) {
 
 		if (errorCode) {
 			Local<Object> errorObject = Object::New();
@@ -179,9 +183,9 @@ namespace Internal {
 	//
 	// Produces a JSON error object for errors resulting from Scrypt
 	//
-	Local<Value> MakeErrorObject(int errorCode, int scryptErrorCode) {
+	Local<Value>
+    MakeErrorObject(int errorCode, int scryptErrorCode) {
 		assert(errorCode == SCRYPT);
-		
 		if (scryptErrorCode) { 
 			Local<Object> errorObject = Object::New();
 			errorObject->Set(String::NewSymbol("err_code"), Integer::New(errorCode));
@@ -227,7 +231,7 @@ namespace Internal {
 	}
 
 	//
-	// Produces a nodejs Buffer argument
+	// Transforms a string or string object into a node buffer
 	//
 	int
 	ProduceBuffer(Handle<Value>& argument, const std::string& argName, std::string& errorMessage, const node::encoding& encoding, bool checkEmpty) {

@@ -81,23 +81,29 @@ struct HashInfo {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo &hashInfo) {
-	uint8_t scryptParameterParseResult = 0;	
-	if (args.Length() < 2) {
+AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo &hashInfo) {
+	uint8_t scryptParameterParseResult = 0;
+	if (arguments.Length() < 2) {
 		errorMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
 		return ADDONARG;
 
 	}
 
-	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
+	if (arguments.Length() >= 2 && (arguments[0]->IsFunction() || arguments[1]->IsFunction())) {
 		errorMessage = "wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
-	for (int i=0; i < args.Length(); i++) {
-		Handle<Value> currentVal = args[i];
+	for (int i=0; i < arguments.Length(); i++) {
+		Handle<Value> currentVal = arguments[i];
+    
+        if (currentVal->IsUndefined() || currentVal->IsNull()) {
+            errorMessage = "argument is undefined or null";
+            return ADDONARG;
+        }
+
 		if (i > 1 && currentVal->IsFunction()) {
-			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(arguments[i]));
 			hashInfo.password = Persistent<Value>::New(hashInfo.password);
 			hashInfo.passwordHash = Persistent<Value>::New(hashInfo.passwordHash);
 			return 0;
@@ -204,15 +210,15 @@ PasswordHashAsyncWork(uv_work_t* req) {
 // Hash: Parses arguments and determines what type (sync or async) this function is
 //
 Handle<Value> 
-Hash(const Arguments& args) {
+Hash(const Arguments& arguments) {
 	uint8_t parseResult = 0;
 	HandleScope scope;
 	std::string validateMessage;
-	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config")))); 
+	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(arguments.Holder()->Get(String::New("config")))); 
 	Handle<Value> passwordHash;
 
 	//Assign and validate arguments
-	if ((parseResult = AssignArguments(args, validateMessage, *hashInfo))) {
+	if ((parseResult = AssignArguments(arguments, validateMessage, *hashInfo))) {
 		ThrowException(
 			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
