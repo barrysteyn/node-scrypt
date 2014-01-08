@@ -86,10 +86,10 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
 
-        if (currentVal->IsUndefined() || currentVal->IsNull()) {
-            errorMessage = "argument is undefined or null";
-            return ADDONARG;
-        } 
+		if (currentVal->IsUndefined() || currentVal->IsNull()) {
+			errorMessage = "argument is undefined or null";
+			return ADDONARG;
+		} 
 
 		if (i > 1 && currentVal->IsFunction()) {
 			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
@@ -142,7 +142,7 @@ VerifyWork(HashInfo* hashInfo) {
 //
 void
 VerifyAsyncWork(uv_work_t* req) {
-    VerifyWork(static_cast<HashInfo*>(req->data));
+	VerifyWork(static_cast<HashInfo*>(req->data));
 }
 
 //

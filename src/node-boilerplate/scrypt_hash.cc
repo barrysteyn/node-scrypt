@@ -63,7 +63,7 @@ struct HashInfo {
 	//Construtor / destructor   
 	HashInfo(Handle<Object> config) : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) {
 		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
-		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());		 
+		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
 		callback.Clear(); 
 		password.Clear();
 		passwordHash.Clear();
@@ -96,11 +96,11 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 
 	for (int i=0; i < arguments.Length(); i++) {
 		Handle<Value> currentVal = arguments[i];
-    
-        if (currentVal->IsUndefined() || currentVal->IsNull()) {
-            errorMessage = "argument is undefined or null";
-            return ADDONARG;
-        }
+
+		if (currentVal->IsUndefined() || currentVal->IsNull()) {
+			errorMessage = "argument is undefined or null";
+			return ADDONARG;
+		}
 
 		if (i > 1 && currentVal->IsFunction()) {
 			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(arguments[i]));
@@ -199,7 +199,7 @@ PasswordHashWork(HashInfo* hashInfo) {
 }
 
 //
-// Asynchronous: Wrapper to actual work function
+// Asynchronous: Wrapper to work function
 //
 void 
 PasswordHashAsyncWork(uv_work_t* req) {

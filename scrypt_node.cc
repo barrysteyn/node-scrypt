@@ -52,7 +52,7 @@ void RegisterModule(Handle<Object> target) {
             FunctionTemplate::New(CreateHashFunction)->GetFunction());
 
 	//Verify hash
-	target->Set(String::NewSymbol("VerifyHash"), 
+	target->Set(String::NewSymbol("Verify"), 
             FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
 
 	//Error Object

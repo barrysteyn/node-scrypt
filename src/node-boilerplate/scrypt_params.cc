@@ -81,11 +81,12 @@ AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInf
 	for (int i=0; i < args.Length(); i++) {
 		v8::Handle<v8::Value> currentVal = args[i];
 
-        if (currentVal->IsUndefined() || currentVal->IsNull()) {
-            continue;
-        } 
+		//Undefined or null will choose default value
+		if (currentVal->IsUndefined() || currentVal->IsNull()) {
+			continue;
+		} 
 
-        if (i > 0 && currentVal->IsFunction()) { //An async signature
+		if (i > 0 && currentVal->IsFunction()) { //An async signature
 			translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			return 0;
 		}
@@ -188,7 +189,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 	TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 	uint8_t argc = 1;
 	Local<Object> obj;
-	
+
 	if (!translationInfo->result) {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
 		argc++;
@@ -246,7 +247,7 @@ Params(const Arguments& args) {
 	//Only clean up heap if synchronous
 	if (translationInfo->callback.IsEmpty()) {
 		delete translationInfo;
-    }	
+	}	
 
 	return scope.Close(params);
 }
