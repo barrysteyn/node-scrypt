@@ -55,7 +55,7 @@ namespace Internal {
 	//
 	//Declarations
 	//
-	int CheckScryptParameters(const v8::Local<v8::Object>&, std::string&);
+	uint32_t CheckScryptParameters(const v8::Local<v8::Object>&, std::string&);
 	v8::Local<v8::Value> MakeErrorObject(int, std::string&);
 	v8::Local<v8::Value> MakeErrorObject(int, int);
 	void CreateBuffer(v8::Handle<v8::Value>&, size_t);

@@ -104,6 +104,11 @@ AssignArguments(const Arguments& args, std::string& errorMessage, KDFInfo &kdfIn
 	for (int i=0; i < args.Length(); i++) {
 		Handle<Value> currentVal = args[i];
 
+        if (currentVal->IsUndefined() || currentVal->IsNull()) {
+            errorMessage = "argument is undefined or null";
+            return ADDONARG;
+        } 
+
 		if (i > 1 && currentVal->IsFunction()) {
 			kdfInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			kdfInfo.key = Persistent<Value>::New(kdfInfo.key);

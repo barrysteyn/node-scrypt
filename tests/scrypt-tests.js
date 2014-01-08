@@ -278,17 +278,17 @@ test("Password Hash: incorrect arguments - no arguments present", function(t) {
 		scrypt.passwordHash();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
-/*
+
 test("Password Hash: incorrect arguments - only one argument present", function(t) {
 	try {
 		scrypt.passwordHash(passwordString);
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, only one was present, namely the password");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -541,19 +541,6 @@ test("Password Hash (Synchronous): hash password with correct arguments: passwor
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object, but expecting a buffer to be returned", function(t) {
-	var hash = scrypt.passwordHash(passwordString, scryptParameters, true);
-	t.ok(true, "The password was hashed successfully, as expected");
-	t.ok(Buffer.isBuffer(hash), "The hash that was returned is of type 'Buffer', as expected because it was specified that a buffer must be returned");
-	t.end();
-});
-
-test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object, but buffer value given of type 'string'", function(t) {
-	var hash = scrypt.passwordHash(passwordString, scryptParameters, "this will work");
-	t.ok(true, "The password was hashed successfully, as expected");
-	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because a 'true' value could not be ascertained for buffer, so it assumed it was set to false)");
-	t.end();
-});
 
 //Asynchronous
 test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
@@ -604,23 +591,7 @@ test("Password Hash (Asynchronous): hash password with correct arguments: passwo
 	});
 });
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object, but expecting a buffer to be returned", function(t) {
-	scrypt.passwordHash(passwordString, scryptParameters, true, function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
-		t.ok(Buffer.isBuffer(hash), "The hash that was returned is of type 'Buffer', as expected because it was specified that a buffer must be returned");
-		t.end();
-	});
-});
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object, but buffer value given of type 'string'", function(t) {
-	scrypt.passwordHash(passwordString, scryptParameters, "this should work", function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
-		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because a 'true' value could not be ascertained for buffer, so it assumed it was set to false)");
-		t.end();
-	});
-});
-
-/*
 //
 // Password Verify
 //
@@ -883,15 +854,17 @@ test("Scrypt KDF: Incorrect arguments - key is an object, not a string object no
 });
 
 test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", function(t) {
+    var kdf = new scrypt.KDF();
+    kdf.config.keyEncoding = "ascii";
 	try {
-		scrypt.kdf("key", 123);
+		kdf("key", 123);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the scrypt parameters JSON object is passed as a number");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"expecting JSON object representing scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.kdf("key", 123, function() {});
+		kdf("key", 123, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the scrypt parameters JSON object is passed as a number");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"expecting JSON object representing scrypt parameters"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -900,15 +873,17 @@ test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", fun
 });
 
 test("Scrypt KDF: Incorrect arguments - length is not a number", function(t) {
+    var kdf = new scrypt.KDF();
+    kdf.config.keyEncoding = "ascii";
 	try {
-		scrypt.kdf("key", scryptParameters, "this should be a number");
+		kdf("key", scryptParameters, "this should be a number");
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the length parameter was of type string");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.kdf("key", scryptParameters, "this should be a number", function() {});
+		kdf("key", scryptParameters, "this should be a number", function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the length parameter was of type string");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -917,17 +892,19 @@ test("Scrypt KDF: Incorrect arguments - length is not a number", function(t) {
 });
 
 test("Scrypt KDF: Incorrect arguments - salt is not of type string, string object nor buffer", function(t) {
+    var kdf = new scrypt.KDF();
+    kdf.config.keyEncoding = "ascii";
 	try {
-		scrypt.kdf("key", scryptParameters, 32, 123);
+		kdf("key", scryptParameters, 32, 123);
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
+		t.ok(err, "Synchronous test - An error was correctly thrown because the salt is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.kdf("key", scryptParameters, 32, 123, function(){});
+		kdf("key", scryptParameters, 32, 123, function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the salt is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
@@ -935,19 +912,19 @@ test("Scrypt KDF: Incorrect arguments - salt is not of type string, string objec
 
 test("Scrypt KDF: Incorrect arguments - salt is an object, but not a string object nor a buffer", function(t) {
 	try {
-		scrypt.kdf("key", scryptParameters, 32, {});
+        var kdf = new scrypt.KDF();
+        kdf.config.keyEncoding = "ascii";
+		kdf("key", scryptParameters, 32, {});
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the key is of an incorrect type");
+		t.ok(err, "Synchronous test - An error was correctly thrown because the salt is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
-		scrypt.kdf("key", scryptParameters, 32, {}, function(){});
+		kdf("key", scryptParameters, 32, {}, function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the key is of an incorrect type");
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the salt is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
-
-*/
