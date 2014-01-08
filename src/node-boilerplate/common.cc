@@ -81,7 +81,7 @@ namespace Internal {
 	// for an excellent example by Ben Noordhuis, see https://groups.google.com/forum/#!topic/nodejs/gz8YF3oLit0
 	//
 	void
-    FreeCallback(char* data, void* hint) {
+	FreeCallback(char* data, void* hint) {
 		delete [] data;
 	} 
 
@@ -93,7 +93,7 @@ namespace Internal {
 	// Checks that ScryptParams object is "Kosher"
 	//
 	uint32_t
-    CheckScryptParameters(const Local<Object> &obj, std::string& errMessage) {
+	CheckScryptParameters(const Local<Object> &obj, std::string& errMessage) {
 		Local<Value> val;
 		if (!obj->Has(String::New("N"))) {
 			errMessage = "N value is not present";
@@ -135,7 +135,7 @@ namespace Internal {
 	// Definition for assignment operator
 	//
 	void
-    ScryptParams::operator=(const Local<Object> &rhs) {
+	ScryptParams::operator=(const Local<Object> &rhs) {
 		this->N = rhs->Get(String::New("N"))->ToNumber()->Value();
 		this->r = rhs->Get(String::New("r"))->ToNumber()->Value();
 		this->p = rhs->Get(String::New("p"))->ToNumber()->Value();
@@ -145,7 +145,7 @@ namespace Internal {
 	// Produces a JSON error object
 	//
 	Local<Value>
-    MakeErrorObject(int errorCode, std::string& errorMessage) {
+	MakeErrorObject(int errorCode, std::string& errorMessage) {
 
 		if (errorCode) {
 			Local<Object> errorObject = Object::New();
@@ -184,7 +184,7 @@ namespace Internal {
 	// Produces a JSON error object for errors resulting from Scrypt
 	//
 	Local<Value>
-    MakeErrorObject(int errorCode, int scryptErrorCode) {
+	MakeErrorObject(int errorCode, int scryptErrorCode) {
 		assert(errorCode == SCRYPT);
 		if (scryptErrorCode) { 
 			Local<Object> errorObject = Object::New();
