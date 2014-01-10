@@ -38,7 +38,7 @@
 // Creates a password hash. This is the actual key derivation function
 //
 int
-Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t logN, uint32_t r, uint32_t p) {
+Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uint32_t r, uint32_t p) {
 	uint64_t N=0;
 	uint8_t dk[64],
 		salt[32],
@@ -57,25 +57,25 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t logN, u
 	if (ScryptKeyDerivationFunction(passwd, passwdSize, salt, 32, N, r, p, dk, 64))
 		return (3);
 
-	/* Construct the file header. */
-	memcpy(header, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
-	header[6] = 0;
-	header[7] = logN;
-	be32enc(&header[8], r);
-	be32enc(&header[12], p);
-	memcpy(&header[16], salt, 32);
+	/* Construct the hash. */
+	memcpy(hash, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
+	hash[6] = 0;
+	hash[7] = logN;
+	be32enc(&hash[8], r);
+	be32enc(&hash[12], p);
+	memcpy(&hash[16], salt, 32);
 
-	/* Add header checksum. */
+	/* Add hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, header, 48);
+	scrypt_SHA256_Update(&ctx, hash, 48);
 	scrypt_SHA256_Final(hbuf, &ctx);
-	memcpy(&header[48], hbuf, 16);
+	memcpy(&hash[48], hbuf, 16);
 
-	/* Add header signature (used for verifying password). */
+	/* Add hash signature (used for verifying password). */
 	HMAC_SHA256_Init(&hctx, key_hmac, 32);
-	HMAC_SHA256_Update(&hctx, header, 64);
+	HMAC_SHA256_Update(&hctx, hash, 64);
 	HMAC_SHA256_Final(hbuf, &hctx);
-	memcpy(&header[64], hbuf, 32);
+	memcpy(&hash[64], hbuf, 32);
 
 	return 0; //success
 }
@@ -84,7 +84,7 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t logN, u
  * Verifies password hash (also ensures hash integrity at same time)
  */
 int
-Verify(const uint8_t* header, const uint8_t* passwd, size_t passwdSize) {
+Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
 	uint64_t N=0;
 	uint32_t r=0, p=0; 
 	uint8_t dk[64],
@@ -95,27 +95,27 @@ Verify(const uint8_t* header, const uint8_t* passwd, size_t passwdSize) {
 	SHA256_CTX ctx;
 
 	/* Parse N, r, p, salt. */
-	N = (uint64_t)1 << header[7]; //Remember, header[7] is actually LogN
-	r = be32dec(&header[8]);
-	p = be32dec(&header[12]);
-	memcpy(salt, &header[16], 32);
+	N = (uint64_t)1 << hash[7]; //Remember, hash[7] is actually LogN
+	r = be32dec(&hash[8]);
+	p = be32dec(&hash[12]);
+	memcpy(salt, &hash[16], 32);
 
-	/* Verify header checksum. */
+	/* Verify hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, header, 48);
+	scrypt_SHA256_Update(&ctx, hash, 48);
 	scrypt_SHA256_Final(hbuf, &ctx);
-	if (memcmp(&header[48], hbuf, 16))
+	if (memcmp(&hash[48], hbuf, 16))
 		return (7);
 
 	/* Compute Derived Key */
 	if (ScryptKeyDerivationFunction(passwd, passwdSize, salt, 32, N, r, p, dk, 64))
 		return (3);
 
-	/* Check header signature (i.e., verify password). */
+	/* Check hash signature (i.e., verify password). */
 	HMAC_SHA256_Init(&hctx, key_hmac, 32);
-	HMAC_SHA256_Update(&hctx, header, 64);
+	HMAC_SHA256_Update(&hctx, hash, 64);
 	HMAC_SHA256_Final(hbuf, &hctx);
-	if (memcmp(hbuf, &header[64], 32))
+	if (memcmp(hbuf, &hash[64], 32))
 		return (11);        
 
 	return (0); //Success
