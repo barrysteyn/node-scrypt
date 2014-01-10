@@ -2,53 +2,115 @@
 
 [![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
 
-node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) utility. In short, it is a NodeJS module for what is arguably the most advanced password hash in existence.
-
-##Platforms Supported
-For Scrypt to work at its best, it needs to have its configuration file custom built for each platform it is installed on. Scrypt's author made Scrypt as a C program. The user of this C program is expected to run a specialised configuration script which will automatically determines the best and most secure way Scrypt can be compiled on that platform. In the past, the output of this configuration script run on a Linux box was used with this module, with other platforms (notably Mac OS) being specially customised. 
-
-As of version 1.6.0, this configuration is run automatically before each compile, meaning that this NodeJS Scrypt module will be perfectly tuned to the target operating system. But this is only available for Unix like platforms (Windows support coming soon). It has been tested on **Linux**, **MAC OS** and **SmartOS** (so its ready for Joyent Cloud). This includes FreeBSD, OpenBSD, SunOS etc. 
-
-**New In Version 1.7.0**: Version 1.7.0 now automatically determines what libraries (besides openssl) to link to. Therefore I expect this module to work on any *unix-like* platform.
-
-##Node Version Compatibilty
-This module supports Node version 0.8x and upwards. Earlier versions of Node do not come bundled with OpenSSL which is required for this module to work.
-
-##What Is Scrypt? 
-Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function) (i.e. password authenticator). More information can be found here:
+node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt utility. Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function): More information can be found here:
 
 * [Tarsnap blurb about Scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of Scrypt) explains a bit about it.
 * [Academic paper explaining Scrypt](http://www.tarsnap.com/scrypt/scrypt.pdf).
 * [Wikipedia Article on Scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
-For additional interest, read the article on Wikipedia about the [key derivation function](http://en.wikipedia.org/wiki/Key_derivation_function).
+#Table Of Contents
+## Node-scrypt version 2.X - introducing version 2
+## API
+## Example Usage
+## FAQ
+## Credits
 
-###The Three Essential Properties Of Password Key Derivation
-Password key derivation requires three properties:
+#Node-Scrypt Version 2
+This module is a complete rewrite of the previous module. It's main highlights are:
+ * Access to the underlying key derivation function
+ * Extensive use of node's buffers
+ * Easy configuration
+ * Removal of scrypt encryption/decryption (this will soon be moved to another module)
+
+The module consists of four functions:
+ 1. params - a translation function that produces scrypt parameters
+ 2. hash - produces a 256 bit hash using scrypt's key derivation function
+ 3. verify - verify's a hash produced by this module
+ 4. kdf - scrypt's underlying key dervivation function
+
+Each function has a member json object called *config* used to configure settings. All the functions (except the params function) can accept th following encodings:
+ 1. ascii
+ 2. utf8
+ 3. base64
+ 4. ucs2 
+ 5. binary
+ 6. hex
+ 7. buffer
+
+The last encoding is node's buffer object.
+
+##Params
+This function translates human understandable parameters to Scrypt's internal parameters. 
+
+The human understandable parameters are as follows:
+ 1. **maxtime**: the maximum amount of time scrypt will spend when computing the derived key.
+ 2. **maxmemfrac**: the maximum fraction of the available RAM used when computing the derived key.
+ 3. **maxmem**: the maximum number of bytes of RAM used when computing the derived encryption key. 
+
+Scrypt's internal parameters are as follows:
+ 1. **N** - general work factor, iteration count.
+ 2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
+ 3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
+
+###A Note On How Memory Is Calculated
+`maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
+
+> the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
+
+Therefore at the very least, 1MiB of ram will be used.
+
+##Hash
+The hash function does the following:
+ * Adds random salt.
+ * Creates a HMAC to protect against active attack.
+ * Uses the Scrypt key derivation function to derive a hash for a key.
+
+###Hash Format
+All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key to the HMAC being produced by the scrypt key derivation function. The result is a 768 bit output:
+ 1. bytes 0-5: The word *"scrypt"*
+ 2. bytes 6-15: Scrypt parameters N, r, and p
+ 3. bytes 16-47: 32 bits of random salt
+ 4. bytes 48-63: A 16 bit checksum
+ 5. bytes 64-95: A 32 bit HMAC of bytes 0 to 63 using a key produced by the Scrypt key derivation function.
+
+Bytes 0 to 63 is not encrypted. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
+
+##Verify
+The verify function will take as input
+##Key Derivation Function
+##Backward Compatibility For User's Of Version 1.x
+Four extra functions are provided for means of backward compatibility:
+ 1. passwordHash
+ 2. passwordHashSync
+ 3. verifyHash
+ 4. verifyHashSync
+
+The above functions are defaulted to behave exactly like the previous version.
+
+#API
+#Example Usage
+
+# FAQ
+## General
+### What Platforms Are Supported?
+This module supports most posix platforms. It has been tested on the following platforms: **Linux**, **MAC OS** and **SmartOS** (so its ready for Joyent Cloud). This includes FreeBSD, OpenBSD, SunOS etc.
+### What About Windows?
+Windows support is not native to Scrypt, but it does work when using cygwin. With this in mind, I will be updating this module to work on Windows with a prerequisite of cygwin. 
+## Scrypt
+### What Is Scrypt?
+### What Are The Three Scrypt Parameters (*N*, *r* and *p*)
+## Hash
+### What Are The Essential Properties For Storing Passwords
+Storing passwords requires three essential properties
 
 * The password must not be stored in plaintext. (Therefore it is hashed).
 * The password hash must be salted. (Making a rainbow table attack very difficult to pull off).
 * The salted hash function must not be fast. (If someone does get hold of the salted hashes, their only option will be brute force which will be very slow).
 
-This Scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power now or in the future.
+As an example of how storing passwords can be done badly, take [LinkedIn](http://www.linkedin.com). In 2012, they [came under fire](http://thenextweb.com/socialmedia/2012/06/06/bad-day-for-linkedin-6-5-million-hashed-passwords-reportedly-leaked-change-yours-now/#!rS1HT) for using unsalted hashes to store their passwords. As most commentators at the time were focusing no salt being present, the big picture was missed. In fact, their biggest problem was that they used [sha1](http://en.wikipedia.org/wiki/SHA-1), a very fast hash function.
 
-### What This Module Provides
-This module implements the following:
-
- * **Scrypt password key derivation**
-    * All three essential properties of password key derivation are implemented (as described above).
-    * Both *asynchronous* and *synchronous* versions are available.
- * **Scrypt encryption**
-    * Both *asynchronous* and *synchronous* versions are available.
-
-I suspect Scrypt will be used mainly as a password key derivation function (its author's intended use), but I have also ported the Scrypt encryption and decryption functions as implementations for them were available from the author. Performing Scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower. It is also the basis for the key derivation functions.
-
-### The Scrypt Hash Format
-I have included this section because I keep being queried about the randomness of this module. Scrypt (and in general, all key derivation functions) store metadata in the header which cannot be encrypted.  For example, the random salt needs to be stored un-encrypted in the header. The header information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Scrypt uses a normal MAC to ensure integrity, but it derives it in a funky way based on its unique properties.
-
-Every Scrypt header starts with the word *"scrypt"*. The reason for this is that I am following Colin Percival's (Scrypt's author) reference implementation whereby he starts off each hash this way. Next comes information regarding how the hash will be constructed (see the three tweakable inputs below). Users of Scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). Once the hash has been produced, the result is base64 encoded to ensure maximum portability. 
-
-Taking the above paragraph into account, note the following: The base64 encoding for the word *"scrypt"* is *c2NyeXB0*. So at the very least, every hash derived using this module should start with *c2NyeXB0*. Next comes metadata that normally does not change once settled upon (so it should also look the same). Only then does the random salt get added along with the derived hashed password.
+### If random salts are used for each hash, why does each hash start with *c2NyeXB0* when using passwordHash
+All hashes start with the word *"scrypt"*. The reason for this is because I am sticking to Colin Percival's (the creator of Scrypt) hash reference implementation whereby he starts off each hash this way. The base64 encoding of the ascii *"scrypt"* is *c2NyeXB0*. Seeing as *passwordHash* defaults it's output to base64, every hash produced will start with *c2NyeXB0*. Next is the Scrypt parameter. Users of Scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). 
 
 To illustrate with an example, I have hashed two password: *password1* and *password2*. Their outputs are as follows:
 
@@ -70,6 +132,23 @@ Compare this hash to the one above. Even though they start off looking similar, 
 
 For those that are curious or paranoid, please look at how the hash is both [produced](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L146-197) and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/passwordhash/scrypthash.c#L199-238) (you are going to need some knowledge of the [C language](http://c.learncodethehardway.org/book/) for this). 
 
+##What Is Scrypt? 
+
+###The Three Essential Properties Of Password Key Derivation
+This Scrypt library automatically handles the above properties. The last item seems strange: Computer scientists are normally pre-occupied with making things fast. Yet it is this property that sets Scrypt apart from the competition. As computers evolve and get more powerful, they are able to attack this property more efficiently. This has become especially apparent with the rise of parallel programming. Scrypt aims to defend against all types of attacks, not matter the attackers power now or in the future.
+
+### What This Module Provides
+This module implements the following:
+
+ * **Scrypt password key derivation**
+    * All three essential properties of password key derivation are implemented (as described above).
+    * Both *asynchronous* and *synchronous* versions are available.
+ * **Scrypt encryption**
+    * Both *asynchronous* and *synchronous* versions are available.
+
+I suspect Scrypt will be used mainly as a password key derivation function (its author's intended use), but I have also ported the Scrypt encryption and decryption functions as implementations for them were available from the author. Performing Scrypt cryptography is done if you value security over speed. Scrypt is more secure than a vanilla block cipher (e.g. AES) but it is much slower. It is also the basis for the key derivation functions.
+
+### The Scrypt Hash Format
 ##Why Use Scrypt?
 It is probably the most advanced key derivation function available. This is is quote taken from a comment in hacker news:
 
@@ -77,28 +156,6 @@ It is probably the most advanced key derivation function available. This is is q
 
 The *three tweakable* inputs mentioned above are as follows (quoting from Scrypt's author Colin Percival):
 
-**maxtime**
->maxtime will instruct scrypt to spend at most maxtime seconds computing the derived encryption key from the password; [If using scrypt] for encryption, this value will determine how secure the encrypted data is, while for decryption this value is used as an upper limit (if scrypt detects that it would take too long to decrypt the data, it will exit with an error message).
-
-**maxmemfrac**
->maxmemfrac instructs scrypt to use at most the specified fraction of the available RAM for computing the derived encryption key. For encryption, increasing this value might increase the security of the encrypted data, depending on the maxtime value; for decryption, this value is used as an upper limit and may cause scrypt to exit with an error.
-
-**maxmem**
->maxmem instructs scrypt to use at most the specified number of bytes of RAM when computing the derived encryption key. 
-
-
-**A Note On How Memory Is Calculated**: `maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
-
-> the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
-
-Therefore at the very least, 1MiB of ram will be used.
-
-###The Three Tweakable Inputs
-<u>**Note**: This is a very important section to understand</u>. The three tweakable inputs mentioned above are actually just *human understandable* inputs into a translation function that produces the inputs required for the internal scrypt cryptographic function. These inputs (as defined in the [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf)) are as follows:
-
-1. **N** - general work factor, iteration count.
-2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
-3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
 
 Values for *maxtime*, *maxmemfrac* and *maxmem* are translated into the above values, which are then fed to the Scrypt function. The translation function also takes into account the CPU and Memory capabilities of a machine. Therefore values of *N*, *r* and *p* may differ for different machines that have different specs.
 
