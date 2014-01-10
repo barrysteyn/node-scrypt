@@ -46,7 +46,7 @@
                 'src/util/salt.c',
                 'src/scryptwrapper/keyderivation.c',
                 'src/scryptwrapper/pickparams.c',
-                'src/scryptwrapper/passwordhash.c'
+                'src/scryptwrapper/hash.c'
             ],
             'include_dirs' : [
                 'scrypt/scrypt-1.1.6/lib/util',

@@ -32,7 +32,7 @@
 
 //Scrypt is a C library
 extern "C" {
-	#include "passwordhash.h"
+	#include "hash.h"
 }
 
 using namespace v8;
@@ -130,7 +130,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 //
 void
 VerifyWork(HashInfo* hashInfo) {
-	hashInfo->result = VerifyHash(
+	hashInfo->result = Verify(
 		(const uint8_t*)hashInfo->hash_ptr,
 		(const uint8_t*)hashInfo->password_ptr, 
 		hashInfo->passwordSize

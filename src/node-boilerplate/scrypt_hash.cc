@@ -32,7 +32,7 @@
 
 //C Linkings
 extern "C" {
-	#include "passwordhash.h"
+	#include "hash.h"
 }
 
 using namespace v8;
@@ -190,8 +190,8 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 //
 void 
 PasswordHashWork(HashInfo* hashInfo) {
-	//perform scrypt password hash
-	hashInfo->result = HashPassword(
+	//perform scrypt hash
+	hashInfo->result = Hash(
 		(const uint8_t*)hashInfo->password_ptr, hashInfo->passwordSize,
 		(uint8_t*)hashInfo->passwordHash_ptr,
 		hashInfo->params.N, hashInfo->params.r, hashInfo->params.p

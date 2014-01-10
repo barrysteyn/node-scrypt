@@ -1,5 +1,5 @@
 /* 
-   passwordhash.c and passwordhash.h
+   hash.c
 
    Copyright (C) 2012 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -38,7 +38,7 @@
  * Creates a password hash. This is the actual key derivation function
  */
 int
-HashPassword(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t logN, uint32_t r, uint32_t p) {
+Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t logN, uint32_t r, uint32_t p) {
 	uint64_t N=0;
     uint8_t dk[64],
             salt[32],
@@ -84,7 +84,7 @@ HashPassword(const uint8_t* passwd, size_t passwdSize, uint8_t* header, uint32_t
  * Verifies password hash (also ensures hash integrity at same time)
  */
 int
-VerifyHash(const uint8_t* header, const uint8_t* passwd, size_t passwdSize) {
+Verify(const uint8_t* header, const uint8_t* passwd, size_t passwdSize) {
     uint64_t N=0;
     uint32_t r=0, p=0; 
     uint8_t dk[64],

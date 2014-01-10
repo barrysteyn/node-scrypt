@@ -1,5 +1,5 @@
 /* 
-   scrypthash.c and scrypthash.h
+   hash.h
 
    Copyright (C) 2012 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
@@ -29,9 +29,9 @@
 #define _SCRYPTHASH_H_
 
 int
-HashPassword(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t);
+Hash(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t);
 
 int
-VerifyHash(const uint8_t*, const uint8_t*, size_t);
+Verify(const uint8_t*, const uint8_t*, size_t);
 
 #endif /* !_SCRYPTHASH_H_ */
