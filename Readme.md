@@ -2,20 +2,24 @@
 
 [![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
 
-node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt utility. Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function): More information can be found here:
+node-scrypt is a native node C++ wrapper for Colin Percival's Scrypt utility. 
+
+##Table Of Contents
+ * [Scrypt](#scrypt)
+ * [Introducing Node-scrypt version 2.X](#introducing-node-scrypt-version-2)
+ * [API](#api)
+ * [Example Usage](#example-usage)
+ * [FAQ](#faq)
+ * [Credits](#credits)
+
+##Scrypt
+Scrypt is an advanced crypto library used mainly for [key derivation](http://en.wikipedia.org/wiki/Key_derivation_function): More information can be found here:
 
 * [Tarsnap blurb about Scrypt](http://www.tarsnap.com/scrypt.html) - Colin Percival (the author of Scrypt) explains a bit about it.
 * [Academic paper explaining Scrypt](http://www.tarsnap.com/scrypt/scrypt.pdf).
 * [Wikipedia Article on Scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
-#Table Of Contents
-## Node-scrypt version 2.X - introducing version 2
-## API
-## Example Usage
-## FAQ
-## Credits
-
-#Node-Scrypt Version 2
+##Introducing Node-Scrypt Version 2
 This module is a complete rewrite of the previous module. It's main highlights are:
  * Access to the underlying key derivation function
  * Extensive use of node's buffers
@@ -37,7 +41,7 @@ Each function has a member json object called *config* used to configure setting
  6. hex
  7. buffer
 
-The last encoding is node's buffer object.
+The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. Buffer is useful for representing raw binary data and has the ability to translate into any of the encodings mentioned above. It is for these reasons that encodings default to buffer in this module.
 
 ##Params
 This function translates human understandable parameters to Scrypt's internal parameters. 
@@ -66,18 +70,30 @@ The hash function does the following:
  * Uses the Scrypt key derivation function to derive a hash for a key.
 
 ###Hash Format
-All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key to the HMAC being produced by the scrypt key derivation function. The result is a 768 bit output:
+All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key for the HMAC being produced by the scrypt key derivation function. The result is a 768 bit (96 byte) output:
  1. bytes 0-5: The word *"scrypt"*
  2. bytes 6-15: Scrypt parameters N, r, and p
  3. bytes 16-47: 32 bits of random salt
  4. bytes 48-63: A 16 bit checksum
  5. bytes 64-95: A 32 bit HMAC of bytes 0 to 63 using a key produced by the Scrypt key derivation function.
 
-Bytes 0 to 63 is not encrypted. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
+Bytes 0 to 63 are left in plaintext. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
 
 ##Verify
-The verify function will take as input
+The verify function takes two inputs:
+ 1. **hash** a hash produced by the hash function
+ 2. **key**  a key. 
+
+It will verify whether the hash can be derived from the key and return a boolean result.
+
 ##Key Derivation Function
+The underlying Scrypt key derivation function. This functionality is exposed for users who are quite experienced and need the function for business logic. A good example is [litecoin](https://litecoin.org/) which uses the scrypt key derivation function as a proof of work. The key derivation function in this module is tested against [three of the four test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) in the original scrypt paper. The fourth test vector takes too long to computer and is infeasible to use as testing for continuous integration. Nevertheless, it is included in the tests, but commented out - uncomment it and run the tests, but be warned that it is rather taxing on resources.
+
+###Use Hash To Store Keys
+If your interested in this module is to produce hashes to store passwords, then I strongly encourage you to use the hash function. The key derivation function does not produce any [message authentication code](http://en.wikipedia.org/wiki/Message_authentication_code) to ensure integrity. You will also have to store the scrypt parameters separately. 
+
+In short: If you are going to use this module to store keys, then use the hash function. It has been customised for general key storage and is both easier to use and provides better protection compared to the key derivation function.
+
 ##Backward Compatibility For User's Of Version 1.x
 Four extra functions are provided for means of backward compatibility:
  1. passwordHash
@@ -88,6 +104,9 @@ Four extra functions are provided for means of backward compatibility:
 The above functions are defaulted to behave exactly like the previous version.
 
 #API
+##Hash
+###Config Object
+
 #Example Usage
 
 # FAQ
