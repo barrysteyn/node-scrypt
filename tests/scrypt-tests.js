@@ -1,8 +1,8 @@
 var test = require('tap').test;
 var scrypt = require('../');
-var passwordString = "This is the test password";
-var passwordStringObject = new String(passwordString);
-var passwordBuffer = new Buffer(passwordString);
+var keyString = "This is the test key";
+var keyStringObject = new String(keyString);
+var keyBuffer = new Buffer(keyString);
 var message = "This is a message";
 var scryptParameters = {"N":1, "r":1, "p":1}
 
@@ -97,27 +97,27 @@ test("KDF - Deterministic non-random salt added manually", function(t) {
 	});
 });
 
-test("Password hashing: Salt means same passwords hash to different values", function(t) {
-    var hash1 = scrypt.passwordHashSync(passwordString, scryptParameters);
-    var hash2 = scrypt.passwordHashSync(passwordString, scryptParameters);
-    t.notEqual(hash1,hash2,"Synchronous: same passwords are correctly hashed to different values due to salt");
+test("Password hashing: Salt means same keys hash to different values", function(t) {
+    var hash1 = scrypt.passwordHashSync(keyString, scryptParameters);
+    var hash2 = scrypt.passwordHashSync(keyString, scryptParameters);
+    t.notEqual(hash1,hash2,"Synchronous: same keys are correctly hashed to different values due to salt");
 	
-	scrypt.passwordHash(passwordString, scryptParameters, function(err, hash1) {
-		scrypt.passwordHash(passwordString, scryptParameters, function(err, hash2) {
-			t.notEqual(hash1,hash2,"Asynchronous: same passwords are correctly hashed to different values due to salt");
+	scrypt.passwordHash(keyString, scryptParameters, function(err, hash1) {
+		scrypt.passwordHash(keyString, scryptParameters, function(err, hash2) {
+			t.notEqual(hash1,hash2,"Asynchronous: same keys are correctly hashed to different values due to salt");
 			t.end();
 		});
 	});
 });
 
-test("Password hashing and verifying: Same password verify and hash (Consistency test - Result Must Be True)", function(t) {
-	hash = scrypt.passwordHash(passwordString, scryptParameters);
-	result = scrypt.verifyHash(hash, passwordString);
+test("Password hashing and verifying: Same key verify and hash (Consistency test - Result Must Be True)", function(t) {
+	hash = scrypt.passwordHash(keyString, scryptParameters);
+	result = scrypt.verifyHash(hash, keyString);
 	t.equal(result, true,"Synchronous: hash has been verified as true => Result Is True");
 
-    scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
+    scrypt.passwordHash(keyString, scryptParameters, function(err, hash) {
 		t.notOk(err,"Asynchronous: no error hashing result");
-        scrypt.verifyHash(hash, passwordString, function(err, result) {
+        scrypt.verifyHash(hash, keyString, function(err, result) {
             t.notOk(err,"Asynchronous: no error verifying hash");
             t.equal(result, true,"Asynchronous: hash has been verified as true => Result Is True");
             t.end();
@@ -125,14 +125,14 @@ test("Password hashing and verifying: Same password verify and hash (Consistency
     })
 });
 
-test("Password hashing and verifying: Different passwords do not verify (Result Must Be False)", function(t) {
-	hash = scrypt.passwordHash(passwordString, scryptParameters);
-	result = scrypt.verifyHash(hash, "another password");
+test("Password hashing and verifying: Different keys do not verify (Result Must Be False)", function(t) {
+	hash = scrypt.passwordHash(keyString, scryptParameters);
+	result = scrypt.verifyHash(hash, "another key");
 	t.equal(result, false,"Synchronous: hash has been verified as false => Result Is False (as it should be)");
 
-    scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
+    scrypt.passwordHash(keyString, scryptParameters, function(err, hash) {
 		t.notOk(err,"Asynchronous: no error hashing result");
-        scrypt.verifyHash(hash, "another password", function(err, result) {
+        scrypt.verifyHash(hash, "another key", function(err, result) {
             t.ok(err,"Asynchronous: error verifying hash - because hashes are not the same (as expected)");
             t.equal(result, false,"Asynchronous: hash has been verified as false => Result Is False (as it should be)");
             t.end();
@@ -278,48 +278,48 @@ test("Password Hash: incorrect arguments - no arguments present", function(t) {
 		scrypt.passwordHash();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
 test("Password Hash: incorrect arguments - only one argument present", function(t) {
 	try {
-		scrypt.passwordHash(passwordString);
+		scrypt.passwordHash(keyString);
 	} catch (err) {
-		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, only one was present, namely the password");
-		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, only one was present, namely the key");
+		t.deepEqual(err,scrypt.errorObject(JSARG,"wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Hash: incorrect arguments - expected password is not a string", function(t) {
+test("Password Hash: incorrect arguments - expected key is not a string", function(t) {
 	try {
 		scrypt.passwordHash(1232, scryptParameters);
 	} catch (err) {
-		t.ok(err, "Synchronous test: An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test: An error was correctly thrown because the key type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	
 	try {
 		scrypt.passwordHash(1232, scryptParameters, function() {});
 	} catch (err) {
-		t.ok(err, "Asynchronous test: An error was correctly thrown because the password type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test: An error was correctly thrown because the key type was incorrect - in this case, it was of type number, but it should be of type string or buffer");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {});
+		scrypt.passwordHash(keyString, {});
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it is an empty object");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	
 	try {
-		scrypt.passwordHash(passwordString, {}, function(){});
+		scrypt.passwordHash(keyString, {}, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it is an empty object");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -329,14 +329,14 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":1});
+		scrypt.passwordHash(keyString, {"N":1});
 	} catch (err) {
 		t.ok(err, "Synchronout test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it has one property, only N (but r and p are also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	
 	try {
-		scrypt.passwordHash(passwordString, {"N":1}, function(){});
+		scrypt.passwordHash(keyString, {"N":1}, function(){});
 	} catch (err) {
 		t.ok(err, "Asychronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it has one property, only N (but r and p are also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -346,13 +346,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":1});
+		scrypt.passwordHash(keyString, {"N":1,"r":1});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and r (but p is also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":1}, function() {});
+		scrypt.passwordHash(keyString, {"N":1,"r":1}, function() {});
 	} catch (err) {
 		t.ok(err, "Asyncrhonous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and r (but p is also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -362,13 +362,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"p":1});
+		scrypt.passwordHash(keyString, {"N":1,"p":1});
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and p (but r is also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"p":1}, function() {});
+		scrypt.passwordHash(keyString, {"N":1,"p":1}, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, it has two properties, only N and p (but r is also needed)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r value is not present"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -378,13 +378,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":"hello","r":1, "p":1});
+		scrypt.passwordHash(keyString, {"N":"hello","r":1, "p":1});
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, N type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, {"N":"hello","r":1, "p":1},function() {});
+		scrypt.passwordHash(keyString, {"N":"hello","r":1, "p":1},function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, N type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"N must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -394,13 +394,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":"hello", "p":1});
+		scrypt.passwordHash(keyString, {"N":1,"r":"hello", "p":1});
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, r type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":"hello", "p":1}, function() {});
+		scrypt.passwordHash(keyString, {"N":1,"r":"hello", "p":1}, function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, r type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"r must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -410,13 +410,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - expected scrypt parameter object is malformed", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":1, "p":"hello"});
+		scrypt.passwordHash(keyString, {"N":1,"r":1, "p":"hello"});
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, p type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, {"N":1,"r":1, "p":"hello"}, function(){});
+		scrypt.passwordHash(keyString, {"N":1,"r":1, "p":"hello"}, function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, p type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(PARMOBJ,"p must be a numeric value"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -426,13 +426,13 @@ test("Password Hash: incorrect arguments - expected scrypt parameter object is m
 
 test("Password Hash: incorrect arguments - maxtime not a number", function(t) {
 	try {
-		scrypt.passwordHash(passwordString, "hello world");
+		scrypt.passwordHash(keyString, "hello world");
 	} catch (err) {
 		t.ok(err, "Synchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, p type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(JSARG,"expecting maxtime as a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
-		scrypt.passwordHash(passwordString, "hello world", function(){});
+		scrypt.passwordHash(keyString, "hello world", function(){});
 	} catch (err) {
 		t.ok(err, "Asynchronous test: an error was correctly thrown because the scrypt parameter object is malformed - in this case, p type is a string (it should be a numeric)");
 		t.deepEqual(err,scrypt.errorObject(JSARG,"expecting maxtime as a number"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -440,152 +440,152 @@ test("Password Hash: incorrect arguments - maxtime not a number", function(t) {
 	}
 });
 
-test("Password Hash: incorrect arguments - password string is empty", function(t) {
+test("Password Hash: incorrect arguments - key string is empty", function(t) {
 	try {
 		scrypt.passwordHash("", scryptParameters);
 	} catch (err) {
-		t.ok(err, "Synchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
 		scrypt.passwordHash("", scryptParameters, function() {});
 	} catch (err) {
-		t.ok(err, "Asynchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Hash: incorrect arguments - password string object is empty", function(t) {
+test("Password Hash: incorrect arguments - key string object is empty", function(t) {
 	try {
 		scrypt.passwordHash(new String(""), scryptParameters);
 	} catch (err) {
-		t.ok(err, "Synchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
 		scrypt.passwordHash(new String(""), scryptParameters, function() {});
 	} catch (err) {
-		t.ok(err, "Asynchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Hash: incorrect arguments - password buffer is empty", function(t) {
+test("Password Hash: incorrect arguments - key buffer is empty", function(t) {
 	try {
 		scrypt.passwordHash(new Buffer(""), scryptParameters);
 	} catch (err) {
-		t.ok(err, "synchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "synchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 	try {
 		scrypt.passwordHash(new Buffer(""), scryptParameters, function() {});
 	} catch (err) {
-		t.ok(err, "Asynchronous test: an error was correctly thrown because the password string was empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test: an error was correctly thrown because the key string was empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Hash: incorrect arguments - only two arguments present, password and callback function" , function(t) {
+test("Password Hash: incorrect arguments - only two arguments present, key and callback function" , function(t) {
 	try {
-		scrypt.passwordHash(passwordString, function(){});
+		scrypt.passwordHash(keyString, function(){});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because there was no scrypt parameters object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"wrong number of arguments at least two arguments are needed before the callback function - key and scrypt parameters JSON object"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
 //Synchronous
-test("Password Hash (Synchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
-	var hash = scrypt.passwordHash(passwordString, scryptParameters);
-	t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key string and scrypt parameters object", function(t) {
+	var hash = scrypt.passwordHash(keyString, scryptParameters);
+	t.ok(true, "The key was hashed successfully, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password string and maxtime number", function(t) {
-	var hash = scrypt.passwordHash(passwordString, 1);
-	t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key string and maxtime number", function(t) {
+	var hash = scrypt.passwordHash(keyString, 1);
+	t.ok(true, "The key was hashed successfully, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password string, maxtime number and maxmem number", function(t) {
-	var hash = scrypt.passwordHash(passwordString, 1, 0.05);
-	t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key string, maxtime number and maxmem number", function(t) {
+	var hash = scrypt.passwordHash(keyString, 1, 0.05);
+	t.ok(true, "The key was hashed successfully, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password string,maxtime number, maxmemnumber and maxmem_frac number", function(t) {
-	var hash = scrypt.passwordHash(passwordString, 1, 0.05, 0.05);
-	t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key string,maxtime number, maxmemnumber and maxmem_frac number", function(t) {
+	var hash = scrypt.passwordHash(keyString, 1, 0.05, 0.05);
+	t.ok(true, "The key was hashed successfully, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password string object and scrypt parameters object", function(t) {
-	var hash = scrypt.passwordHash(passwordStringObject, scryptParameters);
-	t.ok(true, "The password was hashed successfully with a string object, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key string object and scrypt parameters object", function(t) {
+	var hash = scrypt.passwordHash(keyStringObject, scryptParameters);
+	t.ok(true, "The key was hashed successfully with a string object, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
-test("Password Hash (Synchronous): hash password with correct arguments: password buffer and scrypt parameters object", function(t) {
-	var hash = scrypt.passwordHash(passwordBuffer, scryptParameters);
-	t.ok(true, "The password was hashed successfully with a buffer, as expected");
+test("Password Hash (Synchronous): hash key with correct arguments: key buffer and scrypt parameters object", function(t) {
+	var hash = scrypt.passwordHash(keyBuffer, scryptParameters);
+	t.ok(true, "The key was hashed successfully with a buffer, as expected");
 	t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 	t.end();
 });
 
 
 //Asynchronous
-test("Password Hash (Asynchronous): hash password with correct arguments: password string and scrypt parameters object", function(t) {
-	scrypt.passwordHash(passwordString, scryptParameters, function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Asynchronous): hash key with correct arguments: key string and scrypt parameters object", function(t) {
+	scrypt.passwordHash(keyString, scryptParameters, function(err, hash) {
+		t.ok(true, "The key was hashed successfully, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
 });
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password string and maxtime number", function(t) {
-	scrypt.passwordHash(passwordString, 1, function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Asynchronous): hash key with correct arguments: key string and maxtime number", function(t) {
+	scrypt.passwordHash(keyString, 1, function(err, hash) {
+		t.ok(true, "The key was hashed successfully, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
 });
 
-test("Password Hash (Aynchronous): hash password with correct arguments: password string, maxtime number and maxmem number", function(t) {
-	scrypt.passwordHash(passwordString, 1, 0.05, function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Aynchronous): hash key with correct arguments: key string, maxtime number and maxmem number", function(t) {
+	scrypt.passwordHash(keyString, 1, 0.05, function(err, hash) {
+		t.ok(true, "The key was hashed successfully, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
 });
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password string,maxtime number, maxmemnumber and maxmem_frac number", function(t) {
-	scrypt.passwordHash(passwordString, 1, 0.05, 0.05, function(err, hash) {
-		t.ok(true, "The password was hashed successfully, as expected");
+test("Password Hash (Asynchronous): hash key with correct arguments: key string,maxtime number, maxmemnumber and maxmem_frac number", function(t) {
+	scrypt.passwordHash(keyString, 1, 0.05, 0.05, function(err, hash) {
+		t.ok(true, "The key was hashed successfully, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
 });
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password string object and scrypt parameters object", function(t) {
-	scrypt.passwordHash(passwordStringObject, scryptParameters, function(err, hash) {
-		t.ok(true, "The password was hashed successfully with a string object, as expected");
+test("Password Hash (Asynchronous): hash key with correct arguments: key string object and scrypt parameters object", function(t) {
+	scrypt.passwordHash(keyStringObject, scryptParameters, function(err, hash) {
+		t.ok(true, "The key was hashed successfully with a string object, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
 });
 
-test("Password Hash (Asynchronous): hash password with correct arguments: password buffer and scrypt parameters object", function(t) {
-	scrypt.passwordHash(passwordBuffer, scryptParameters,function (err, hash) {
-		t.ok(true, "The password was hashed successfully with a buffer, as expected");
+test("Password Hash (Asynchronous): hash key with correct arguments: key buffer and scrypt parameters object", function(t) {
+	scrypt.passwordHash(keyBuffer, scryptParameters,function (err, hash) {
+		t.ok(true, "The key was hashed successfully with a buffer, as expected");
 		t.type(hash, "string", "The hash that was returned is of type 'string', as expected (because it is base64 encoded)");
 		t.end();
 	});
@@ -600,7 +600,7 @@ test("Password Verify: incorrect arguments - no arguments present", function(t) 
 		scrypt.verifyHash();
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and password are needed"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and key are needed"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -610,7 +610,7 @@ test("Password Verify: incorrect arguments - one argument present", function(t) 
 		scrypt.verifyHash("hash");
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and password are needed"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and key are needed"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -620,7 +620,7 @@ test("Password Verify: incorrect argument type - two arguments present, but one 
 		scrypt.verifyHash("hash", function(){});
 	} catch (err) {
 		t.ok(err, "An error was correctly thrown because at one least two arguments are needed - in this case, no arguments were given");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and password are needed before the callback function"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"both hash and key are needed before the callback function"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -661,7 +661,7 @@ test("Password Verify: incorrect argument type - hash is an object, but not a bu
 
 test("Password Verify: incorrect argument type - hash an empty string", function(t) {
 	try {
-		scrypt.verifyHash("", passwordString);
+		scrypt.verifyHash("", keyString);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the hash string is empty");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -678,7 +678,7 @@ test("Password Verify: incorrect argument type - hash an empty string", function
 
 test("Password Verify: incorrect argument type - hash an empty string object", function(t) {
 	try {
-		scrypt.verifyHash(new String(""), passwordString);
+		scrypt.verifyHash(new String(""), keyString);
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the hash string object is empty");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"hash cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
@@ -710,87 +710,87 @@ test("Password Verify: incorrect argument type - hash an empty buffer", function
 	}
 });
 
-test("Password Verify: incorrect argument type - password not a string nor a string object nor a buffer", function(t) {
+test("Password Verify: incorrect argument type - key not a string nor a string object nor a buffer", function(t) {
 	try {
 		scrypt.verifyHash("hash", 123);
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because key is not a recognised type, namely string, string object or buffer. In this case, key is a number");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", 123, function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is a number");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because key is not a recognised type, namely string, string object or buffer. In this case, key is a number");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Verify: incorrect argument type - password is an object, but not a buffer nor a string object", function(t) {
+test("Password Verify: incorrect argument type - key is an object, but not a buffer nor a string object", function(t) {
 	try {
 		scrypt.verifyHash("hash",{});
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because password is not a recognised type, namely string, string object or buffer. In this case, password is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because key is not a recognised type, namely string, string object or buffer. In this case, key is an empty JSON object");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", {}, function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, password is an empty JSON object");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because hash is not a recognised type, namely string, string object or buffer. In this case, key is an empty JSON object");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Verify: incorrect argument type - password an empty string", function(t) {
+test("Password Verify: incorrect argument type - key an empty string", function(t) {
 	try {
 		scrypt.verifyHash("hash", "");
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the password string is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because the key string is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", "", function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the password string is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the key string is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Verify: incorrect argument type - password an empty string object", function(t) {
+test("Password Verify: incorrect argument type - key an empty string object", function(t) {
 	try {
 		scrypt.verifyHash("hash", new String(""));
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the password string object is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because the key string object is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", new String(""), function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the password string object is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the key string object is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
 
-test("Password Verify: incorrect argument type - password an empty buffer", function(t) {
+test("Password Verify: incorrect argument type - key an empty buffer", function(t) {
 	try {
 		scrypt.verifyHash("hash", new Buffer(""));
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the password buffer is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because the key buffer is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		scrypt.verifyHash("hash", new Buffer(""), function(){});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the password buffer is empty");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"password cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the key buffer is empty");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key cannot be empty"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });

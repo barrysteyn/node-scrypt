@@ -47,25 +47,25 @@ struct HashInfo {
 
 	//Async callback function
 	Persistent<Function> callback;
-	Handle<Value> hash, password;
+	Handle<Value> hash, key;
 
 	//Custom data
 	int result;
-	char *hash_ptr, *password_ptr;
-	size_t passwordSize;
+	char *hash_ptr, *key_ptr;
+	size_t keySize;
 
-	HashInfo(Handle<Object> config) : hash_ptr(NULL), password_ptr(NULL), passwordSize(0) { 
+	HashInfo(Handle<Object> config) : hash_ptr(NULL), key_ptr(NULL), keySize(0) { 
 		hashEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_hashEncoding"))->ToUint32()->Value());
 		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
 		callback.Clear(); 
 		hash.Clear(); 
-		password.Clear(); 
+		key.Clear(); 
 	}
 
 	~HashInfo() { 
 		if (!callback.IsEmpty()) {
 			Persistent<Value>(hash).Dispose();
-			Persistent<Value>(password).Dispose();
+			Persistent<Value>(key).Dispose();
 		}
 		callback.Dispose(); 
 	}
@@ -74,12 +74,12 @@ struct HashInfo {
 int
 AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hashInfo) {
 	if (args.Length() < 2) {
-		errorMessage = "both hash and password are needed";
+		errorMessage = "both hash and key are needed";
 		return ADDONARG;
 	}
 
 	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
-		errorMessage = "both hash and password are needed before the callback function";
+		errorMessage = "both hash and key are needed before the callback function";
 		return ADDONARG;
 	}
 
@@ -94,7 +94,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 		if (i > 1 && currentVal->IsFunction()) {
 			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
 			hashInfo.hash = Persistent<Value>::New(hashInfo.hash);
-			hashInfo.password = Persistent<Value>::New(hashInfo.password);
+			hashInfo.key = Persistent<Value>::New(hashInfo.key);
 			return 0;
 		}
 
@@ -109,14 +109,14 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 
 				break;
 
-			case 1: //Password
-				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, hashInfo.keyEncoding)) {
+			case 1: //Key
+				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, hashInfo.keyEncoding)) {
 					return ADDONARG;
 				}
 
-				hashInfo.password = currentVal;
-				hashInfo.password_ptr = node::Buffer::Data(currentVal);
-				hashInfo.passwordSize = node::Buffer::Length(currentVal);
+				hashInfo.key = currentVal;
+				hashInfo.key_ptr = node::Buffer::Data(currentVal);
+				hashInfo.keySize = node::Buffer::Length(currentVal);
 
 				break;
 		}
@@ -126,14 +126,14 @@ AssignArguments(const Arguments& args, std::string& errorMessage, HashInfo& hash
 }
 
 //
-// Work Function: Actual password hash done here
+// Work Function: Actual key hash done here
 //
 void
 VerifyWork(HashInfo* hashInfo) {
 	hashInfo->result = Verify(
 		(const uint8_t*)hashInfo->hash_ptr,
-		(const uint8_t*)hashInfo->password_ptr, 
-		hashInfo->passwordSize
+		(const uint8_t*)hashInfo->key_ptr, 
+		hashInfo->keySize
 	);
 }
 

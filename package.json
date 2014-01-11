@@ -8,7 +8,12 @@
         "auth",
         "authentication",
         "encryption",
-        "crypto"
+        "crypto",
+		"secret",
+		"key",
+		"secret key",
+		"hash",
+		"verify"
     ],
     "author": {
         "name": "Barry Steyn",
