@@ -51,27 +51,27 @@ struct HashInfo {
 
 	//Async callback function
 	Persistent<Function> callback;
-	Handle<Value> password, passwordHash;
+	Handle<Value> key, keyHash;
 
 	//Custom data for scrypt
 	int result;
 	
-	char *password_ptr, *passwordHash_ptr;
-	size_t passwordSize, passwordHashSize;
+	char *key_ptr, *keyHash_ptr;
+	size_t keySize, keyHashSize;
 	Internal::ScryptParams params;
 
 	//Construtor / destructor   
-	HashInfo(Handle<Object> config) : password_ptr(NULL), passwordHash_ptr(NULL), passwordSize(0),passwordHashSize(96) {
+	HashInfo(Handle<Object> config) : key_ptr(NULL), keyHash_ptr(NULL), keySize(0),keyHashSize(96) {
 		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
 		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
 		callback.Clear(); 
-		password.Clear();
-		passwordHash.Clear();
+		key.Clear();
+		keyHash.Clear();
 	}
 	~HashInfo() {
 		if (!callback.IsEmpty()) {
-			Persistent<Value>(password).Dispose();
-			Persistent<Value>(passwordHash).Dispose();
+			Persistent<Value>(key).Dispose();
+			Persistent<Value>(keyHash).Dispose();
 		}
 		callback.Dispose();
 	}
@@ -84,13 +84,13 @@ int
 AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo &hashInfo) {
 	uint8_t scryptParameterParseResult = 0;
 	if (arguments.Length() < 2) {
-		errorMessage = "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object";
+		errorMessage = "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object";
 		return ADDONARG;
 
 	}
 
 	if (arguments.Length() >= 2 && (arguments[0]->IsFunction() || arguments[1]->IsFunction())) {
-		errorMessage = "wrong number of arguments at least two arguments are needed before the callback function - password and scrypt parameters JSON object";
+		errorMessage = "wrong number of arguments at least two arguments are needed before the callback function - key and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
@@ -104,28 +104,28 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 
 		if (i > 1 && currentVal->IsFunction()) {
 			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(arguments[i]));
-			hashInfo.password = Persistent<Value>::New(hashInfo.password);
-			hashInfo.passwordHash = Persistent<Value>::New(hashInfo.passwordHash);
+			hashInfo.key = Persistent<Value>::New(hashInfo.key);
+			hashInfo.keyHash = Persistent<Value>::New(hashInfo.keyHash);
 			return 0;
 		}
 
 		switch(i) {
-			case 0: //Password
-				if (Internal::ProduceBuffer(currentVal, "password", errorMessage, hashInfo.keyEncoding)) {
+			case 0: //key
+				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, hashInfo.keyEncoding)) {
 					return ADDONARG;
 				}
-				hashInfo.password = currentVal;
-				hashInfo.password_ptr = node::Buffer::Data(currentVal);
-				hashInfo.passwordSize = node::Buffer::Length(currentVal);
+				hashInfo.key = currentVal;
+				hashInfo.key_ptr = node::Buffer::Data(currentVal);
+				hashInfo.keySize = node::Buffer::Length(currentVal);
 
-				//Create hash buffer - note that it is the same size as the password buffer
-				Internal::CreateBuffer(hashInfo.passwordHash, hashInfo.passwordHashSize);
-				hashInfo.passwordHash_ptr = node::Buffer::Data(hashInfo.passwordHash);
+				//Create hash buffer - note that it is the same size as the key buffer
+				Internal::CreateBuffer(hashInfo.keyHash, hashInfo.keyHashSize);
+				hashInfo.keyHash_ptr = node::Buffer::Data(hashInfo.keyHash);
 				break;
 
 			case 1: //Scrypt parameters
 				if (!currentVal->IsObject()) {
-					errorMessage = "expecting scrypt parameters JSON object";
+					errorMessage = "expecting scrypt parameter JSON object";
 					return ADDONARG;
 				}
 
@@ -147,13 +147,13 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 // Synchronous: After work function
 //
 void
-PasswordHashSyncAfterWork(Handle<Value> &passwordHash, const HashInfo* hashInfo) {
+PasswordHashSyncAfterWork(Handle<Value> &keyHash, const HashInfo* hashInfo) {
 	if (hashInfo->result) { //There has been an error
 		ThrowException(
 			Internal::MakeErrorObject(SCRYPT,hashInfo->result)
 		);
 	} else {
-		passwordHash = BUFFER_ENCODED(hashInfo->passwordHash, hashInfo->outputEncoding);
+		keyHash = BUFFER_ENCODED(hashInfo->keyHash, hashInfo->outputEncoding);
 	}
 }
 
@@ -165,11 +165,11 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 	HandleScope scope;
 	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
 	uint8_t argc = (hashInfo->result) ? 1 : 2;
-	Handle<Value> passwordHash = BUFFER_ENCODED(hashInfo->passwordHash, hashInfo->outputEncoding);
+	Handle<Value> keyHash = BUFFER_ENCODED(hashInfo->keyHash, hashInfo->outputEncoding);
 
 	Handle<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,hashInfo->result),
-		passwordHash
+		keyHash
 	};
 
 	TryCatch try_catch;
@@ -186,14 +186,14 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 
 
 //
-// Work Function: Actual password hash performed here
+// Work Function: Actual key hash performed here
 //
 void 
 PasswordHashWork(HashInfo* hashInfo) {
 	//perform scrypt hash
 	hashInfo->result = Hash(
-		(const uint8_t*)hashInfo->password_ptr, hashInfo->passwordSize,
-		(uint8_t*)hashInfo->passwordHash_ptr,
+		(const uint8_t*)hashInfo->key_ptr, hashInfo->keySize,
+		(uint8_t*)hashInfo->keyHash_ptr,
 		hashInfo->params.N, hashInfo->params.r, hashInfo->params.p
 	);
 }
@@ -215,7 +215,7 @@ Hash(const Arguments& arguments) {
 	HandleScope scope;
 	std::string validateMessage;
 	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(arguments.Holder()->Get(String::New("config")))); 
-	Handle<Value> passwordHash;
+	Handle<Value> keyHash;
 
 	//Assign and validate arguments
 	if ((parseResult = AssignArguments(arguments, validateMessage, *hashInfo))) {
@@ -226,7 +226,7 @@ Hash(const Arguments& arguments) {
 		if (hashInfo->callback.IsEmpty()) {
 			//Synchronous 
 			PasswordHashWork(hashInfo);
-			PasswordHashSyncAfterWork(passwordHash, hashInfo);
+			PasswordHashSyncAfterWork(keyHash, hashInfo);
 		} else {
 			//Work request 
 			uv_work_t *req = new uv_work_t();
@@ -243,7 +243,7 @@ Hash(const Arguments& arguments) {
 		delete hashInfo;
 	}
 
-	return scope.Close(passwordHash);
+	return scope.Close(keyHash);
 }
 
 } //end of unnamed namespace

@@ -67,7 +67,7 @@ scrypt.passwordHash = function(passwordHash, params) {
 
         //Determine if there are too little arguments
         if (args.length < 2) {
-            throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - password and scrypt parameters JSON object");
+            throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object");
         }
 
 		//Determine if translation function is needed
