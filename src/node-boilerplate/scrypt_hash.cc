@@ -62,8 +62,8 @@ struct HashInfo {
 
 	//Construtor / destructor   
 	HashInfo(Handle<Object> config) : key_ptr(NULL), keyHash_ptr(NULL), keySize(0),keyHashSize(96) {
-		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
-		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
+		keyEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		outputEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_outputEncoding"))->ToUint32()->Value());
 		callback.Clear(); 
 		key.Clear();
 		keyHash.Clear();
