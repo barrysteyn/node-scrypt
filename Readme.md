@@ -54,14 +54,15 @@ The module consists of four functions:
 
 It also consists of four extra functions that provide [backward compatbility](#backward-compatibility-for-users-of-version-1x) to the previous version.
 
-Each function has a member json object called *config* used to configure settings. All the functions (except the params function) can accept th following encodings:
- 1. ascii
- 2. utf8
- 3. base64
- 4. ucs2 
- 5. binary
- 6. hex
- 7. buffer
+####Encodings
+The following encodings are accepted:
+ 1. **ascii**
+ 2. **utf8**
+ 3. **base64**
+ 4. **ucs2** 
+ 5. **binary**
+ 6. **hex**
+ 7. **buffer**
 
 The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. Buffer is useful for representing raw binary data and has the ability to translate into any of the encodings mentioned above. It is for these reasons that encodings default to buffer in this module.
 
@@ -78,7 +79,7 @@ Scrypt's internal parameters are as follows:
  2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
  3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
 
-####A Note On How Memory Is Calculated
+####How Memory Is Calculated
 `maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
 
 > the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
@@ -122,14 +123,111 @@ Four extra functions are provided for means of backward compatibility:
 The above functions are defaulted to behave exactly like the previous version.
 
 ##API
+
+#####Scrypt Parameter Object
+The scrypt parameter object is a JSON object that must have values for properties **N**, **r** and **p**. For example, it could look like this:
+
+    {
+      N: 1,
+      r: 1,
+      p: 1
+    }
+
 ###Params
+`params(maxtime, maxmem, maxmemfrac, callback_function)`
+
+ * `maxtime` - [REQUIRED] - an integer, representing a millisecond value
+ * `maxmem` - [OPTIONAL] - an integer, specifying the maximum number of bytes
+ * `maxmemfrac` - [OPTIONAL] - a double value between 0.0 and 1.0, representing a noramlized percentage value
+ * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
 ####Params Config Object
+The params config object is accessible from `scrypt.params.config`. It has the following default value:
+
+    {
+     maxmem: 0,
+     maxmemfrac: 0.5
+    }
+
+  * `maxmem` - an integer representing the default value maxmem is set to if not explicitly defined in the function call
+  * `maxmemfrac` - a double representing the default value maxmemfrac is set to if not explicitly defined in the function call
+
+Read the section on [how memory is calculated](#how-memory-is-calculated) to get a better understanding of these values.
+
+The return value will be a [scrypt parameter object](#scrypt-parameter-object)
+
 ###Hash
+`hash(key, scrypt_parameters, callback_function)`
+
+ * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
+ * `scrypt_parameters` - [REQUIRED] - a JSON object representing the [scrypt's internal parameters](#params)
+ * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
 ####Hash Config Object
+The hash config object is accessible from `scrypt.hash.config`. It has the following default value:
+
+    {
+     keyEncoding: 'buffer', 
+     outputEncoding: 'buffer'
+    }
+
+ * `keyEncoding` - a string representing the [encoding](#encodings) of the input key
+ * `outputEncoding` - a string representing the [encoding](#encodings) of the output returned to the user
+
+The return value will be an [encoded string or buffer](#encodings) of the [hash format](#hash-format).
+
 ###Verify
+`verify(hash, key, callback_function)`
+
+ * `hash` - [REQUIRED] - an [encoded string or buffer](#encodings) of the output of the hash function
+ * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
+ * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
 ####Verify Config Object
+The verify config object is accessible from `scrypt.verify.config`. It has the following default value:
+
+    {
+     hashEncoding: 'buffer', 
+     keyEncoding: 'buffer'
+    }
+
+ * `hashEncoding` - a string representing the [encoding](#encodings) of the input hash
+ * `keyEncoding` - a string representing the [encoding](#encodings) of the input key
+
+The return value will be a `boolean` representing if the hash can be derived from the key
+
 ###KDF
+`kdf(key, scrypt_parameters, size, salt, callback_function)`
+
+ * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
+ * `scrypt_parameters` - [REQUIRED] - a JSON object representing the [scrypt's internal parameters](#params)
+ * `size` - [OPTIONAL] - an integer, representing the size in bytes of the output
+ * `salt` - [OPTIONAL] - an [encoded string or buffer](#encodings) representing the value used for salt. If not defined, a salt will be created and used
+ * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
+The return value will be a JSON object with the following properties:
+ 
+ 1. **hash** - the resulting scrypt KDF hash
+ 2. **salt** - the salt used to make the hash
+
 ####KDF Config Object
+The kdf config object is accessible from `scrypt.kdf.config`. It has the following default value:
+
+    { 
+     saltEncoding: 'buffer',
+     keyEncoding: 'buffer',
+     outputEncoding: 'buffer',
+     defaultSaltSize: 32,
+     outputSize: 64 
+    }
+ 
+ * `saltEncoding` - a string representing the [encoding](#encodings) of the input salt
+ * `keyEncoding` - a string representing the [encoding](#encodings) of the input key
+ * `outputEncoding` - a string representing the [encoding](#encodings) of the output returned to the user
+ * `defaultSaltSize` - an integer representing the number of bytes used to create a random salt should it be necessary
+ * `outputSize` - an integer representing the size of the output in bytes
+
+
 ###Backward Compatibility
 ####PasswordHash
 `passwordHash(key, maxtime, maxmem, maxmemfrac, callback_function)`
