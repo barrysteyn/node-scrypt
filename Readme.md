@@ -67,7 +67,7 @@ The following encodings are accepted:
 The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. Buffer is useful for representing raw binary data and has the ability to translate into any of the encodings mentioned above. It is for these reasons that encodings default to buffer in this module.
 
 ###Params
-This function translates human understandable parameters to Scrypt's internal parameters. 
+The [params function](#params-1) translates human understandable parameters to Scrypt's internal parameters. 
 
 The human understandable parameters are as follows:
  1. **maxtime**: the maximum amount of time scrypt will spend when computing the derived key.
@@ -87,7 +87,7 @@ Scrypt's internal parameters are as follows:
 Therefore at the very least, 1MiB of ram will be used.
 
 ###Hash
-The hash function does the following:
+The [hash function](#hash-1) does the following:
  * Adds random salt.
  * Creates a HMAC to protect against active attack.
  * Uses the Scrypt key derivation function to derive a hash for a key.
@@ -103,10 +103,10 @@ All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used
 Bytes 0 to 63 are left in plaintext. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using Scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
 
 ###Verify
-The verify function determines whether a hash can be derived from a given key and returns a boolean result.
+The [verify function](#verify-1) determines whether a hash can be derived from a given key and returns a boolean result.
 
 ###Key Derivation Function
-The underlying Scrypt key derivation function. This functionality is exposed for users who are quite experienced and need the function for business logic. A good example is [litecoin](https://litecoin.org/) which uses the scrypt key derivation function as a proof of work. The key derivation function in this module is tested against [three of the four test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) in the original scrypt paper. The fourth test vector takes too long to computer and is infeasible to use as testing for continuous integration. Nevertheless, it is included in the tests, but commented out - uncomment it and run the tests, but be warned that it is rather taxing on resources.
+The underlying [Scrypt key derivation function](#kdf). This functionality is exposed for users who are quite experienced and need the function for business logic. A good example is [litecoin](https://litecoin.org/) which uses the scrypt key derivation function as a proof of work. The key derivation function in this module is tested against [three of the four test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) in the original scrypt paper. The fourth test vector takes too long to computer and is infeasible to use as testing for continuous integration. Nevertheless, it is included in the tests, but commented out - uncomment it and run the tests, but be warned that it is rather taxing on resources.
 
 ####Use Hash To Store Keys
 If your interested in this module is to produce hashes to store passwords, then I strongly encourage you to use the hash function. The key derivation function does not produce any [message authentication code](http://en.wikipedia.org/wiki/Message_authentication_code) to ensure integrity. You will also have to store the scrypt parameters separately. Lastly, there is no native verify function included in this module.
@@ -136,7 +136,7 @@ The scrypt parameter object is a JSON object that must have values for propertie
 ###Params
 `params(maxtime, maxmem, maxmemfrac, callback_function)`
 
- * `maxtime` - [REQUIRED] - an integer, representing a millisecond value
+ * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running Scrypt. 
  * `maxmem` - [OPTIONAL] - an integer, specifying the maximum number of bytes
  * `maxmemfrac` - [OPTIONAL] - a double value between 0.0 and 1.0, representing a noramlized percentage value
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
@@ -260,6 +260,23 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
  * `password` - [REQUIRED] - a password string.
 
 #Example Usage
+##params
+
+    var scrypt = require("scrypt");
+	console.log(scrypt.params.config); //Outputs the config object to screen
+	var scryptParameters = scrypt.params(0.1); //Uses 0.1 for maxtime, and the values in the config object for maxmem and maxmemfrac
+	scrypt.params(0.1, function(err, scryptParameters) {
+		
+	}
+
+##hash
+	
+	var scrypt = require("hash");
+
+##verify
+
+##kdf
+
 ##Backward Compatibilty Functions
 These examples illustrate how to use the backward compatibility functions.
 ###Asynchronous Authentication And Verification
@@ -339,7 +356,6 @@ This module supports most posix platforms. It has been tested on the following p
 #### What About Windows?
 Windows support is not native to Scrypt, but it does work when using cygwin. With this in mind, I will be updating this module to work on Windows with a prerequisite of cygwin. 
 ### Scrypt
-#### What Is Scrypt?
 ####Why Use Scrypt?
 
 It is probably the most advanced key derivation function available. This is is quote taken from a comment in hacker news:
@@ -363,7 +379,6 @@ I will end this section with a quote from Colin Percival (author of Scrypt):
 #####Cons
 There is just one con I can think of: It is a relatively new library (only been around since 2009). Cryptographers don't really like new libraries for production deployment as it has not been *battle tested*. That being said, it is being actively used in [Tarsnap](http://www.tarsnap.com/) (as mentioned above) and the author is very active.
 
-#### What Are The Three Scrypt Parameters (*N*, *r* and *p*)
 ### Hash
 #### What Are The Essential Properties For Storing Passwords
 Storing passwords requires three essential properties
@@ -373,6 +388,8 @@ Storing passwords requires three essential properties
 * The salted hash function must not be fast. (If someone does get hold of the salted hashes, their only option will be brute force which will be very slow).
 
 As an example of how storing passwords can be done badly, take [LinkedIn](http://www.linkedin.com). In 2012, they [came under fire](http://thenextweb.com/socialmedia/2012/06/06/bad-day-for-linkedin-6-5-million-hashed-passwords-reportedly-leaked-change-yours-now/#!rS1HT) for using unsalted hashes to store their passwords. As most commentators at the time were focusing no salt being present, the big picture was missed. In fact, their biggest problem was that they used [sha1](http://en.wikipedia.org/wiki/SHA-1), a very fast hash function.
+
+This module's [hash function](#hash-1) provides all the above properties
 
 #### If random salts are used for each hash, why does each hash start with *c2NyeXB0* when using passwordHash
 All hashes start with the word *"scrypt"*. The reason for this is because I am sticking to Colin Percival's (the creator of Scrypt) hash reference implementation whereby he starts off each hash this way. The base64 encoding of the ascii *"scrypt"* is *c2NyeXB0*. Seeing as *passwordHash* defaults it's output to base64, every hash produced will start with *c2NyeXB0*. Next is the Scrypt parameter. Users of Scrypt normally do not change this information once it is settled upon (hence this will also look the same for each hash). 
