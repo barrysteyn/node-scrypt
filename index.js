@@ -5,6 +5,8 @@ var scrypt = require('./build/Release/scrypt');
 //
 scrypt.passwordHash = scrypt.Hash();
 scrypt.verifyHash = scrypt.Verify();
+scrypt.hash = scrypt.Hash();
+scrypt.verify = scrypt.Verify();
 scrypt.params = scrypt.Params();
 scrypt.kdf = scrypt.KDF();
 
