@@ -23,6 +23,11 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 * [Wikipedia Article on Scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
 ##Installation Instructions
+###Requirements
+
+ * Node version 0.10x and upwards. 
+ * A posix [platform](#what-platforms-are-supported).
+
 ###From NPM
 
     npm install scrypt
@@ -79,6 +84,8 @@ Scrypt's internal parameters are as follows:
  2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
  3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
 
+For info on what the above parameters do, read [section 5 of the scrypt ietf draft](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-01#section-5).
+
 ####How Memory Is Calculated
 `maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
 
@@ -123,6 +130,8 @@ Four extra functions are provided for means of backward compatibility:
 The above functions are defaulted to behave exactly like the previous version.
 
 ##API
+#####A Note On Error Handling
+All synchronous functionality should be wrapped in a `try ... catch` as exceptions are thrown in case of error. For asynchronous functionality, error are returned as the first argument to the callback function if such an error exists. An error is an object with both an error code and a message describing the error.
 
 #####Scrypt Parameter Object
 The scrypt parameter object is a JSON object that must have values for properties **N**, **r** and **p**. For example, it could look like this:
@@ -202,7 +211,7 @@ The return value will be a `boolean` representing if the hash can be derived fro
  * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
  * `scrypt_parameters` - [REQUIRED] - a JSON object representing the [scrypt's internal parameters](#params)
  * `size` - [OPTIONAL] - an integer, representing the size in bytes of the output
- * `salt` - [OPTIONAL] - an [encoded string or buffer](#encodings) representing the value used for salt. If not defined, a salt will be created and used
+ * `salt` - [OPTIONAL] - an [encoded string or buffer](#encodings) representing the value used for salt. If not defined, a randome salt will be created.
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
 
 The return value will be a JSON object with the following properties:
@@ -264,18 +273,122 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
 
     var scrypt = require("scrypt");
 	console.log(scrypt.params.config); //Outputs the config object to screen
-	var scryptParameters = scrypt.params(0.1); //Uses 0.1 for maxtime, and the values in the config object for maxmem and maxmemfrac
-	scrypt.params(0.1, function(err, scryptParameters) {
+
+	//Synchronous
+	try {
+		//Uses 0.1 for maxtime, and the values in the config object for maxmem and maxmemfrac
+		var scryptParameters = scrypt.params(0.1); 
+		console.log(scryptParameters);
+	} catch(err) {
 		
 	}
 
+	//Asynchronous
+	scrypt.params(0.1, function(err, scryptParameters) {
+		console.log(scryptParameters);
+	});
+
 ##hash
 	
-	var scrypt = require("hash");
+	var scrypt = require("scrypt");
+	var scryptParameters = scrypt.params(0.1);
+	var key = new Buffer("this is a key"); //key defaults to buffer in config, so input must be a buffer
+
+	//Synchronous example that will output in hexidecimal encoding
+	scrypt.hash.config.outputEncoding = "hex";
+	var hash = scrypt.hash(key, scryptParameters); //should be wrapped in try catch, but leaving it out for brevity
+	console.log("Synchronous result: "+hash);
+
+	//Asynchronous example that expects key to be ascii encoded
+	scrypt.hash.config.keyEncoding = "ascii";
+	scrypt.hash("ascii encoded key", {N: 1, r:1, p:1}, function(err, result){
+		//result will be hex encoded
+		//Note how scrypt parameters was passed as a JSON object
+		console.log("Asynchronous result: "+hash);
+	});
 
 ##verify
 
+	var scrypt = require("scrypt");
+	var scryptParameters = scrypt.params(0.1);
+	scrypt.hash.config.keyEncoding = "ascii";
+	scrypt.verify.config.keyEncoding = "ascii";
+	var hash = scrypt.hash("password", scryptParameters);
+
+	//Synchronous
+	scrypt.verify(hash, "password"); //result will be true
+	scrypt.verify(hash, "incorrect password"); //result will be false
+
+	//Asynchronous
+	scrypt.verify(hash, "password", function(err, result) {
+		//result will be true
+	});
+
 ##kdf
+The [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) lists four [test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) to test implementation. This example will show how to produce these test vectors from within this module.
+
+####Test Vector 1
+
+	var scrypt = require("scrypt");
+    scrypt.kdf.config.saltEncoding = "ascii";
+    var key = new Buffer("");
+
+	//Synchronous
+    var res = scrypt.kdf(key,{"N":16,"r":1,"p":1},64,"");
+	console.log(res.hash.toString("hex"));
+
+	//Asynchronous
+    scrypt.kdf(key, {"N":16,"r":1,"p":1},64,"", function(err, res) {
+		console.log(res.hash.toString("hex"));
+    });
+
+####Test Vector 2
+
+	var scrypt = require("scrypt");
+    scrypt.kdf.config.keyEncoding = "ascii";
+    var salt = new Buffer("NaCl");
+
+	//Synchronous
+    var res = scrypt.kdf("password",{"N":1024,"r":8,"p":16},64,salt);
+	console.log(res.hash.toString("hex"));
+
+    scrypt.kdf("password", {"N":1024,"r":8,"p":16},64,salt, function(err, res) {
+		console.log(res.hash.toString("hex"));
+    });
+
+
+####Test Vector 3
+	
+	var scrypt = require("scrypt");
+    scrypt.kdf.config.outputEncoding = "hex";
+    var key = new Buffer("pleaseletmein");
+    var salt = new Buffer("SodiumChloride");
+
+	//Synchronous
+    var res = scrypt.kdf(key,{"N":16384,"r":8,"p":1},64,salt);
+	console.log(res.hash);
+
+	//Asynchronous
+    scrypt.kdf(key, {"N":16384,"r":8,"p":1},64,salt, function(err, res) {
+		console.log(res.hash);
+    });
+
+
+####Test Vector 4
+Note: This test vector is very taxing in terms of resources.
+	
+	var scrypt = require("scrypt");
+	scrypt.kdf.config.saltEncoding = "ascii";
+	scrypt.kdf.config.keyEncoding = "ascii";
+
+	//Synchronous
+    var res = scrypt.kdf("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
+	console.log(res.hash.toString("hex"));
+
+	//Asynchronous
+    scrypt.kdf("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
+		console.log(res.hash.toString("hex"));
+    });
 
 ##Backward Compatibilty Functions
 These examples illustrate how to use the backward compatibility functions.
