@@ -874,21 +874,21 @@ test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", fun
 	}
 });
 
-test("Scrypt KDF: Incorrect arguments - length is not a number", function(t) {
+test("Scrypt KDF: Incorrect arguments - size is not a number", function(t) {
     var kdf = new scrypt.KDF();
     kdf.config.keyEncoding = "ascii";
 	try {
 		kdf("key", scryptParameters, "this should be a number");
 	} catch (err) {
-		t.ok(err, "Synchronous test - An error was correctly thrown because the length parameter was of type string");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Synchronous test - An error was correctly thrown because the size parameter was of type string");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"size must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		kdf("key", scryptParameters, "this should be a number", function() {});
 	} catch (err) {
-		t.ok(err, "Asynchronous test - An error was correctly thrown because the length parameter was of type string");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"length must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the size parameter was of type string");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"size must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
