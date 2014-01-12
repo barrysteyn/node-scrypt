@@ -55,8 +55,8 @@ struct HashInfo {
 	size_t keySize;
 
 	HashInfo(Handle<Object> config) : hash_ptr(NULL), key_ptr(NULL), keySize(0) { 
-		hashEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_hashEncoding"))->ToUint32()->Value());
-		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		hashEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_hashEncoding"))->ToUint32()->Value());
+		keyEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_keyEncoding"))->ToUint32()->Value());
 		callback.Clear(); 
 		hash.Clear(); 
 		key.Clear(); 

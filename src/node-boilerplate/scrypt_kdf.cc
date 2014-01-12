@@ -63,9 +63,9 @@ struct KDFInfo {
 
 	//Construtor / destructor   
 	KDFInfo(Handle<Object> config) : key_ptr(NULL), salt_ptr(NULL), hashBuffer_ptr(NULL), keySize(0), saltPersist(false) { 
-		keyEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_keyEncoding"))->ToUint32()->Value());
-		saltEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_saltEncoding"))->ToUint32()->Value());
-		outputEncoding = static_cast<node::encoding>(config->Get(v8::String::New("_outputEncoding"))->ToUint32()->Value());
+		keyEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_keyEncoding"))->ToUint32()->Value());
+		saltEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_saltEncoding"))->ToUint32()->Value());
+		outputEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_outputEncoding"))->ToUint32()->Value());
 		saltSize = static_cast<node::encoding>(config->Get(v8::String::New("defaultSaltSize"))->ToUint32()->Value());
 		outputLength = static_cast<node::encoding>(config->Get(v8::String::New("outputLength"))->ToUint32()->Value());
 

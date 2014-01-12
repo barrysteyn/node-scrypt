@@ -25,8 +25,6 @@
 
 */
 
-#include <iostream>
-
 #include <v8.h>
 #include <node.h>
 #include <string>
@@ -43,7 +41,7 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 	std::string errorMessage;
 	std::string property(*String::Utf8Value(propertyString));
 
-	if (property == "inputEncoding" || property == "outputEncoding" || property == "hashEncoding" || property == "keyEncoding") {
+	if (property == "inputEncoding" || property == "outputEncoding" || property == "hashEncoding" || property == "keyEncoding" || property == "saltEncoding") {
 		if (!value->IsString()) {
 			value = String::New("buffer");
 		}
@@ -53,19 +51,19 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 		std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(), ::tolower);
 		
 		if (propertyValue == "ascii") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::ASCII), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::ASCII));
 		} else if (propertyValue == "utf8") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UTF8), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::UTF8));
 		} else if (propertyValue == "base64") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BASE64), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BASE64));
 		} else if (propertyValue == "ucs2") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::UCS2), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::UCS2));
 		} else if (propertyValue == "binary") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::BINARY), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BINARY));
 		} else if (propertyValue == "hex") {
-			info.Holder()->Set(String::New(property.c_str()), Integer::New(node::HEX), v8::DontDelete);
+			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::HEX));
 		} else {
-			info.This()->Set(String::New(property.c_str()), Integer::New(node::BUFFER), v8::DontDelete);
+			info.This()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BUFFER));
 		}
 	}
 
@@ -76,9 +74,9 @@ Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, con
 				Internal::MakeErrorObject(CONFIG, errorMessage)
 			);
 		}
-		
-		if (value->ToNumber()->Value() <= 0) {
-			errorMessage = property + " must be greater than zero";
+	
+		if (value->ToNumber()->Value() < 0) {
+			errorMessage = property + " cannot be less than zero";
 			ThrowException(
 				Internal::MakeErrorObject(CONFIG, errorMessage)
 			);
@@ -133,7 +131,7 @@ CreateScryptConfigObject(const char* objectType) {
 	}
 
 	if (!strcmp(objectType,"params")) {
-		config->Set(String::New("maxmem"), Number::New(0.5), v8::DontDelete);
+		config->Set(String::New("maxmem"), Number::New(0.0), v8::DontDelete);
 		config->Set(String::New("maxmemfrac"), Number::New(0.5), v8::DontDelete);
 	}
 
