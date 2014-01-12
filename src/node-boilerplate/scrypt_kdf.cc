@@ -147,9 +147,9 @@ AssignArguments(const Arguments& args, std::string& errorMessage, KDFInfo &kdfIn
 
 				break;
 
-			case 2: //length
+			case 2: //size
 				if (!currentVal->IsNumber()) {
-					errorMessage = "length must be a number";
+					errorMessage = "size must be a number";
 					return ADDONARG;
 				}
 			
