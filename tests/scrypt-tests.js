@@ -17,11 +17,13 @@ var SCRYPT=4; //Scrypt generated errors
  */
 
 test("KDF - Test vector 1", function(t) {
+	var kdf = scrypt.KDF();
+	kdf.config.saltEncoding = "ascii";
 	var buf = new Buffer("");
-	var res = scrypt.kdf(buf,{"N":16,"r":1,"p":1},64,"");
+	var res = kdf(buf,{"N":16,"r":1,"p":1},64,"");
 	t.equal(res.hash.toString("hex"),"77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906","Synchronous test: first test vector is correctly returned");	
 
-	scrypt.kdf(buf, {"N":16,"r":1,"p":1},64,"", function(err, res) {
+	kdf(buf, {"N":16,"r":1,"p":1},64,"", function(err, res) {
 		t.equal(res.hash.toString("hex"),"77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906","Asynchronous test: first test vector is correctly returned");
 		t.end();
 	});
@@ -82,7 +84,7 @@ test("KDF - Random salt added by default", function(t) {
 
 test("KDF - Deterministic non-random salt added manually", function(t) {
 	var key = new Buffer("key");
-	var salt = "salt";	
+	var salt = new Buffer("salt");	
 	var hash1 = scrypt.kdf(key, scryptParameters, 64, salt);
 	var hash2 = scrypt.kdf(key, scryptParameters, 64, salt);
 	t.equal(hash1.hash.toString(), hash2.hash.toString(), "Synchronous: hashes that are returned are equal. This is correct due to non-random salt that was added");
