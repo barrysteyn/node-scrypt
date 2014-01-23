@@ -216,11 +216,11 @@ The verify config object is accessible from `scrypt.verify.config`. It has the f
 The return value will be a `boolean` representing if the hash can be derived from the key
 
 ###KDF
-`kdf(key, scrypt_parameters, size, salt, callback_function)`
+`kdf(key, scrypt_parameters, outputLength, salt, callback_function)`
 
  * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
  * `scrypt_parameters` - [REQUIRED] - a JSON object representing the [scrypt's internal parameters](#params)
- * `size` - [OPTIONAL] - an integer, representing the size in bytes of the output
+ * `outputLength` - [OPTIONAL] - an integer, representing the size in bytes of the output
  * `salt` - [OPTIONAL] - an [encoded string or buffer](#encodings) representing the value used for salt. If not defined, a randome salt will be created.
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
 
