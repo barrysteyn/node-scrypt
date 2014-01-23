@@ -237,14 +237,14 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
      keyEncoding: 'buffer',
      outputEncoding: 'buffer',
      defaultSaltSize: 32,
-     outputSize: 64 
+     outputLength: 64 
     }
  
  * `saltEncoding` - a string representing the [encoding](#encodings) of the input salt
  * `keyEncoding` - a string representing the [encoding](#encodings) of the input key
  * `outputEncoding` - a string representing the [encoding](#encodings) of the output returned to the user
  * `defaultSaltSize` - an integer representing the number of bytes used to create a random salt should it be necessary
- * `outputSize` - an integer representing the size of the output in bytes
+ * `outputLength` - an integer representing the size of the output in bytes
 
 
 ###Backward Compatibility

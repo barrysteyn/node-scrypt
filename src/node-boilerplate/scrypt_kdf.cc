@@ -149,13 +149,16 @@ AssignArguments(const Arguments& args, std::string& errorMessage, KDFInfo &kdfIn
 
 			case 2: //size
 				if (!currentVal->IsNumber()) {
-					errorMessage = "size must be a number";
+					errorMessage = "outputLength must be a number";
 					return ADDONARG;
 				}
 			
-				if (currentVal->ToNumber()->Value() > 64) {
-					kdfInfo.outputLength = currentVal->ToNumber()->Value();
+				if (currentVal->ToNumber()->Value() <= 0) {
+					errorMessage = "outputLength must be greater than 0";
+					return ADDONARG;
 				}
+				
+				kdfInfo.outputLength = currentVal->ToNumber()->Value();
 			
 				break;
 

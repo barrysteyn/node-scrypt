@@ -874,21 +874,21 @@ test("Scrypt KDF: Incorrect arguments - scrypt parameters is not an object", fun
 	}
 });
 
-test("Scrypt KDF: Incorrect arguments - size is not a number", function(t) {
+test("Scrypt KDF: Incorrect arguments - outputLength is not a number", function(t) {
     var kdf = new scrypt.KDF();
     kdf.config.keyEncoding = "ascii";
 	try {
 		kdf("key", scryptParameters, "this should be a number");
 	} catch (err) {
 		t.ok(err, "Synchronous test - An error was correctly thrown because the size parameter was of type string");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"size must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"outputLength must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 	}
 
 	try {
 		kdf("key", scryptParameters, "this should be a number", function() {});
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the size parameter was of type string");
-		t.deepEqual(err,scrypt.errorObject(ADDONARG,"size must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"outputLength must be a number"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
@@ -927,6 +927,25 @@ test("Scrypt KDF: Incorrect arguments - salt is an object, but not a string obje
 	} catch (err) {
 		t.ok(err, "Asynchronous test - An error was correctly thrown because the salt is of an incorrect type");
 		t.deepEqual(err,scrypt.errorObject(ADDONARG,"salt must be a buffer or string"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
+
+test("Scrypt KDF: Incorrect arguments - outputLength is less than or equal to zero", function(t) {
+	try {
+        var kdf = new scrypt.KDF();
+        kdf.config.keyEncoding = "ascii";
+		kdf("key", scryptParameters, 0, "");
+	} catch (err) {
+		t.ok(err, "Synchronous test - An error was correctly thrown because the outputLength was set to zero");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"outputLength must be greater than 0"), "The correct object is returned, namely: " + JSON.stringify(err));
+	}
+
+	try {
+		kdf("key", scryptParameters, 0, "", function(err, result){});
+	} catch (err) {
+		t.ok(err, "Asynchronous test - An error was correctly thrown because the outputLength was set to zero");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"outputLength must be greater than 0"), "The correct object is returned, namely: " + JSON.stringify(err));
 		t.end();
 	}
 });
