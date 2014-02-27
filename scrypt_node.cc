@@ -24,7 +24,6 @@
 	Barry Steyn barry.steyn@gmail.com
 
 */
-
 #include <node.h>
 #include <v8.h>
 

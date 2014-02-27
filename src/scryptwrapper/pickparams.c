@@ -21,7 +21,7 @@
 
    3. This notice may not be removed or altered from any source distribution.
 
-   Barry Steyn barry.steyn@gmail.com 
+   Barry Steyn barry.steyn@gmail.com
 
 */
 
@@ -33,7 +33,7 @@
 #include "memlimit.h"
 
 /*
- * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables. 
+ * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables.
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
  */
 int
