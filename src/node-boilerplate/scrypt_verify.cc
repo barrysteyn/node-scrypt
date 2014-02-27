@@ -25,9 +25,9 @@
 
 */
 
-#include <v8.h>
 #include <node.h>
 #include <node_buffer.h>
+#include <v8.h>
 #include <string>
 
 //Scrypt is a C library

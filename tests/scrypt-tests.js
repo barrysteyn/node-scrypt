@@ -12,10 +12,9 @@ var ADDONARG=2; //Error resulting from argument mismatch in the node addon modul
 var PARMOBJ=3; //Scrypt generated errors
 var SCRYPT=4; //Scrypt generated errors
 
-/*
- * Logic Tests
- */
-
+//
+// Logic Tests
+// 
 test("KDF - Test vector 1", function(t) {
 	var kdf = scrypt.KDF();
 	kdf.config.saltEncoding = "ascii";
@@ -56,15 +55,15 @@ test("KDF - Test vector 3", function(t) {
 	});
 });
 
-/*test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
-	var res = scrypt.kdf("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
-	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
-
-	scrypt.kdf("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
-		t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4","Asynchronous test: fourth test vector is correctly returned");
-		t.end();
-	});
-});*/
+//test("KDF - Test vector 4", function(t) { //This test takes too long to perform for continuous integration
+//	var res = scrypt.kdf("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
+//	t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4", "Synchronous test: fourth test vector is correctly returned");	
+//
+//	scrypt.kdf("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, res) {
+//		t.equal(res.hash.toString("hex"),"2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4","Asynchronous test: fourth test vector is correctly returned");
+//		t.end();
+//	});
+//});
 
 test("KDF - Random salt added by default", function(t) {
 	var key = new Buffer("key");	
@@ -142,12 +141,12 @@ test("Password hashing and verifying: Different keys do not verify (Result Must 
     })
 });
 
-/*
- * Argument Tests
- */
+//
+//  Argument Tests
+//
 
 //
-// Translation Function (Parameter) Tests */
+// Translation Function (Parameter) Tests 
 //
 
 //General (applies to both async and sync)

@@ -21,7 +21,7 @@
 		"url": "http://doctrina.org"
 	},
 	"engines" : {
-		"node": ">= 0.10.0"
+		"node": ">= 0.11"
 	},
 	"repository" : {
 		"type": "git",

@@ -30,8 +30,8 @@
 // Common functionality needed by boiler plate code
 //
 
-#include <v8.h>
 #include <node.h>
+#include <v8.h>
 #include <node_buffer.h>
 #include <string>
 #include "common.h"
