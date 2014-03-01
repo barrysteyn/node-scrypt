@@ -78,7 +78,11 @@ blkxor(void * dest, void * src, size_t len)
  * Apply the salsa20/8 core to the provided block.
  */
 static void
+#ifdef _MSC_VER
+salsa20_8(__m128i *B)
+#else
 salsa20_8(__m128i B[4])
+#endif
 {
 	__m128i X0, X1, X2, X3;
 	__m128i T;
