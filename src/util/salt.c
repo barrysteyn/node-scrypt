@@ -73,11 +73,11 @@ err1:
 	close(fd);
 err0:
 	/* Try openssl */
-	if (RAND_bytes(salt, saltlen) != 1) {
+	//if (RAND_bytes(salt, saltlen) != 1) {
 		/* Failure */
 		return (4);
-	} else {
-		/* Success! */
-		return (0);
-	}
+	//} else {
+	//	/* Success! */
+	//	return (0);
+	//}
 }

@@ -26,8 +26,8 @@
 */
 
 #include <node.h>
-#include <node_buffer.h>
 #include <v8.h>
+#include <node_buffer.h>
 #include <string>
 
 //Scrypt is a C library
@@ -212,7 +212,8 @@ Verify(const Arguments& args) {
 			
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, VerifyAsyncWork, (uv_after_work_cb)VerifyAsyncAfterWork);
-			assert(status == 0); 
+			if (status != 0)
+				assert(status == 0); 
 		}
 	}
 

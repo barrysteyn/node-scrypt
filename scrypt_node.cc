@@ -31,7 +31,7 @@ using namespace v8;
 #include "src/node-boilerplate/scrypt_kdf.h"
 #include "src/node-boilerplate/scrypt_hash.h"
 #include "src/node-boilerplate/scrypt_verify.h"
-#include "src/node-boilerplate/scrypt_params.h"
+//#include "src/node-boilerplate/scrypt_params.h"
 #include "src/node-boilerplate/scrypt_error.h"
 
 //
@@ -39,9 +39,9 @@ using namespace v8;
 //
 void RegisterModule(Handle<Object> target) {
 	//Params (Translation function)
-	target->Set(String::NewSymbol("Params"), 
+	/*target->Set(String::NewSymbol("Params"), 
 		FunctionTemplate::New(CreateParameterFunction)->GetFunction());
-    
+*/
 	//KDF
 	target->Set(String::NewSymbol("KDF"), 
 		FunctionTemplate::New(CreateKeyDerivationFunction)->GetFunction());
@@ -49,7 +49,7 @@ void RegisterModule(Handle<Object> target) {
 	//Hash function
 	target->Set(String::NewSymbol("Hash"), 
 		FunctionTemplate::New(CreateHashFunction)->GetFunction());
-
+	
 	//Verify hash
 	target->Set(String::NewSymbol("Verify"), 
 		FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
@@ -57,6 +57,7 @@ void RegisterModule(Handle<Object> target) {
 	//Error Object
 	target->Set(String::NewSymbol("errorObject"),
 		FunctionTemplate::New(MakeErrorObject)->GetFunction());
+
 }
 
 NODE_MODULE(scrypt, RegisterModule)

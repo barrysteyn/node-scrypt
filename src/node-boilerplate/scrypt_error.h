@@ -26,6 +26,7 @@
 
 #ifndef _SCRYPT_ERROR_H_
 #define _SCRYPT_ERROR_H_
+#include <node.h>
 
 Handle<Value> MakeErrorObject(const Arguments& args);
 
