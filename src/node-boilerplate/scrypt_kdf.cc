@@ -26,8 +26,8 @@
 */
 
 #include <node.h>
-#include <node_buffer.h>
 #include <v8.h>
+#include <node_buffer.h>
 #include <string>
 
 //C Linkings
@@ -295,7 +295,8 @@ KDF(const Arguments& args) {
 
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, KDFAsyncWork, (uv_after_work_cb)KDFAsyncAfterWork);
-			assert(status == 0);
+			if (status != 0)
+				assert(status == 0);
 		}
 	}
 

@@ -1,4 +1,4 @@
-/* 
+/*
 	hash.c
 
 	Copyright (C) 2012 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
@@ -21,7 +21,7 @@
 
 	3. This notice may not be removed or altered from any source distribution.
 
-	Barry Steyn barry.steyn@gmail.com 
+	Barry Steyn barry.steyn@gmail.com
 
 */
 
@@ -50,7 +50,7 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uin
 
 	/* Get Some Salt */
 	if ((rc = getsalt(salt, 32)) != 0)
-		return (rc); 
+		return (rc);
 
 	/* Generate the derived keys. */
 	N = (1 << logN);
@@ -86,7 +86,7 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uin
 int
 Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
 	uint64_t N=0;
-	uint32_t r=0, p=0; 
+	uint32_t r=0, p=0;
 	uint8_t dk[64],
 		salt[32],
 		hbuf[32];
@@ -116,7 +116,7 @@ Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
 	HMAC_SHA256_Update(&hctx, hash, 64);
 	HMAC_SHA256_Final(hbuf, &hctx);
 	if (memcmp(hbuf, &hash[64], 32))
-		return (11);        
+		return (11);
 
 	return (0); //Success
 }

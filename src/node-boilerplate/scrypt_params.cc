@@ -240,7 +240,8 @@ Params(const Arguments& args) {
 
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, ParamsAsyncWork, (uv_after_work_cb)ParamsAsyncAfterWork);
-			assert(status == 0);
+			if (status != 0)
+				assert(status == 0);
 		}
 	}
 

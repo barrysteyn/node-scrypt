@@ -7,9 +7,10 @@ scrypt.passwordHash = scrypt.Hash();
 scrypt.verifyHash = scrypt.Verify();
 scrypt.hash = scrypt.Hash();
 scrypt.verify = scrypt.Verify();
-scrypt.params = scrypt.Params();
+//scrypt.params = scrypt.Params();
 scrypt.kdf = scrypt.KDF();
 
+/*
 //
 //Parses input arguments for scrypt parameter object or translation function inputs
 //
@@ -112,5 +113,5 @@ scrypt.verifyHash.config.keyEncoding = "ascii";
 
 scrypt.passwordHashSync = scrypt.passwordHash;
 scrypt.verifyHashSync = scrypt.verifyHash;
-
+*/
 module.exports = scrypt;

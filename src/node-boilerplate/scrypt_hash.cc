@@ -26,7 +26,7 @@
 */
 
 #include <node.h>
-#include <v8.h>
+//#include <v8.h>
 #include <node_buffer.h>
 #include <string>
 
@@ -234,7 +234,8 @@ Hash(const Arguments& arguments) {
 
 			//Schedule work request
 			int status = uv_queue_work(uv_default_loop(), req, PasswordHashAsyncWork, (uv_after_work_cb)PasswordHashAsyncAfterWork);
-			assert(status == 0);
+			if (status != 0)
+				assert(status == 0);
 		}
 	}
 
