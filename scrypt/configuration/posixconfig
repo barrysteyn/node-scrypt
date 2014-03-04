@@ -8,5 +8,5 @@ fi
 mkdir "$SCRIPTPATH/config_output"
 cd "$SCRIPTPATH/config_output" && "../posix_configuration/configure" -q
 echo '@LIBS@' | "$SCRIPTPATH/config_output/config.status" --file=-
-cp "$SCRIPTPATH/config_output/config.h" "$SCRIPTPATH/../config.h"
+cp "$SCRIPTPATH/config_output/config.h" "$SCRIPTPATH/../scrypt-1.1.6/config.h"
 rm -rf "$SCRIPTPATH/config_output"

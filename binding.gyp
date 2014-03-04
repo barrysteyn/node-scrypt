@@ -13,7 +13,7 @@
 					['target_arch=="x64"', {
 						'openssl_lib%': '<(PRODUCT_DIR)../../scrypt/win/libs/openssl_64/libeay32.lib',
 					}],
-					['target_arch!="x64"', {, 
+					['target_arch!="x64"', {
 						'openssl_lib%': '<(PRODUCT_DIR)../../scrypt/win/libs/openssl_32/libeay32.lib',
 					}],
 				],
@@ -62,7 +62,7 @@
 			'<@(scrypt_platform_specific_files)',
 		],
 		'defines': [ # This config file is custom generated for each POSIX OS
-			'CONFIG_H_FILE="./config.h"',
+			'HAVE_CONFIG_H'
 		],
 	},
 	{
