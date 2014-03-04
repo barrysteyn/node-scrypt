@@ -39,7 +39,7 @@
 //
 int
 Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uint32_t r, uint32_t p) {
-	uint64_t N=0;
+	uint64_t N=1;
 	uint8_t dk[64],
 		salt[32],
 		hbuf[32];
@@ -53,7 +53,7 @@ Hash(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uin
 		return (rc);
 
 	/* Generate the derived keys. */
-	N = (1 << logN);
+	N <<= logN;
 	if (ScryptKeyDerivationFunction(passwd, passwdSize, salt, 32, N, r, p, dk, 64))
 		return (3);
 

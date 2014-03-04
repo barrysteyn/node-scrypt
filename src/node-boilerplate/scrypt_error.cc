@@ -44,7 +44,7 @@ MakeErrorObject(const Arguments& args) {
 	if (!args[0]->IsNumber()) {
 		errObj = Internal::MakeErrorObject(500, errString);
 	} else
-		errObj = Internal::MakeErrorObject(args[0]->ToNumber()->Value(), errString);
+		errObj = Internal::MakeErrorObject((int)args[0]->ToInteger()->Value(), errString);
 	
 	return scope.Close(errObj);
 }

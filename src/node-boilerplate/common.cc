@@ -136,9 +136,9 @@ namespace Internal {
 	//
 	void
 	ScryptParams::operator=(const Local<Object> &rhs) {
-		this->N = rhs->Get(String::New("N"))->ToNumber()->Value();
-		this->r = rhs->Get(String::New("r"))->ToNumber()->Value();
-		this->p = rhs->Get(String::New("p"))->ToNumber()->Value();
+		this->N = (uint32_t)rhs->Get(String::New("N"))->ToInteger()->Value();
+		this->r = (uint32_t)rhs->Get(String::New("r"))->ToInteger()->Value();
+		this->p = (uint32_t)rhs->Get(String::New("p"))->ToInteger()->Value();
 	}
 
 	//
