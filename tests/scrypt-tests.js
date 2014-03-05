@@ -97,7 +97,7 @@ test("KDF - Deterministic non-random salt added manually", function(t) {
 		});
 	});
 });
-/*
+
 test("Password hashing: Salt means same keys hash to different values", function(t) {
     var hash1 = scrypt.passwordHashSync(keyString, scryptParameters);
     var hash2 = scrypt.passwordHashSync(keyString, scryptParameters);
@@ -110,7 +110,7 @@ test("Password hashing: Salt means same keys hash to different values", function
 		});
 	});
 });
-*/
+
 test("Password hashing and verifying: Same key verify and hash (Consistency test - Result Must Be True)", function(t) {
 	hash = scrypt.passwordHash(keyString, scryptParameters);
 	result = scrypt.verifyHash(hash, keyString);
@@ -145,7 +145,7 @@ test("Password hashing and verifying: Different keys do not verify (Result Must 
 //  Argument Tests
 //
 
-/*
+
 //
 // Translation Function (Parameter) Tests 
 //
@@ -269,7 +269,7 @@ test("Synchronous: Pick parameters returns an object given correct inputs of max
 	t.type(parameters.p, "number","p is present in object and is of type number");
 	t.end();
 });
-*/
+
 //
 // Password Hash Tests
 //
