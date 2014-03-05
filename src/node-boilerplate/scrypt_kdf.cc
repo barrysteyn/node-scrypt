@@ -158,7 +158,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, KDFInfo &kdfIn
 					return ADDONARG;
 				}
 				
-				kdfInfo.outputLength = currentVal->ToNumber()->Value();
+				kdfInfo.outputLength = (size_t)currentVal->ToInteger()->Value();
 			
 				break;
 
