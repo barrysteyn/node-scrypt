@@ -73,22 +73,13 @@ getsalt(uint8_t salt[], size_t saltlen) {
 err1:
 	close(fd);
 err0:
-	/* Try openssl */
-	if (RAND_bytes(salt, saltlen) != 1) {
-		/* Failure */
-		return (4);
-	} else {
-		/* Success! */
-		return (0);
-	}
-#else
-	/* Try openssl */
-	if (RAND_bytes(salt, saltlen) != 1) {
-		/* Failure */
-		return (4);
-	} else {
-		/* Success! */
-		return (0);
-	}
 #endif
+	/* Try openssl */
+	if (RAND_bytes(salt, saltlen) != 1) {
+		/* Failure */
+		return (4);
+	} else {
+		/* Success! */
+		return (0);
+	}
 }
