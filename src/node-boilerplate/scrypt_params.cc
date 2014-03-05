@@ -113,8 +113,8 @@ AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInf
 						return ADDONARG;
 					}
 
-					if (currentVal->ToNumber()->Value() > 0) {
-						translationInfo.maxmem = Local<Number>(args[i]->ToNumber())->Value();
+					if (currentVal->ToInteger()->Value() > 0) {
+						translationInfo.maxmem = (size_t)Local<Number>(args[i]->ToInteger())->Value();
 					}
 				}
 

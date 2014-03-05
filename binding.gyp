@@ -5,6 +5,7 @@
 				'scrypt_platform_specific_files': [
 					'scrypt/win/memlimit.c',
 					'scrypt/win/mman.c',
+					'scrypt/win/gettimeofday.c'
 				],
 				'platform_specific_include_dirs': [
 					'scrypt/win/include',

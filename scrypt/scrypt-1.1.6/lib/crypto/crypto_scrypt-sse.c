@@ -324,7 +324,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 #endif
 #endif
 #ifdef MAP_ANON
-	if ((V0 = mmap(NULL, 128 * r * N, PROT_READ | PROT_WRITE,
+	if ((V0 = mmap(NULL, (size_t)(128 * r * N), PROT_READ | PROT_WRITE,
 #ifdef MAP_NOCORE
 	    MAP_ANON | MAP_PRIVATE | MAP_NOCORE,
 #else
@@ -349,7 +349,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 
 	/* Free memory. */
 #ifdef MAP_ANON
-	if (munmap(V0, 128 * r * N))
+	if (munmap(V0, (size_t)(128 * r * N)))
 		goto err2;
 #else
 	free(V0);
