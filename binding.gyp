@@ -3,6 +3,7 @@
 		'conditions' : [
 			['OS=="win"',{
 				'scrypt_platform_specific_files': [
+					'scrypt/win/memlimit.c',
 					'scrypt/win/mman.c',
 				],
 				'platform_specific_include_dirs': [
@@ -24,7 +25,6 @@
 				'scrypt_platform_specific_files': [
 					'scrypt/scrypt-1.1.6/lib/util/memlimit.c',
 					'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.c',
-					'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc_cpuperf.c',
 					'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
 				],
 				'platform_specific_include_dirs': [
@@ -59,6 +59,7 @@
 		'sources': [
 			'scrypt/scrypt-1.1.6/lib/crypto/sha256.c',
 			'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c',
+			'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc_cpuperf.c',
 			'<@(scrypt_platform_specific_files)',
 		],
 		'defines': [ # This config file is custom generated for each POSIX OS
@@ -74,7 +75,7 @@
 		'sources': [
 			'src/util/salt.c',
 			'src/scryptwrapper/keyderivation.c',
-			#'src/scryptwrapper/pickparams.c',
+			'src/scryptwrapper/pickparams.c',
 			'src/scryptwrapper/hash.c'
 		],
 		'include_dirs': [
@@ -95,7 +96,7 @@
 			'src/node-boilerplate/common.cc',
 			'src/node-boilerplate/scrypt_error.cc',
 			'src/node-boilerplate/scrypt_config_object.cc',
-			#'src/node-boilerplate/scrypt_params.cc',
+			'src/node-boilerplate/scrypt_params.cc',
 			'src/node-boilerplate/scrypt_kdf.cc',
 			'src/node-boilerplate/scrypt_hash.cc',
 			'src/node-boilerplate/scrypt_verify.cc',
