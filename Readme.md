@@ -25,14 +25,16 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 
 ##Installation Instructions
 ###Requirements
- 
- * Node version 0.10x and upwards. 
- * A posix [platform](#what-platforms-are-supported).
+
+ * *node-gyp* 
+ * Node version 0.10x (0.11x support coming soon).
 
 ####Node-Gyp
-In order to build the module, [node-gyp](https://github.com/TooTallNate/node-gyp) is needed. It should be installed globally, that is, with the `-g` switch:
+[Node-gyp](https://github.com/TooTallNate/node-gyp) is needed to build this module. It should be installed globally, that is, with the `-g` switch:
 
 	npm install -g node-gyp
+
+For operating system specific instructions (like getting *node-gyp* working on Windows), read the official [node-gyp installation instructions](https://github.com/TooTallNate/node-gyp#installation).
 
 ###From NPM
 
@@ -49,8 +51,11 @@ To test, go to the folder where scrypt was installed, and type:
 
     npm test
 
-##Introducing Node-Scrypt Version 2
-This module is a complete rewrite of the previous module. It's main highlights are:
+##Introducing Node-Scrypt Version 3
+Version 3's main highlight is support for the **Microsoft Windows** platform.
+
+###Node-Scrypt Version 2
+Node-Scrypt version 2.0 is a complete rewrite of the previous module. It's main highlights are:
 
 
  * Access to the underlying key derivation function
@@ -479,9 +484,8 @@ Note: There is no error description for the synchronous version. Therefore, if a
 ## FAQ
 ### General
 #### What Platforms Are Supported?
-This module supports most posix platforms. It has been tested on the following platforms: **Linux**, **MAC OS** and **SmartOS** (so its ready for Joyent Cloud). This includes FreeBSD, OpenBSD, SunOS etc.
-#### What About Windows?
-Windows support is not native to scrypt, but it does work when using cygwin. With this in mind, I will be updating this module to work on Windows with a prerequisite of cygwin. 
+This module supports most posix platforms, as well as Microsoft Windows. It has been tested on the following platforms: **Linux**, **MAC OS**, **SmartOS** (so its ready for Joyent Cloud) and **Microsoft Windows**. It also works on FreeBSD, OpenBSD, SunOS etc.
+
 ### Scrypt
 ####Why Use Scrypt?
 
@@ -546,3 +550,5 @@ For those that are curious or paranoid, please look at how the hash is both [pro
 The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project. This includes the encryption/decryption functions which are basically just wrappers into this library.
 
 The password hash and verify functions are also very heavily influenced by the scrypt source code, with most functionality being copied from various placed within scrypt.
+
+Syed Beparey was instrumental in getting the Windows build working, with most of the Windows build based off the work done by Dinesh Shanbhag.
