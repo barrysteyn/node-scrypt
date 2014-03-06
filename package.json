@@ -1,7 +1,7 @@
 {
 	"name": "scrypt",
 	"description": "The scrypt crypto library for NodeJS",
-	"version": "2.0.2",
+	"version": "3.0.1",
 	"keywords": [
 		"scrypt",
 		"password",
@@ -21,20 +21,19 @@
 		"url": "http://doctrina.org"
 	},
 	"engines" : {
-		"node": ">= 0.11"
+		"node": ">= 0.10 < 0.11"
 	},
-	"repository" : {
+	"engineStrict": true,
+	"repository": {
 		"type": "git",
 		"url": "https://github.com/barrysteyn/node-scrypt.git"
 	},
 	"devDependencies": {
 		"tap": "*"
 	},
-	"licenses": [
-		{
-			"type": "MIT"
-		}
-	],
+	"licenses": [{
+		"type": "MIT"
+	}],
 	"bugs": {
 		"url": "https://github.com/barrysteyn/node-scrypt/issues"
 	},
