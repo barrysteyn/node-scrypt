@@ -75,7 +75,7 @@ err1:
 err0:
 #endif
 	/* Try openssl */
-	if (RAND_bytes(salt, saltlen) != 1) {
+	if (RAND_bytes(salt, (int)saltlen) != 1) {
 		/* Failure */
 		return (4);
 	} else {
