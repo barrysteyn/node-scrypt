@@ -78,7 +78,7 @@ pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, d
         }
     } else {
         /* Set N based on the memory limit. */
-        maxN = memlimit / (*r * 128);
+        maxN = (double)(memlimit / (*r * 128));
         for (*logN = 1; *logN < 63; *logN += 1) {
             if ((uint64_t)(1) << *logN > maxN / 2)
             break;

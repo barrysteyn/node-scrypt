@@ -208,7 +208,7 @@ namespace Internal {
 		//Create the node JS "fast" buffer
 		Local<Object> globalObj = Context::GetCurrent()->Global();  
 		Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-		Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
+		Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New((uint32_t)dataLength), Integer::New(0) };
 
 		//Create the "fast buffer"
 		buffer = bufferConstructor->NewInstance(3, constructorArgs);
@@ -224,7 +224,7 @@ namespace Internal {
 		//Create the node JS "fast" buffer
 		Local<Object> globalObj = Context::GetCurrent()->Global();  
 		Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-		Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New(dataLength), Integer::New(0) };
+		Handle<Value> constructorArgs[3] = { slowBuffer->handle_, Integer::New((uint32_t)dataLength), Integer::New(0) };
 
 		//Create the "fast buffer"
 		buffer = bufferConstructor->NewInstance(3, constructorArgs);
