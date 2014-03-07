@@ -13,10 +13,10 @@
         ],
         'conditions': [
           ['target_arch=="x64"', {
-            'openssl_lib%': '<(PRODUCT_DIR)../../scrypt/win/libs/openssl_64/libeay32.lib',
+            'openssl_lib%': '"<(PRODUCT_DIR)../../scrypt/win/libs/openssl_64/libeay32.lib"',
           }],
           ['target_arch=="ia32"', {
-            'openssl_lib%': '<(PRODUCT_DIR)../../scrypt/win/libs/openssl_32/libeay32.lib',
+            'openssl_lib%': '"<(PRODUCT_DIR)../../scrypt/win/libs/openssl_32/libeay32.lib"',
           }],
         ],
       }],
