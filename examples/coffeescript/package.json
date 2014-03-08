@@ -1,0 +1,9 @@
+{
+  "name": "coffeescript",
+  "version": "0.0.1",
+  "description": "Example with Coffeescript",
+  "main": "app.js",
+  "dependencies": {
+    "scrypt": "3.0.1"
+  }
+}
