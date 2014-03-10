@@ -36,6 +36,8 @@
 
   'target_defaults': {
     'default_configuration': 'Release',
+    'cflags': ['-fstack-protector', '-Wformat-security'],
+    'ldflags': ['-Wl,-z,relro', '-Wl,-z,now'],
     'msvs_settings': {
       'VCCLCompilerTool': {
         'RuntimeLibrary': 0, # static release
@@ -43,6 +45,7 @@
         'AdditionalOptions': ['/EHsc'],
         'DisableSpecificWarnings': ['4506'],
       },
+
     },
   },
 
@@ -65,6 +68,7 @@
     'defines': [
       'HAVE_CONFIG_H'
     ],
+    'conditions': [['OS=="win"', {'defines': ['inline=__inline']}]],
   },
 
   {
