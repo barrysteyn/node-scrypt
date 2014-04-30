@@ -31,6 +31,16 @@
           'scrypt/scrypt-1.1.6/lib/scryptenc',
         ],
       }],
+      ['target_arch=="arm"', {
+        'scrypt_arch_specific_files': [
+          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
+        ],
+      }],
+      ['target_arch!="arm"', {
+        'scrypt_arch_specific_files': [
+          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c', 
+        ],
+      }],
     ],
   },
 
@@ -51,7 +61,7 @@
     'type' : 'static_library',
     'sources': [
       'scrypt/scrypt-1.1.6/lib/crypto/sha256.c',
-      'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c',
+      '<@(scrypt_arch_specific_files)',
       'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc_cpuperf.c',
       '<@(scrypt_platform_specific_files)',
     ],
