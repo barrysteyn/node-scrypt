@@ -1,6 +1,7 @@
 {
   'variables': {
     'openssl_include%':'<(node_root_dir)/deps/openssl/openssl/include',
+    'SSE':'<!(node sse-discover.js)',
     'conditions' : [
       ['OS=="win"',{
         'scrypt_platform_specific_files': [
@@ -31,14 +32,14 @@
           'scrypt/scrypt-1.1.6/lib/scryptenc',
         ],
       }],
-      ['target_arch=="arm"', {
-        'scrypt_arch_specific_files': [
-          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
-        ],
-      }],
-      ['target_arch!="arm"', {
+      ['<(SSE)=="true"', {
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c', 
+        ],
+      }],
+      ['<(SSE)!="true"', {
+        'scrypt_arch_specific_files': [
+          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
         ],
       }],
     ],
