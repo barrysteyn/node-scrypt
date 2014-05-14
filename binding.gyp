@@ -32,12 +32,12 @@
           'scrypt/scrypt-1.1.6/lib/scryptenc',
         ],
       }],
-      ['<(SSE)=="true"', {
+      ['"<(SSE)"=="true"', {
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c', 
         ],
       }],
-      ['<(SSE)!="true"', {
+      ['"<(SSE)"!="true"', {
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
         ],
