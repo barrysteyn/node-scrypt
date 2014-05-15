@@ -41,6 +41,9 @@
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
         ],
+        'actions' : [{
+          'message': 'SSE not supported on this platform, compiling without SSE support',
+        }],
       }],
     ],
   },
