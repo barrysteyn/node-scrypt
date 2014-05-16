@@ -31,6 +31,9 @@
 	"devDependencies": {
 		"tap": "*"
 	},
+	"dependencies": {
+		"cpuid": "*"	
+	},
 	"licenses": [{
 		"type": "MIT"
 	}],
