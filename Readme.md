@@ -323,7 +323,7 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
 	scrypt.hash("ascii encoded key", {N: 1, r:1, p:1}, function(err, result){
 		//result will be hex encoded
 		//Note how scrypt parameters was passed as a JSON object
-		console.log("Asynchronous result: "+hash);
+		console.log("Asynchronous result: "+result);
 	});
 
 ##verify
