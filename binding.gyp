@@ -1,7 +1,7 @@
 {
   'variables': {
     'openssl_include%':'<(node_root_dir)/deps/openssl/openssl/include',
-    'SSE':'<!(node sse-discover.js)',
+    'SSE':'true',
     'conditions' : [
       ['OS=="win"',{
         'scrypt_platform_specific_files': [
