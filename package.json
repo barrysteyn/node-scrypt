@@ -32,7 +32,7 @@
     "tap": "*"
   },
   "dependencies": {
-    "cpuid": "brainling/cpuid-node#c0f53b6d9c3856b47d15e8c01ccac94a70726f70",
+    "cpuid": "barrysteyn/cpuid-node#c0f53b6d9c3856b47d15e8c01ccac94a70726f70",
     "nan": "^1.6.2"
   },
   "licenses": [

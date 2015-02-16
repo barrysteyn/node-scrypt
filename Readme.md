@@ -44,6 +44,7 @@ For operating system specific instructions (like getting *node-gyp* working on W
 
     git clone https://github.com/barrysteyn/node-scrypt.git
     cd node-scrypt
+    npm install cpuid
     node-gyp configure build
 
 ###Testing
