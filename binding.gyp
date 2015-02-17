@@ -118,6 +118,7 @@
       'src/node-boilerplate/scrypt_verify.cc',
     ],
     'include_dirs': [
+      '<!(node -e \'require("nan")\')',
       'src/util',
       'src/scryptwrapper',
     ],

@@ -27,6 +27,7 @@
 #ifndef _SCRYPT_PICK_PARAMS_H_
 #define _SCRYPT_PICK_PARAMS_H_
 
-Handle<Value> CreateParameterFunction(const Arguments&);
+NAN_METHOD(CreateParameterFunction);
+//Handle<Value> CreateParameterFunction(const Arguments&);
 
 #endif /*_SCRYPT_PICK_PARAMS_H_*/ 

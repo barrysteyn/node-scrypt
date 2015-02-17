@@ -27,6 +27,7 @@
 #ifndef _SCRYPT_HASH_H_
 #define _SCRYPT_HASH_H_
 
-Handle<Value> CreateHashFunction(const Arguments&);
+NAN_METHOD(CreateHashFunction);
+//Handle<Value> CreateHashFunction(const Arguments&);
 
 #endif //_SCRYPT_HASH_H_

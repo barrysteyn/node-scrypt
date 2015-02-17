@@ -1,30 +1,31 @@
 /*
-	scrypt_params.cc 
+scrypt_params.cc 
 
-	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-	This source code is provided 'as-is', without any express or implied
-	warranty. In no event will the author be held liable for any damages
-	arising from the use of this software.
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-	1. The origin of this source code must not be misrepresented; you must not
-	claim that you wrote the original source code. If you use this source code
-	in a product, an acknowledgment in the product documentation would be
-	appreciated but is not required.
+1. The origin of this source code must not be misrepresented; you must not
+claim that you wrote the original source code. If you use this source code
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
 
-	2. Altered source versions must be plainly marked as such, and must not be
-	misrepresented as being the original source code.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original source code.
 
-	3. This notice may not be removed or altered from any source distribution.
+3. This notice may not be removed or altered from any source distribution.
 
-	Barry Steyn barry.steyn@gmail.com
+Barry Steyn barry.steyn@gmail.com
 */
 
 #include <node.h>
+#include <nan.h>
 #include <v8.h>
 #include <string>
 
@@ -56,18 +57,18 @@ struct TranslationInfo {
 
 	//Constructor / Destructor
 	TranslationInfo(Handle<Object> config) { 
-		maxmem = static_cast<node::encoding>(config->Get(v8::String::New("maxmem"))->ToUint32()->Value());
-		maxmemfrac = static_cast<node::encoding>(config->Get(v8::String::New("maxmemfrac"))->ToUint32()->Value());
-		callback.Clear(); 
+		maxmem = static_cast<node::encoding>(config->Get(NanNew<String>("maxmem"))->ToUint32()->Value());
+		maxmemfrac = static_cast<node::encoding>(config->Get(NanNew<String>("maxmemfrac"))->ToUint32()->Value());
+		NanDisposePersistent(callback); 
 	}
-	~TranslationInfo() { callback.Dispose(); }
+	~TranslationInfo() { NanDisposePersistent(callback); }
 };
 
 //
 // Assigns and validates arguments from JavaScript land
 //
 int 
-AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInfo &translationInfo) {
+AssignArguments(_NAN_METHOD_ARGS_TYPE args, std::string& errorMessage, TranslationInfo &translationInfo) {
 	if (args.Length() == 0) {
 		errorMessage = "at least one argument is needed - the maxtime";
 		return ADDONARG;
@@ -87,7 +88,7 @@ AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInf
 		} 
 
 		if (i > 0 && currentVal->IsFunction()) { //An async signature
-			translationInfo.callback = Persistent<Function>::New(Local<Function>::Cast(args[i]));
+			NanAssignPersistent(translationInfo.callback, args[i].As<Function>());
 			return 0;
 		}
 
@@ -144,10 +145,10 @@ AssignArguments(const Arguments& args, std::string& errorMessage, TranslationInf
 //
 void 
 createJSONObject(Local<Object> &obj, const int &N, const uint32_t &r, const uint32_t &p) {
-	obj = Object::New();
-	obj->Set(String::NewSymbol("N"), Integer::New(N));
-	obj->Set(String::NewSymbol("r"), Integer::New(r));
-	obj->Set(String::NewSymbol("p"), Integer::New(p));
+	obj = NanNew<Object>();
+	obj->Set(NanNew<String>("N"), NanNew<Integer>(N));
+	obj->Set(NanNew<String>("r"), NanNew<Integer>(r));
+	obj->Set(NanNew<String>("p"), NanNew<Integer>(p));
 }
 
 //
@@ -172,9 +173,7 @@ ParamsAsyncWork(uv_work_t* req) {
 void
 ParamsSyncAfterWork(Local<Object>& obj, const TranslationInfo *translationInfo) {
 	if (translationInfo->result) { //There has been an error
-		ThrowException(
-			Internal::MakeErrorObject(SCRYPT,translationInfo->result)
-		);
+		NanThrowError(Internal::MakeErrorObject(SCRYPT,translationInfo->result));
 	} else {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
 	}
@@ -185,7 +184,7 @@ ParamsSyncAfterWork(Local<Object>& obj, const TranslationInfo *translationInfo) 
 //
 void
 ParamsAsyncAfterWork(uv_work_t* req) {
-	HandleScope scope;
+	NanScope();
 	TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
 	uint8_t argc = 1;
 	Local<Object> obj;
@@ -197,11 +196,12 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 
 	Local<Value> argv[2] = {
 		Internal::MakeErrorObject(SCRYPT,translationInfo->result),
-		Local<Value>::New(obj)
+		NanNew(obj)
 	};
 
 	TryCatch try_catch;
-	translationInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+
+	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(translationInfo->callback), argc, argv);
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}
@@ -214,19 +214,17 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 //
 // Params: Parses arguments and determines what type (sync or async) this function is
 //
-Handle<Value> 
-Params(const Arguments& args) {
-	HandleScope scope;
+NAN_METHOD(Params) {
+	NanScope();
+
 	uint8_t parseResult = 0;
 	Local<Object> params;
 	std::string validateMessage;
-	TranslationInfo* translationInfo = new TranslationInfo(Local<Object>::Cast(args.Holder()->Get(String::New("config"))));
+	TranslationInfo* translationInfo = new TranslationInfo(Local<Object>::Cast(args.Holder()->Get(NanNew<String>("config"))));
 
 	//Validate arguments and determine function type
 	if ((parseResult = AssignArguments(args, validateMessage, *translationInfo))) {
-		ThrowException(
-			Internal::MakeErrorObject(parseResult, validateMessage)
-		);
+		NanThrowError(Internal::MakeErrorObject(parseResult, validateMessage));
 	} else {
 		if (translationInfo->callback.IsEmpty()) { 
 			//Synchronous
@@ -248,9 +246,10 @@ Params(const Arguments& args) {
 	//Only clean up heap if synchronous
 	if (translationInfo->callback.IsEmpty()) {
 		delete translationInfo;
+		NanReturnValue(params);
 	}	
 
-	return scope.Close(params);
+	NanReturnUndefined();
 }
 
 } //unnamed namespace
@@ -258,13 +257,13 @@ Params(const Arguments& args) {
 //
 // The Construtor That Is Exposed To JavaScript
 //
-Handle<Value>
-CreateParameterFunction(const Arguments& arguments) {
-	HandleScope scope;
+NAN_METHOD(CreateParameterFunction) {
+	NanScope();
 
 	Local<ObjectTemplate> params = ObjectTemplate::New();
-	params->SetCallAsFunctionHandler(Params);
-	params->Set(String::New("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
 
-	return scope.Close(params->NewInstance());
+	params->SetCallAsFunctionHandler(Params);
+	params->Set(NanNew<String>("config"), CreateScryptConfigObject("params"), v8::ReadOnly);
+
+	NanReturnValue(NanNew(params)->NewInstance());
 }

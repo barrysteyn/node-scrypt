@@ -27,7 +27,9 @@
 #ifndef _SCRYPT_ERROR_H_
 #define _SCRYPT_ERROR_H_
 #include <node.h>
+#include <nan.h>
 
-Handle<Value> MakeErrorObject(const Arguments& args);
+NAN_METHOD(MakeErrorObject);
+//Handle<Value> MakeErrorObject(const Arguments& args);
 
 #endif /*_SCRYPT_ERROR_H_*/ 

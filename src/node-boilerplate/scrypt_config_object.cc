@@ -1,31 +1,31 @@
 /*
-	scrypt_config_object.cc
+scrypt_config_object.cc
 
-	Copyright (C) 2014 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+Copyright (C) 2014 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-	This source code is provided 'as-is', without any express or implied
-	warranty. In no event will the author be held liable for any damages
-	arising from the use of this software.
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-	1. The origin of this source code must not be misrepresented; you must not
-	claim that you wrote the original source code. If you use this source code
-	in a product, an acknowledgment in the product documentation would be
-	appreciated but is not required.
+1. The origin of this source code must not be misrepresented; you must not
+claim that you wrote the original source code. If you use this source code
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
 
-	2. Altered source versions must be plainly marked as such, and must not be
-	misrepresented as being the original source code.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original source code.
 
-	3. This notice may not be removed or altered from any source distribution.
+3. This notice may not be removed or altered from any source distribution.
 
-	Barry Steyn barry.steyn@gmail.com
-
+Barry Steyn barry.steyn@gmail.com
 */
 
 #include <node.h>
+#include <nan.h>
 #include <v8.h>
 #include <string>
 #include <string.h>
@@ -36,104 +36,104 @@ using namespace v8;
 
 namespace {
 
-Handle<Value> configSetter(Local<String> propertyString, Local<Value> value, const AccessorInfo& info) {
+NAN_PROPERTY_SETTER(configSetter) {
+	NanScope();
 	Handle<Value> returnValue;
 	std::string errorMessage;
-	std::string property(*String::Utf8Value(propertyString));
+	std::string propertyString(*NanUtf8String(property));
 
-	if (property == "inputEncoding" || property == "outputEncoding" || property == "hashEncoding" || property == "keyEncoding" || property == "saltEncoding") {
+	if (propertyString == "inputEncoding" || propertyString == "outputEncoding" || propertyString == "hashEncoding" || propertyString == "keyEncoding" || propertyString == "saltEncoding") {
 		if (!value->IsString()) {
-			value = String::New("buffer");
+			value = NanNew<String>("buffer");
 		}
 
-		property.insert(property.begin(), '_');	
-		std::string propertyValue(*String::Utf8Value(value->ToString()));
+		propertyString.insert(propertyString.begin(), '_');	
+		std::string propertyValue(*NanUtf8String(value->ToString()));
 		std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(), ::tolower);
 		
 		if (propertyValue == "ascii") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::ASCII));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::ASCII));
 		} else if (propertyValue == "utf8") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::UTF8));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::UTF8));
 		} else if (propertyValue == "base64") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BASE64));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::BASE64));
 		} else if (propertyValue == "ucs2") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::UCS2));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::UCS2));
 		} else if (propertyValue == "binary") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BINARY));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::BINARY));
 		} else if (propertyValue == "hex") {
-			info.Holder()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::HEX));
+			args.Holder()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::HEX));
 		} else {
-			info.This()->SetHiddenValue(String::New(property.c_str()), Integer::New(node::BUFFER));
+			args.This()->SetHiddenValue(NanNew<String>(propertyString.c_str()), NanNew<Integer>(Nan::BUFFER));
 		}
 	}
 
-	if (property == "maxmem" || property == "maxmemfrac") {
+	if (propertyString == "maxmem" || propertyString == "maxmemfrac") {
 		if (!value->IsNumber()) {
-			errorMessage = property + " must be a number";
-			ThrowException(
-				Internal::MakeErrorObject(CONFIG, errorMessage)
-			);
+			errorMessage = propertyString + " must be a number";
+			NanThrowError(Internal::MakeErrorObject(CONFIG, errorMessage));
 		}
 	
 		if (value->ToNumber()->Value() < 0) {
-			errorMessage = property + " cannot be less than zero";
-			ThrowException(
-				Internal::MakeErrorObject(CONFIG, errorMessage)
-			);
+			errorMessage = propertyString + " cannot be less than zero";
+			NanThrowError(Internal::MakeErrorObject(CONFIG, errorMessage));
 		}
 	}
 	
-	if (property == "defaultSaltSize" || property == "outputLength") {
+	if (propertyString == "defaultSaltSize" || propertyString == "outputLength") {
 		if (!value->IsNumber()) {
-			errorMessage = property + " must be a number";
-			ThrowException(
-				Internal::MakeErrorObject(CONFIG, errorMessage)
-			);
+			errorMessage = propertyString + " must be a number";
+			NanThrowError(Internal::MakeErrorObject(CONFIG, errorMessage));
 		}
 		
 		if (value->ToUint32()->Value() <= 0) {
-			errorMessage = property + " must be greater than zero";
-			ThrowException(
-				Internal::MakeErrorObject(CONFIG, errorMessage)
-			);
+			errorMessage = propertyString + " must be greater than zero";
+			NanThrowError(Internal::MakeErrorObject(CONFIG, errorMessage));
 		}
 	}
 
-	return returnValue;
+	NanReturnValue(returnValue);
 }
 
 } //end anon namespace
 
 Handle<Object>
 CreateScryptConfigObject(const char* objectType) {
-	HandleScope scope;
+	NanEscapableScope();
 	Local<ObjectTemplate> configTemplate = ObjectTemplate::New();
 	configTemplate->SetNamedPropertyHandler(NULL, configSetter); //Ignoring accessor callback
 
-	Local<Object> config = configTemplate->NewInstance();
+	NanSetTemplate(configTemplate, NanNew<String>("type"), NanNew<String>(objectType), v8::DontDelete);
 
 	if (!strcmp(objectType,"kdf")) {
-		config->Set(String::New("saltEncoding"), String::New("buffer"), v8::DontDelete);
-		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
-		config->Set(String::New("outputEncoding"), String::New("buffer"), v8::DontDelete);
-		config->Set(String::New("defaultSaltSize"), Integer::New(32), v8::DontDelete);
-		config->Set(String::New("outputLength"), Integer::New(64), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("saltEncoding"), NanNew<String>("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("keyEncoding"), NanNew<String>("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("outputEncoding"), NanNew<String>("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("defaultSaltSize"), NanNew<Integer>(32), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("outputLength"), NanNew<Integer>(64), v8::DontDelete);
 	}
 	
 	if (!strcmp(objectType,"hash") || !strcmp(objectType,"kdf")) {
-		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
-		config->Set(String::New("outputEncoding"), String::New("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("keyEncoding"), NanNew<String>("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("outputEncoding"), NanNew<String>("buffer"), v8::DontDelete);
 	}
 
 	if (!strcmp(objectType,"verify")) {
-		config->Set(String::New("hashEncoding"), String::New("buffer"), v8::DontDelete);
-		config->Set(String::New("keyEncoding"), String::New("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("hashEncoding"), NanNew<String>("buffer"), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("keyEncoding"), NanNew<String>("buffer"), v8::DontDelete);
 	}
 
 	if (!strcmp(objectType,"params")) {
-		config->Set(String::New("maxmem"), Number::New(0.0), v8::DontDelete);
-		config->Set(String::New("maxmemfrac"), Number::New(0.5), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("maxmem"), NanNew<Number>(0.0), v8::DontDelete);
+		NanSetTemplate(configTemplate, NanNew<String>("maxmemfrac"), NanNew<Number>(0.5), v8::DontDelete);
 	}
 
-	return scope.Close(config);
+	Local<Object> config = NanNew(configTemplate)->NewInstance();
+
+	//Initialize Hidden Values
+	config->SetHiddenValue(NanNew<String>("_keyEncoding"), NanNew<Integer>(Nan::BUFFER));
+	config->SetHiddenValue(NanNew<String>("_saltEncoding"), NanNew<Integer>(Nan::BUFFER));
+	config->SetHiddenValue(NanNew<String>("_outputEncoding"), NanNew<Integer>(Nan::BUFFER));
+	
+	return NanEscapeScope(config);
 }

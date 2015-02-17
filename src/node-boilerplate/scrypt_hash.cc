@@ -1,33 +1,32 @@
 /*
-	scrypt_hash.cc 
+scrypt_hash.cc 
 
-	Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
+Copyright (C) 2013 Barry Steyn (http://doctrina.org/Scrypt-Authentication-For-Node.html)
 
-	This source code is provided 'as-is', without any express or implied
-	warranty. In no event will the author be held liable for any damages
-	arising from the use of this software.
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-	1. The origin of this source code must not be misrepresented; you must not
-	claim that you wrote the original source code. If you use this source code
-	in a product, an acknowledgment in the product documentation would be
-	appreciated but is not required.
+1. The origin of this source code must not be misrepresented; you must not
+claim that you wrote the original source code. If you use this source code
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
 
-	2. Altered source versions must be plainly marked as such, and must not be
-	misrepresented as being the original source code.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original source code.
 
-	3. This notice may not be removed or altered from any source distribution.
+3. This notice may not be removed or altered from any source distribution.
 
-	Barry Steyn barry.steyn@gmail.com
+Barry Steyn barry.steyn@gmail.com
 
 */
 
 #include <node.h>
-//#include <v8.h>
-#include <node_buffer.h>
+#include <nan.h>
 #include <string>
 
 //C Linkings
@@ -47,33 +46,35 @@ namespace
 //
 struct HashInfo {
 	//Encodings
-	node::encoding keyEncoding, outputEncoding;
+	Nan::Encoding keyEncoding, outputEncoding;
 
 	//Async callback function
 	Persistent<Function> callback;
-	Handle<Value> key, keyHash;
+	Persistent<Value> key, keyHash;
 
 	//Custom data for scrypt
 	int result;
-	
+
 	char *key_ptr, *keyHash_ptr;
 	size_t keySize, keyHashSize;
 	Internal::ScryptParams params;
 
+	//Clear/reset/release pertinent variables
+	void cleanUp() {
+		NanDisposePersistent(callback);
+		NanDisposePersistent(key);
+		NanDisposePersistent(keyHash);
+	}
+
 	//Construtor / destructor   
 	HashInfo(Handle<Object> config) : key_ptr(NULL), keyHash_ptr(NULL), keySize(0),keyHashSize(96) {
-		keyEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_keyEncoding"))->ToUint32()->Value());
-		outputEncoding = static_cast<node::encoding>(config->GetHiddenValue(v8::String::New("_outputEncoding"))->ToUint32()->Value());
-		callback.Clear(); 
-		key.Clear();
-		keyHash.Clear();
+		keyEncoding = static_cast<Nan::Encoding>(config->GetHiddenValue(NanNew<String>("_keyEncoding"))->ToUint32()->Value());
+		outputEncoding = static_cast<Nan::Encoding>(config->GetHiddenValue(NanNew<String>("_outputEncoding"))->ToUint32()->Value());
+		cleanUp();
 	}
+
 	~HashInfo() {
-		if (!callback.IsEmpty()) {
-			Persistent<Value>(key).Dispose();
-			Persistent<Value>(keyHash).Dispose();
-		}
-		callback.Dispose();
+		cleanUp();
 	}
 };
 
@@ -81,21 +82,21 @@ struct HashInfo {
 // Validates and assigns arguments from JS land. Also determines if function is async or sync
 //
 int 
-AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo &hashInfo) {
+AssignArguments(_NAN_METHOD_ARGS_TYPE args, std::string& errorMessage, HashInfo &hashInfo) {
 	uint8_t scryptParameterParseResult = 0;
-	if (arguments.Length() < 2) {
+	if (args.Length() < 2) {
 		errorMessage = "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object";
 		return ADDONARG;
 
 	}
 
-	if (arguments.Length() >= 2 && (arguments[0]->IsFunction() || arguments[1]->IsFunction())) {
+	if (args.Length() >= 2 && (args[0]->IsFunction() || args[1]->IsFunction())) {
 		errorMessage = "wrong number of arguments at least two arguments are needed before the callback function - key and scrypt parameters JSON object";
 		return ADDONARG;
 	}
 
-	for (int i=0; i < arguments.Length(); i++) {
-		Handle<Value> currentVal = arguments[i];
+	for (int i=0; i < args.Length(); i++) {
+		Handle<Value> currentVal = args[i];
 
 		if (currentVal->IsUndefined() || currentVal->IsNull()) {
 			errorMessage = "argument is undefined or null";
@@ -103,27 +104,30 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 		}
 
 		if (i > 1 && currentVal->IsFunction()) {
-			hashInfo.callback = Persistent<Function>::New(Local<Function>::Cast(arguments[i]));
-			hashInfo.key = Persistent<Value>::New(hashInfo.key);
-			hashInfo.keyHash = Persistent<Value>::New(hashInfo.keyHash);
+			NanAssignPersistent(hashInfo.callback, args[i].As<Function>());
 			return 0;
 		}
 
 		switch(i) {
-			case 0: //key
+			case 0: { //key
+
 				if (Internal::ProduceBuffer(currentVal, "key", errorMessage, hashInfo.keyEncoding)) {
 					return ADDONARG;
 				}
-				hashInfo.key = currentVal;
+
+				NanAssignPersistent(hashInfo.key, currentVal);
 				hashInfo.key_ptr = node::Buffer::Data(currentVal);
 				hashInfo.keySize = node::Buffer::Length(currentVal);
 
 				//Create hash buffer - note that it is the same size as the key buffer
-				Internal::CreateBuffer(hashInfo.keyHash, hashInfo.keyHashSize);
-				hashInfo.keyHash_ptr = node::Buffer::Data(hashInfo.keyHash);
+				Local<Value> keyHash = NanNewBufferHandle(hashInfo.keyHashSize);
+				NanAssignPersistent(hashInfo.keyHash, keyHash);
+				hashInfo.keyHash_ptr = node::Buffer::Data(keyHash);
+				
 				break;
+			}
 
-			case 1: //Scrypt parameters
+			case 1: { //Scrypt parameters
 				if (!currentVal->IsObject()) {
 					errorMessage = "expecting scrypt parameter JSON object";
 					return ADDONARG;
@@ -136,7 +140,8 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 
 				hashInfo.params = currentVal->ToObject();
 
-				break;   
+				break;
+			}   
 		}
 	}
 
@@ -149,8 +154,8 @@ AssignArguments(const Arguments& arguments, std::string& errorMessage, HashInfo 
 void
 PasswordHashSyncAfterWork(Handle<Value> &keyHash, const HashInfo* hashInfo) {
 	if (hashInfo->result) { //There has been an error
-		ThrowException(
-			Internal::MakeErrorObject(SCRYPT,hashInfo->result)
+		NanThrowError(
+			Internal::MakeErrorObject(SCRYPT, hashInfo->result)
 		);
 	} else {
 		keyHash = BUFFER_ENCODED(hashInfo->keyHash, hashInfo->outputEncoding);
@@ -162,7 +167,7 @@ PasswordHashSyncAfterWork(Handle<Value> &keyHash, const HashInfo* hashInfo) {
 //
 void 
 PasswordHashAsyncAfterWork(uv_work_t *req) {
-	HandleScope scope;
+	NanScope();
 	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
 	uint8_t argc = (hashInfo->result) ? 1 : 2;
 	Handle<Value> keyHash = BUFFER_ENCODED(hashInfo->keyHash, hashInfo->outputEncoding);
@@ -173,7 +178,7 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 	};
 
 	TryCatch try_catch;
-	hashInfo->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(hashInfo->callback), argc, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
@@ -209,17 +214,18 @@ PasswordHashAsyncWork(uv_work_t* req) {
 //
 // Hash: Parses arguments and determines what type (sync or async) this function is
 //
-Handle<Value> 
-Hash(const Arguments& arguments) {
+NAN_METHOD(Hash) {
+	NanScope();
+
 	uint8_t parseResult = 0;
-	HandleScope scope;
 	std::string validateMessage;
-	HashInfo* hashInfo = new HashInfo(Local<Object>::Cast(arguments.Holder()->Get(String::New("config")))); 
+	HashInfo* hashInfo = new HashInfo(args.Holder()->Get(NanNew<String>("config")).As<Object>()); 
 	Handle<Value> keyHash;
 
+	
 	//Assign and validate arguments
-	if ((parseResult = AssignArguments(arguments, validateMessage, *hashInfo))) {
-		ThrowException(
+	if ((parseResult = AssignArguments(args, validateMessage, *hashInfo))) {
+		NanThrowError(
 			Internal::MakeErrorObject(parseResult, validateMessage)
 		);
 	} else {
@@ -242,9 +248,11 @@ Hash(const Arguments& arguments) {
 	//Clean up heap only if call is synchronous
 	if (hashInfo->callback.IsEmpty()) {
 		delete hashInfo;
+
+		NanReturnValue(keyHash);
 	}
 
-	return scope.Close(keyHash);
+	NanReturnUndefined();
 }
 
 } //end of unnamed namespace
@@ -252,13 +260,12 @@ Hash(const Arguments& arguments) {
 //
 // Constructor For Object Exposed To JavaScript
 //
-Handle<Value>
-CreateHashFunction(const Arguments& arguments) {
-	HandleScope scope;
+NAN_METHOD(CreateHashFunction) {
+	NanScope();
 
 	Local<ObjectTemplate> hash = ObjectTemplate::New();
 	hash->SetCallAsFunctionHandler(Hash);
-	hash->Set(String::New("config"), CreateScryptConfigObject("hash"), v8::ReadOnly);
+	NanSetTemplate(hash, NanNew<String>("config"), CreateScryptConfigObject("hash"), v8::ReadOnly);
 
-	return scope.Close(hash->NewInstance());
+	NanReturnValue(NanNew(hash)->NewInstance());
 }

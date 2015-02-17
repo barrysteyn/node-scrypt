@@ -27,7 +27,7 @@
 #ifndef _SCRYPT_KDF_H_
 #define _SCRYPT_KDF_H_
 
-
-Handle<Value> CreateKeyDerivationFunction(const Arguments&);
+NAN_METHOD(CreateKeyDerivationFunction);
+//Handle<Value> CreateKeyDerivationFunction(const Arguments&);
 
 #endif /*_SCRYPT_KDF_H_*/ 

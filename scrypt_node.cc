@@ -25,6 +25,7 @@
 
 */
 #include <node.h>
+#include <nan.h>
 #include <v8.h>
 
 using namespace v8;
@@ -39,25 +40,24 @@ using namespace v8;
 //
 void RegisterModule(Handle<Object> target) {
 	//Params (Translation function)
-	target->Set(String::NewSymbol("Params"), 
-		FunctionTemplate::New(CreateParameterFunction)->GetFunction());
+	target->Set(NanNew<String>("Params"), 
+		NanNew<FunctionTemplate>(CreateParameterFunction)->GetFunction());
 
 	//KDF
-	target->Set(String::NewSymbol("KDF"), 
-		FunctionTemplate::New(CreateKeyDerivationFunction)->GetFunction());
+	target->Set(NanNew<String>("KDF"), 
+		NanNew<FunctionTemplate>(CreateKeyDerivationFunction)->GetFunction());
 
 	//Hash function
-	target->Set(String::NewSymbol("Hash"), 
-		FunctionTemplate::New(CreateHashFunction)->GetFunction());
+	target->Set(NanNew<String>("Hash"), 
+		NanNew<FunctionTemplate>(CreateHashFunction)->GetFunction());
 	
 	//Verify hash
-	target->Set(String::NewSymbol("Verify"), 
-		FunctionTemplate::New(CreateVerifyFunction)->GetFunction());
+	target->Set(NanNew<String>("Verify"), 
+		NanNew<FunctionTemplate>(CreateVerifyFunction)->GetFunction());
 
 	//Error Object
-	target->Set(String::NewSymbol("errorObject"),
-		FunctionTemplate::New(MakeErrorObject)->GetFunction());
-
+	target->Set(NanNew<String>("errorObject"),
+		NanNew<FunctionTemplate>(MakeErrorObject)->GetFunction());
 }
 
 NODE_MODULE(scrypt, RegisterModule)

@@ -27,6 +27,7 @@
 #ifndef _SCRYPT_VERIFY_HASH_H_
 #define _SCRYPT_VERIFY_HASH_H_
 
-Handle<Value> CreateVerifyFunction(const Arguments&);
+NAN_METHOD(CreateVerifyFunction);
+//Handle<Value> CreateVerifyFunction(const Arguments&);
 
 #endif //_SCRYPT_VERIFY_HASH_H_
