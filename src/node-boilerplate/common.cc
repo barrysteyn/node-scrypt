@@ -223,7 +223,6 @@ namespace Internal {
 			data = new char[dataLength];
 			buffer = NanBufferUse(data, dataLength);
 			dataWritten = NanDecodeWrite(data, dataLength, argument->ToString(), encoding);
-			assert(dataWritten == dataLength);
 
 			if (dataWritten != dataLength) {
 				errorMessage = argName + " is probably encoded differently to what was specified";

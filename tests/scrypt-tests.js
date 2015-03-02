@@ -949,3 +949,22 @@ test("Scrypt KDF: Incorrect arguments - outputLength is less than or equal to ze
 		t.end();
 	}
 });
+
+test("Scrypt KDF: Incorrect encodings - input is encoded differently to what was configured", function(t) {
+	try {
+		var kdf = new scrypt.KDF();
+		kdf.config.keyEncoding = "base64";
+		kdf('error', scryptParameters);
+	} catch (err) {
+		t.ok(err, "Synchronous test - An error was correctly thrown because the input encoding is ascii and that differs to the requested config of base64");
+		t.deepEqual(err, scrypt.errorObject(ADDONARG,"key is probably encoded differently to what was specified"), "The correct object is returned, namely: " + JSON.stringify(err));
+	}
+
+	try {
+		kdf("error", scryptParameters, function(err, result){});
+	} catch (err) {
+		t.ok(err, "Synchronous test - An error was correctly thrown because the input encoding is ascii and that differs to the requested config of base64");
+		t.deepEqual(err,scrypt.errorObject(ADDONARG,"key is probably encoded differently to what was specified"), "The correct object is returned, namely: " + JSON.stringify(err));
+		t.end();
+	}
+});
