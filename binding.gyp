@@ -61,6 +61,28 @@
   },
 
   'targets' : [{
+    'target_name': 'copied_files',
+    'conditions': [
+      ['OS=="win"', {
+        'copies' : [{
+          'destination':'scrypt/scrypt-1.1.6/',
+          'files' : [
+            'scrypt/win/include/config.h'
+          ]
+        }],
+      }],
+      ['OS!="win"', {
+        'copies' : [{
+          'destination':'scrypt/scrypt-1.1.6/',
+          'files' : [
+            'scrypt/configuration/config_output/config.h'
+          ]
+        }],
+      }],
+    ],
+  },
+
+  {
     'target_name': 'scrypt_lib',
     'type' : 'static_library',
     'sources': [
@@ -79,6 +101,7 @@
     'defines': [
       'HAVE_CONFIG_H'
     ],
+    'dependencies': ['copied_files'],
   },
 
   {
