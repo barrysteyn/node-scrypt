@@ -2,15 +2,14 @@
  *Script for determining if SSE support is available
  */
 
-try {
-    var cpuid = require('cpuid');
+var os = require("os");
 
-    try {
-            var cpuidInfo = cpuid();
-            if (cpuidInfo.features.sse && cpuidInfo.features.sse2) {
-                    console.log("true");
-                    process.exit(0);
-            }
-    } catch (error) {}
-} catch(error) {}
-console.log("false");
+switch(os.arch()) {
+	case 'ia32':
+	case 'x64':
+		console.log("true");
+		break;
+	case 'arm':
+	default:
+		console.log("false");
+};
