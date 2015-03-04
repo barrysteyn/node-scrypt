@@ -1,7 +1,7 @@
 {
   "name": "scrypt",
   "description": "The scrypt crypto library for NodeJS",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "keywords": [
     "scrypt",
     "password",
@@ -23,7 +23,6 @@
   "engines": {
     "node": ">= 0.10"
   },
-  "engineStrict": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/barrysteyn/node-scrypt.git"

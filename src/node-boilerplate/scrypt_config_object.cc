@@ -134,6 +134,7 @@ CreateScryptConfigObject(const char* objectType) {
 	config->SetHiddenValue(NanNew<String>("_keyEncoding"), NanNew<Integer>(Nan::BUFFER));
 	config->SetHiddenValue(NanNew<String>("_saltEncoding"), NanNew<Integer>(Nan::BUFFER));
 	config->SetHiddenValue(NanNew<String>("_outputEncoding"), NanNew<Integer>(Nan::BUFFER));
+	config->SetHiddenValue(NanNew<String>("_hashEncoding"), NanNew<Integer>(Nan::BUFFER));
 	
 	return NanEscapeScope(config);
 }
