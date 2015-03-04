@@ -1,7 +1,7 @@
 {
   'variables': {
     'openssl_include%':'<(node_root_dir)/deps/openssl/openssl/include',
-    'SSE':'<!(node sse-discover.js)',
+    'compiler-flags': [],
     'conditions' : [
       ['OS=="win"',{
         'scrypt_platform_specific_files': [
@@ -23,6 +23,13 @@
       }],
       ['OS!="win"', {
         'config_libs': '<!(scrypt/configuration/posixconfig)',
+        'conditions': [
+          ['target_arch=="x64" or target_arch=="ia32"',{
+            'compiler-flags': [
+              '-march=native', 
+            ],
+          }],
+        ],
         'scrypt_platform_specific_files': [
           'scrypt/scrypt-1.1.6/lib/util/memlimit.c',
           'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.c',
@@ -32,18 +39,16 @@
           'scrypt/scrypt-1.1.6/lib/scryptenc',
         ],
       }],
-      ['"<(SSE)"=="true"', {
+
+      # SSE support
+      ['target_arch=="x64" or target_arch=="ia32"', {
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c', 
         ],
-      }],
-      ['"<(SSE)"!="true"', {
+      },{
         'scrypt_arch_specific_files': [
           'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
         ],
-        'actions' : [{
-          'message': 'SSE not supported on this platform, compiling without SSE support',
-        }],
       }],
     ],
   },
@@ -98,6 +103,7 @@
       '<@(platform_specific_include_dirs)',
       '<(openssl_include)'
     ],
+    'cflags': ['<@(compiler-flags)'],
     'defines': [
       'HAVE_CONFIG_H'
     ],
@@ -121,6 +127,7 @@
       'src/util',
       '<(openssl_include)',
     ],
+    'cflags': ['<@(compiler-flags)'],
     'conditions': [['OS=="win"', {'include_dirs': ['scrypt/win/include']}]],
     'defines': [
       'HAVE_CONFIG_H'
@@ -145,9 +152,10 @@
       'src/util',
       'src/scryptwrapper',
     ],
+    'cflags': ['<@(compiler-flags)'],
     'conditions': [
       ['OS=="win"', {'libraries': ['-l<(openssl_lib)']}],
-      ['OS!="win"', {'libraries': ['<@(config_libs)']}]
+      ['OS!="win"', {'libraries': ['<@(config_libs)'],}],
     ],
     'dependencies': ['scrypt_wrapper'],
   }],

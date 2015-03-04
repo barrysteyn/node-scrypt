@@ -1,7 +1,7 @@
 {
   "name": "scrypt",
   "description": "The scrypt crypto library for NodeJS",
-  "version": "4.0.1",
+  "version": "4.0.3",
   "keywords": [
     "scrypt",
     "password",

@@ -1,5 +1,5 @@
 #! /bin/sh
-# Will run scrypt's autoconf generation script and save the output in the appropriate place
+# Will run scrypt's autoconf generation script
 
 SCRIPTPATH="$(pwd)/scrypt/configuration"
 if [ -d "$SCRIPTPATH/config_output" ]; then
