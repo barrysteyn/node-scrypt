@@ -51,7 +51,10 @@ To test, go to the folder where scrypt was installed, and type:
 
     npm test
 
-## Introducing Node-Scrypt Version 3
+## Node-Scrypt Version 4
+Fully compatible with Node versions 0.10x and up and IO. Library rewritten using Nan.
+
+## Node-Scrypt Version 3
 Version 3's main highlight is support for the **Microsoft Windows** platform.
 
 ### Node-Scrypt Version 2
