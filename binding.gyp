@@ -24,9 +24,9 @@
       ['OS!="win"', {
         'config_libs': '<!(scrypt/configuration/posixconfig)',
         'conditions': [
-          ['target_arch=="x64" or target_arch=="ia32"',{
+          ['target_arch=="ia32"',{
             'compiler-flags': [
-              '-march=native', 
+              '-msse2', 
             ],
           }],
         ],
