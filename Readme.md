@@ -24,17 +24,25 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 * [Wikipedia Article on scrypt](http://en.wikipedia.org/wiki/Scrypt).
 
 ## Installation Instructions
-### Requirements
 
- * *node-gyp* 
- * Node version 0.10x (0.11x support coming soon).
+### Windows
+
+#### Node-Gyp
+
+To install node-gyp for windows, refer to the [windows specific install instructions](https://github.com/TooTallNate/node-gyp#installation) of the node-gyp documentation.
+
+#### OpenSSL
+It is very important that OpenSSL for windows be installed:
+
+ * [OpenSSL For Windows 32 bit](Win32 OpenSSL v1.0.2)
+ * [OpenSSL For Windows 64 bit](http://slproweb.com/download/Win64OpenSSL-1_0_2.exe)
+  
+### Posix Environment Prerequisites (Linux, Mac etc)
 
 #### Node-Gyp
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is needed to build this module. It should be installed globally, that is, with the `-g` switch:
 
 	npm install -g node-gyp
-
-For operating system specific instructions (like getting *node-gyp* working on Windows), read the official [node-gyp installation instructions](https://github.com/TooTallNate/node-gyp#installation).
 
 ### From NPM
 
@@ -44,6 +52,7 @@ For operating system specific instructions (like getting *node-gyp* working on W
 
     git clone https://github.com/barrysteyn/node-scrypt.git
     cd node-scrypt
+    npm install
     node-gyp configure build
 
 ### Testing
