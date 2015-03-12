@@ -1,16 +1,40 @@
-# Scrypt For NodeJS
+# Scrypt For Node/IO
 
 [![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt) [![npm version](https://badge.fury.io/js/scrypt.svg)](http://badge.fury.io/js/scrypt)
 
-node-scrypt is a native node C++ wrapper for Colin Percival's scrypt utility. 
+Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's scrypt utility. 
 
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
+
+# News And Updates
+
+## Node-Scrypt Version 4
+Fully compatible with Node versions 0.10x and up and IO. Library rewritten using [nan](https://github.com/rvagg/nan).
+
+## Node-Scrypt Version 3
+Version 3's main highlight is support for the **Microsoft Windows** platform.
+
+### Node-Scrypt Version 2
+Node-Scrypt version 2.0 is a complete rewrite of the previous module. It's main highlights are:
+
+ * Access to the underlying key derivation function
+ * Extensive use of node's buffers
+ * Easy configuration
+ * Removal of scrypt encryption/decryption (this will soon be moved to another module)
+
+The module consists of four functions:
+
+ 1. [params](#params) - a translation function that produces scrypt parameters
+ 2. [hash](#hash) - produces a 256 bit hash using scrypt's key derivation function
+ 3. [verify](#verify) - verify's a hash produced by this module
+ 4. [kdf](#key-derivation-function) - scrypt's underlying key dervivation function
+
+It also consists of four extra functions that provide [backward compatibility](#backward-compatibility-for-users-of-version-1x) to the previous version.
 
 ## Table Of Contents
 
  * [Scrypt](#scrypt)
  * [Installation Instructions](#installation-instructions)
- * [Introducing Node-scrypt version 2.X](#introducing-node-scrypt-version-2)
  * [API](#api)
  * [Example Usage](#example-usage)
  * [FAQ](#faq)
@@ -29,12 +53,12 @@ Scrypt is an advanced crypto library used mainly for [key derivation](http://en.
 
 #### Node-Gyp
 
-To install node-gyp for windows, refer to the [windows specific install instructions](https://github.com/TooTallNate/node-gyp#installation) of the node-gyp documentation.
+To install node-gyp for windows, refer to the [windows specific install instructions](https://github.com/TooTallNate/node-gyp#installation) of the node-gyp documentation (also look [here](https://github.com/TooTallNate/node-gyp/wiki/Visual-Studio-2010-Setup) for helpful hints).
 
 #### OpenSSL
 It is very important that OpenSSL for windows be installed:
 
- * [OpenSSL For Windows 32 bit](Win32 OpenSSL v1.0.2)
+ * [OpenSSL For Windows 32 bit](http://slproweb.com/download/Win32OpenSSL-1_0_2.exe)
  * [OpenSSL For Windows 64 bit](http://slproweb.com/download/Win64OpenSSL-1_0_2.exe)
   
 ### Posix Environment Prerequisites (Linux, Mac etc)
@@ -59,30 +83,6 @@ It is very important that OpenSSL for windows be installed:
 To test, go to the folder where scrypt was installed, and type:
 
     npm test
-
-## Node-Scrypt Version 4
-Fully compatible with Node versions 0.10x and up and IO. Library rewritten using Nan.
-
-## Node-Scrypt Version 3
-Version 3's main highlight is support for the **Microsoft Windows** platform.
-
-### Node-Scrypt Version 2
-Node-Scrypt version 2.0 is a complete rewrite of the previous module. It's main highlights are:
-
-
- * Access to the underlying key derivation function
- * Extensive use of node's buffers
- * Easy configuration
- * Removal of scrypt encryption/decryption (this will soon be moved to another module)
-
-The module consists of four functions:
-
- 1. [params](#params) - a translation function that produces scrypt parameters
- 2. [hash](#hash) - produces a 256 bit hash using scrypt's key derivation function
- 3. [verify](#verify) - verify's a hash produced by this module
- 4. [kdf](#key-derivation-function) - scrypt's underlying key dervivation function
-
-It also consists of four extra functions that provide [backward compatibility](#backward-compatibility-for-users-of-version-1x) to the previous version.
 
 #### Encodings
 The following encodings are accepted:
