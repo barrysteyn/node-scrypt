@@ -1,6 +1,6 @@
 # Scrypt For NodeJS
 
-[![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
+[![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt) [![npm version](https://badge.fury.io/js/scrypt.svg)](http://badge.fury.io/js/scrypt)
 
 node-scrypt is a native node C++ wrapper for Colin Percival's scrypt utility. 
 

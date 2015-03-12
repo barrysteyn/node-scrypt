@@ -168,7 +168,7 @@ namespace Internal {
 			return NanEscapeScope(errorObject);
 		}
 	
-		return NanEscapeScope(NanUndefined());
+		return NanEscapeScope(NanNull());
 	}
 
 	//
