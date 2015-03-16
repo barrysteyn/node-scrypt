@@ -215,7 +215,6 @@ KDFAsyncAfterWork(uv_work_t *req) {
 
 	KDFInfo* kdfInfo = static_cast<KDFInfo*>(req->data);
 	Local<Value> kdfResult;
-	uint8_t argc = (kdfInfo->result) ? 1 : 2;
 	if (!kdfInfo->result) {
 		CreateJSONResult(kdfResult, kdfInfo);
 	}
@@ -226,7 +225,7 @@ KDFAsyncAfterWork(uv_work_t *req) {
 	};
 
 	TryCatch try_catch;
-	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(kdfInfo->callback), argc, argv);
+	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(kdfInfo->callback), 2, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);

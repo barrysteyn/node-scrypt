@@ -186,12 +186,10 @@ void
 ParamsAsyncAfterWork(uv_work_t* req) {
 	NanScope();
 	TranslationInfo* translationInfo = static_cast<TranslationInfo*>(req->data);
-	uint8_t argc = 1;
 	Local<Object> obj;
 
 	if (!translationInfo->result) {
 		createJSONObject(obj, translationInfo->N, translationInfo->r, translationInfo->p);
-		argc++;
 	}
 
 	Local<Value> argv[2] = {
@@ -201,7 +199,7 @@ ParamsAsyncAfterWork(uv_work_t* req) {
 
 	TryCatch try_catch;
 
-	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(translationInfo->callback), argc, argv);
+	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(translationInfo->callback), 2, argv);
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);
 	}

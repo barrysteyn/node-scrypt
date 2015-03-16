@@ -169,7 +169,6 @@ void
 PasswordHashAsyncAfterWork(uv_work_t *req) {
 	NanScope();
 	HashInfo* hashInfo = static_cast<HashInfo*>(req->data);
-	uint8_t argc = (hashInfo->result) ? 1 : 2;
 	Handle<Value> keyHash = BUFFER_ENCODED(hashInfo->keyHash, hashInfo->outputEncoding);
 
 	Handle<Value> argv[2] = {
@@ -178,7 +177,7 @@ PasswordHashAsyncAfterWork(uv_work_t *req) {
 	};
 
 	TryCatch try_catch;
-	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(hashInfo->callback), argc, argv);
+	NanMakeCallback(NanGetCurrentContext()->Global(), NanNew(hashInfo->callback), 2, argv);
 
 	if (try_catch.HasCaught()) {
 		node::FatalException(try_catch);

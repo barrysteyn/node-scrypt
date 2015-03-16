@@ -161,8 +161,13 @@ Four extra functions are provided for means of backward compatibility:
 The above functions are defaulted to behave exactly like the previous version.
 
 ## API
-##### A Note On Error Handling
+##### A Note On Error Synchronous Handling
 All synchronous functionality should be wrapped in a `try ... catch` as exceptions are thrown in case of error. For asynchronous functionality, error are returned as the first argument to the callback function if such an error exists. An error is an object with both an error code and a message describing the error.
+
+##### A Note On Error Asynchronous Handling
+For asynchronous functionality, an error is thrown if the error is a programmer error. For more information about different error types, see [this](https://www.joyent.com/developers/node/design/errors#) article. For example, specifying the `hashEncoding` for verify that is different to the actual hash's encoding will throw an error. 
+
+On a successful result, the err object of the callback function will be `null` (not `undefined`).
 
 ##### Scrypt Parameter Object
 The scrypt parameter object is a JSON object that must have values for properties **N**, **r** and **p**. For example, it could look like this:
@@ -520,7 +525,7 @@ I will end this section with a quote from Colin Percival (author of scrypt):
 
 > We estimate that on modern (2009) hardware, if 5 seconds are spent computing a derived key, the cost of a hardware brute-force attack against scrypt is roughly 4000 times greater than the cost of a similar attack against bcrypt (to find the same password), and 20000 times greater than a similar attack against PBKDF2.
 
-#####Cons
+##### Cons
 There is just one con I can think of: It is a relatively new library (only been around since 2009). Cryptographers don't really like new libraries for production deployment as it has not been *battle tested*. That being said, it is being actively used in [Tarsnap](http://www.tarsnap.com/) (as mentioned above) and the author is very active.
 
 ### Hash
