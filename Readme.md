@@ -6,12 +6,12 @@ Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's scrypt u
 
 As should be the case with any security tool, this library should be scrutinized by anyone using it. If you find or suspect an issue with the code- please bring it to my attention and I'll spend some time trying to make sure that this tool is as secure as possible.
 
-# News And Updates
+## News And Updates
 
-## Node-Scrypt Version 4
+### Node-Scrypt Version 4
 Fully compatible with Node versions 0.10x and up and IO. Library rewritten using [nan](https://github.com/rvagg/nan).
 
-## Node-Scrypt Version 3
+### Node-Scrypt Version 3
 Version 3's main highlight is support for the **Microsoft Windows** platform.
 
 ### Node-Scrypt Version 2
@@ -22,12 +22,9 @@ Node-Scrypt version 2.0 is a complete rewrite of the previous module. It's main 
  * Easy configuration
  * Removal of scrypt encryption/decryption (this will soon be moved to another module)
 
-The module consists of four functions:
 
- 1. [params](#params) - a translation function that produces scrypt parameters
- 2. [hash](#hash) - produces a 256 bit hash using scrypt's key derivation function
- 3. [verify](#verify) - verify's a hash produced by this module
- 4. [kdf](#key-derivation-function) - scrypt's underlying key dervivation function
+
+
 
 It also consists of four extra functions that provide [backward compatibility](#backward-compatibility-for-users-of-version-1x) to the previous version.
 
@@ -35,7 +32,11 @@ It also consists of four extra functions that provide [backward compatibility](#
 
  * [Scrypt](#scrypt)
  * [Installation Instructions](#installation-instructions)
- * [API](#api)
+ * [API](#api) - The module consists of four functions:
+   * [params](#params) - a translation function that produces scrypt parameters
+   * [hash](#hash) - produces a 256 bit hash using scrypt's key derivation function
+   * [verify](#verify) - verify's a hash produced by this module
+   * [kdf](#kdf) - scrypt's underlying key dervivation function
  * [Example Usage](#example-usage)
  * [FAQ](#faq)
  * [Credits](#credits)
@@ -84,72 +85,6 @@ To test, go to the folder where scrypt was installed, and type:
 
     npm test
 
-#### Encodings
-The following encodings are accepted:
-
- 1. **ascii**
- 2. **utf8**
- 3. **base64**
- 4. **ucs2** 
- 5. **binary**
- 6. **hex**
- 7. **buffer**
-
-The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. Buffer is useful for representing raw binary data and has the ability to translate into any of the encodings mentioned above. It is for these reasons that encodings default to buffer in this module.
-
-### Params
-The [params function](#params-1) translates human understandable parameters to scrypt's internal parameters. 
-
-The human understandable parameters are as follows:
-
- 1. **maxtime**: the maximum amount of time scrypt will spend when computing the derived key.
- 2. **maxmemfrac**: the maximum fraction of the available RAM used when computing the derived key.
- 3. **maxmem**: the maximum number of bytes of RAM used when computing the derived encryption key. 
-
-Scrypt's internal parameters are as follows:
-
- 1. **N** - general work factor, iteration count.
- 2. **r** - blocksize in use for underlying hash; fine-tunes the relative memory-cost.
- 3. **p** - parallelization factor; fine-tunes the relative cpu-cost.
-
-For info on what the above parameters do, read [section 5 of the scrypt ietf draft](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-01#section-5).
-
-#### How Memory Is Calculated
-`maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
-
-> the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
-
-Therefore at the very least, 1MiB of ram will be used.
-
-### Hash
-The [hash function](#hash-1) does the following:
-
- * Adds random salt.
- * Creates a HMAC to protect against active attack.
- * Uses the scrypt key derivation function to derive a hash for a key.
-
-#### Hash Format
-All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key for the HMAC being produced by the scrypt key derivation function. The result is a 768 bit (96 byte) output:
-
- 1. **bytes 0-5**: The word *"scrypt"*
- 2. **bytes 6-15**: Scrypt parameters N, r, and p
- 3. **bytes 16-47**: 32 bits of random salt
- 4. **bytes 48-63**: A 16 bit checksum
- 5. **bytes 64-95**: A 32 bit HMAC of bytes 0 to 63 using a key produced by the scrypt key derivation function.
-
-Bytes 0 to 63 are left in plaintext. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
-
-### Verify
-The [verify function](#verify-1) determines whether a hash can be derived from a given key and returns a boolean result.
-
-### Key Derivation Function
-The underlying [scrypt key derivation function](#kdf). This functionality is exposed for users who are quite experienced and need the function for business logic. A good example is [litecoin](https://litecoin.org/) which uses the scrypt key derivation function as a proof of work. The key derivation function in this module is tested against [three of the four test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) in the original scrypt paper. The fourth test vector takes too long to computer and is infeasible to use as testing for continuous integration. Nevertheless, it is included in the tests, but commented out - uncomment it and run the tests, but be warned that it is rather taxing on resources.
-
-#### Use Hash To Store Keys
-If your interested in this module is to produce hashes to store passwords, then I strongly encourage you to use the hash function. The key derivation function does not produce any [message authentication code](http://en.wikipedia.org/wiki/Message_authentication_code) to ensure integrity. You will also have to store the scrypt parameters separately. Lastly, there is no native verify function included in this module.
-
-In short: If you are going to use this module to store keys, then use the hash function. It has been customized for general key storage and is both easier to use and provides better protection compared to the key derivation function.
-
 ### Backward Compatibility For User's Of Version 1.x
 Four extra functions are provided for means of backward compatibility:
 
@@ -165,26 +100,36 @@ The above functions are defaulted to behave exactly like the previous version.
 All synchronous functionality should be wrapped in a `try ... catch` as exceptions are thrown in case of error. For asynchronous functionality, error are returned as the first argument to the callback function if such an error exists. An error is an object with both an error code and a message describing the error.
 
 ##### A Note On Error Asynchronous Handling
-For asynchronous functionality, an error is thrown if the error is a programmer error. For more information about different error types, see [this](https://www.joyent.com/developers/node/design/errors#) article. For example, specifying the `hashEncoding` for verify that is different to the actual hash's encoding will throw an error. 
+For asynchronous functionality, an error is thrown if the error is a programmer error. For more information about different error types, see [this](https://www.joyent.com/developers/node/design/errors#) article. For example, specifying the `hashEncoding` for verify that is different than the actual hash's encoding will throw an error. 
 
 On a successful result, the err object of the callback function will be `null` (not `undefined`).
 
-##### Scrypt Parameter Object
-The scrypt parameter object is a JSON object that must have values for properties **N**, **r** and **p**. For example, it could look like this:
-
-    {
-      N: 1,
-      r: 1,
-      p: 1
-    }
-
 ### Params
+Translates human understandable parameters to scrypt's internal parameters. 
+
 `params(maxtime, maxmem, maxmemfrac, callback_function)`
 
- * `maxtime` - [REQUIRED] - a decimal (double) representing the maxtime in seconds for running scrypt. 
- * `maxmem` - [OPTIONAL] - an integer, specifying the maximum number of bytes
- * `maxmemfrac` - [OPTIONAL] - a double value between 0.0 and 1.0, representing a normalized percentage value
+ * `maxtime` - [REQUIRED] - a decimal (double) representing the maximum amount of time in seconds scrypt will spend when computing the derived key. 
+ * `maxmem` - [OPTIONAL] - an integer, specifying the maximum number of bytes of RAM used when computing the derived encryption key
+ * `maxmemfrac` - [OPTIONAL] - a double value between 0.0 and 1.0, representing the fraction (normalized percentage value) of the available RAM used when computing the derived key
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
+The scrypt parameter object is a JSON object that must have values for properties **N**, **r** and **p**. Scrypt's internal parameters are as follows:
+
+    {
+      N: 1, // general work factor, iteration count.
+      r: 1, // blocksize in use for underlying hash; fine-tunes the relative memory-cost.
+      p: 1  // parallelization factor; fine-tunes the relative cpu-cost.
+    }
+
+For info on what the above parameters do, read [section 5 of the scrypt ietf draft](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-01#section-5).
+
+#### How Memory Is Calculated
+`maxmem` is often defaulted to `0`. This does not mean that `0` RAM is used. Instead, memory used is calculated like so (quote from Colin Percival):
+
+> the system [will use] the amount of RAM which [is] specified [as the] fraction of the available RAM, but no more than maxmem, and no less than 1MiB
+
+Therefore at the very least, 1MiB of ram will be used.
 
 #### Params Config Object
 The params config object is accessible from `scrypt.params.config`. It has the following default value:
@@ -202,11 +147,29 @@ Read the section on [how memory is calculated](#how-memory-is-calculated) to get
 The return value will be a [scrypt parameter object](#scrypt-parameter-object)
 
 ### Hash
+
+The `hash` function does the following:
+
+ * Adds random salt.
+ * Creates a HMAC to protect against active attack.
+ * Uses the scrypt key derivation function to derive a hash for a key.
+
 `hash(key, scrypt_parameters, callback_function)`
 
  * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
  * `scrypt_parameters` - [REQUIRED] - a JSON object representing the [scrypt's internal parameters](#params)
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
+#### Hash Format
+All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key for the HMAC being produced by the scrypt key derivation function. The result is a 768 bit (96 byte) output:
+
+ 1. **bytes 0-5**: The word *"scrypt"*
+ 2. **bytes 6-15**: Scrypt parameters N, r, and p
+ 3. **bytes 16-47**: 32 bits of random salt
+ 4. **bytes 48-63**: A 16 bit checksum
+ 5. **bytes 64-95**: A 32 bit HMAC of bytes 0 to 63 using a key produced by the scrypt key derivation function.
+
+Bytes 0 to 63 are left in plaintext. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
 
 #### Hash Config Object
 The hash config object is accessible from `scrypt.hash.config`. It has the following default value:
@@ -222,6 +185,8 @@ The hash config object is accessible from `scrypt.hash.config`. It has the follo
 The return value will be an [encoded string or buffer](#encodings) of the [hash format](#hash-format).
 
 ### Verify
+Determines whether a hash can be derived from a given key and returns a boolean result.
+
 `verify(hash, key, callback_function)`
 
  * `hash` - [REQUIRED] - an [encoded string or buffer](#encodings) of the output of the hash function
@@ -242,6 +207,8 @@ The verify config object is accessible from `scrypt.verify.config`. It has the f
 The return value will be a `boolean` representing if the hash can be derived from the key
 
 ### KDF
+The underlying scrypt key derivation function.
+
 `kdf(key, scrypt_parameters, outputLength, salt, callback_function)`
 
  * `key` - [REQUIRED] - an [encoded string or buffer](#encodings) representing the key to be hashed
@@ -249,6 +216,13 @@ The return value will be a `boolean` representing if the hash can be derived fro
  * `outputLength` - [OPTIONAL] - an integer, representing the size in bytes of the output
  * `salt` - [OPTIONAL] - an [encoded string or buffer](#encodings) representing the value used for salt. If not defined, a random salt will be created.
  * `callback_function` - [OPTIONAL] - if present, will make this function asynchronous
+
+This functionality is exposed for users who are quite experienced and need the function for business logic. A good example is [litecoin](https://litecoin.org/) which uses the scrypt key derivation function as a proof of work. The key derivation function in this module is tested against [three of the four test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) in the original scrypt paper. The fourth test vector takes too long to computer and is infeasible to use as testing for continuous integration. Nevertheless, it is included in the tests, but commented out - uncomment it and run the tests, but be warned that it is rather taxing on resources.
+
+#### Use Hash To Store Keys
+If your interested in this module is to produce hashes to store passwords, then I strongly encourage you to use the hash function. The key derivation function does not produce any [message authentication code](http://en.wikipedia.org/wiki/Message_authentication_code) to ensure integrity. You will also have to store the scrypt parameters separately. Lastly, there is no native verify function included in this module.
+
+In short: If you are going to use this module to store keys, then use the hash function. It has been customized for general key storage and is both easier to use and provides better protection compared to the key derivation function.
 
 The return value will be a JSON object with the following properties:
 
@@ -272,6 +246,18 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
  * `defaultSaltSize` - an integer representing the number of bytes used to create a random salt should it be necessary
  * `outputLength` - an integer representing the size of the output in bytes
 
+#### Encodings
+The following encodings are accepted:
+
+ 1. **ascii**
+ 2. **utf8**
+ 3. **base64**
+ 4. **ucs2** 
+ 5. **binary**
+ 6. **hex**
+ 7. **buffer**
+
+The last encoding is node's [Buffer](http://nodejs.org/api/buffer.html) object. Buffer is useful for representing raw binary data and has the ability to translate into any of the encodings mentioned above. It is for these reasons that encodings default to buffer in this module.
 
 ### Backward Compatibility
 #### PasswordHash
@@ -304,8 +290,8 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
  * `hash` - [REQUIRED] - the password created with the above `passwordHash` function.
  * `password` - [REQUIRED] - a password string.
 
-# Example Usage
-## params
+## Example Usage
+### params
 
     var scrypt = require("scrypt");
 	console.log(scrypt.params.config); //Outputs the config object to screen
@@ -324,7 +310,7 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
 		console.log(scryptParameters);
 	});
 
-## hash
+### hash
 	
 	var scrypt = require("scrypt");
 	var scryptParameters = scrypt.params(0.1);
@@ -343,7 +329,7 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
 		console.log("Asynchronous result: "+result);
 	});
 
-## verify
+### verify
 
 	var scrypt = require("scrypt");
 	var scryptParameters = scrypt.params(0.1);
@@ -360,7 +346,7 @@ The kdf config object is accessible from `scrypt.kdf.config`. It has the followi
 		//result will be true
 	});
 
-## kdf
+### kdf
 The [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) lists four [test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) to test implementation. This example will show how to produce these test vectors from within this module.
 
 #### Test Vector 1
