@@ -1,7 +1,7 @@
 {
   "name": "scrypt",
   "description": "The scrypt crypto library for NodeJS",
-  "version": "4.0.7",
+  "version": "5.0.0",
   "keywords": [
     "scrypt",
     "password",
@@ -31,7 +31,7 @@
     "tap": "*"
   },
   "dependencies": {
-    "nan": "^1.6.2"
+    "nan": "1.8.0"
   },
   "licenses": [
     {
