@@ -164,10 +164,12 @@ The `hash` function does the following:
 All hashes start with the word *"scrypt"*. Next comes the scrypt parameters used in the key derivation function, followed by random salt. Finally, a 256 bit HMAC of previous content is appended, with the key for the HMAC being produced by the scrypt key derivation function. The result is a 768 bit (96 byte) output:
 
  1. **bytes 0-5**: The word *"scrypt"*
- 2. **bytes 6-15**: Scrypt parameters N, r, and p
- 3. **bytes 16-47**: 32 bits of random salt
- 4. **bytes 48-63**: A 16 bit checksum
- 5. **bytes 64-95**: A 32 bit HMAC of bytes 0 to 63 using a key produced by the scrypt key derivation function.
+ 2. **bytes 6-7**: 2 bytes of Scrypt parameter N
+ 2. **bytes 8-11**: 4 bytes of Scrypt parameter r
+ 2. **bytes 12-15**: 4 bytes of Scrypt parameter p
+ 3. **bytes 16-47**: 32 bytes (256 bits) of random salt
+ 4. **bytes 48-63**: 16 bytes (128 bits) of checksum
+ 5. **bytes 64-95**: 32 bytes (256 bits) HMAC of bytes 0 to 63 using a key produced by the scrypt key derivation function.
 
 Bytes 0 to 63 are left in plaintext. This is necessary as these bytes contain metadata needed for verifying the hash. This information not being encrypted does not mean that security is weakened. What is essential in terms of security is hash **integrity** (meaning that no part of the hashed output can be changed) and that the original password cannot be determined from the hashed output (this is why you are using scrypt - because it does this in a good way). Bytes 64 to 95 is where all this happens.
 
