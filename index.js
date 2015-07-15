@@ -118,7 +118,8 @@ var ProcessParamsASyncArguments = function(args) {
 	return args;
 }
 
-var scrypt = {
+//Actual Scrypt Object
+var Scrypt = {
 
 	ParamsSync: function() {
 		var args = ProcessParamsSyncArguments(arguments);
@@ -131,9 +132,4 @@ var scrypt = {
 	}
 };
 
-var test = scrypt.Params(1, 2 ,0.5, function(err, obj){
-	if (err) console.log(err);
-	else console.log(obj);
-});
-
-module.exports = scrypt;
+module.exports = Scrypt;
