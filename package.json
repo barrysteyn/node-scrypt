@@ -28,7 +28,8 @@
     "url": "https://github.com/barrysteyn/node-scrypt.git"
   },
   "devDependencies": {
-    "mocha": "2.2.5"
+    "mocha": "2.2.5",
+    "chai": "3.0.0"
   },
   "dependencies": {
     "nan": "1.8.0"
@@ -42,6 +43,6 @@
     "url": "https://github.com/barrysteyn/node-scrypt/issues"
   },
   "scripts": {
-    "test": "npm install && node tests/scrypt-tests.js"
+    "test": "mocha tests/scrypt-tests.js"
   }
 }
