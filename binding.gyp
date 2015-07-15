@@ -26,7 +26,7 @@
         'conditions': [
           ['target_arch=="ia32"',{
             'compiler-flags': [
-              '-msse2', 
+              '-msse2',
             ],
           }],
         ],
@@ -43,11 +43,11 @@
       # SSE support
       ['target_arch=="x64" or target_arch=="ia32"', {
         'scrypt_arch_specific_files': [
-          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c', 
+          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-sse.c',
         ],
       },{
         'scrypt_arch_specific_files': [
-          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c', 
+          'scrypt/scrypt-1.1.6/lib/crypto/crypto_scrypt-nosse.c',
         ],
       }],
     ],
@@ -138,14 +138,16 @@
   {
     'target_name': 'scrypt',
     'sources': [
-      'scrypt_node.cc',
-      'src/node-boilerplate/common.cc',
       'src/node-boilerplate/scrypt_error.cc',
-      'src/node-boilerplate/scrypt_config_object.cc',
-      'src/node-boilerplate/scrypt_params.cc',
-      'src/node-boilerplate/scrypt_kdf.cc',
-      'src/node-boilerplate/scrypt_hash.cc',
-      'src/node-boilerplate/scrypt_verify.cc',
+      'scrypt_node.cc',
+      #'src/node-boilerplate/common.cc',
+      #'src/node-boilerplate/scrypt_error.cc',
+      #'src/node-boilerplate/scrypt_config_object.cc',
+      'src/node-boilerplate/scrypt_params_async.cc',
+      'src/node-boilerplate/scrypt_params_sync.cc',
+      #'src/node-boilerplate/scrypt_kdf.cc',
+      #'src/node-boilerplate/scrypt_hash.cc',
+      #'src/node-boilerplate/scrypt_verify.cc',
     ],
     'include_dirs': [
       'node_modules/nan',

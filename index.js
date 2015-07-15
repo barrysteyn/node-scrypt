@@ -1,121 +1,139 @@
-module.exports = function() {
+"use strict";
 
-	var scrypt = require('./build/Release/scrypt');
-	console.log("Hello World");
+var scryptNative = require("./build/Release/scrypt");
+//module.exports = scrypt;
+//var scryptParameters = scrypt.ParamsSync(10, 10240, 0.9);
+//console.log(scryptParameters);
 
-	//
-	//Create function instances
-	//
-	scrypt.passwordHash = scrypt.Hash();
-	scrypt.verifyHash = scrypt.Verify();
-	scrypt.hash = scrypt.Hash();
-	scrypt.verify = scrypt.Verify();
-	scrypt.params = scrypt.Params();
-	scrypt.kdf = new scrypt.KDF();
+var CheckEmptyArguments = function(args, message) {
+	var err_msg = (message !== undefined) ? message : "No arguments are present";
 
+	if (args.length === 0) {
+		var error = new Error(err_msg);
+		error.name = "SyntaxError";
+		throw error;
+	}
+}
 
-	//
-	//Parses input arguments for scrypt parameter object or translation function inputs
-	//
-	function parseScryptParameters(args, startIndex) {
-		var	i = 0,
-			paramsObject = {};
+var ProcessParamsSyncArguments = function(args) {
+	var error = undefined;
 
-		for (i=startIndex; i < startIndex+3 && typeof args[i] != "undefined"; i++) {
-			if (i - startIndex > 0 && (typeof args[i] === "function" || typeof args[i] === "boolean")) {
-				break;
-			}
+	CheckEmptyArguments(args, "No arguments present, at least one argument is needed - the maxtime");
 
-			switch(typeof args[i]) {	
-				case "number": 
-					if (i - startIndex == 0) {
-						paramsObject.maxtime = args[i];
+	// Set defaults (if necessary)
+	if (args[1] === undefined) args[1] = 0; //maxmem default to 0
+	if (args[2] === undefined) args[2] = 0.5; //max_memfrac default to 0.5
+
+	for(var i=0; i < Math.min(3, args.length); i++) {
+		var propertyName = (function() {
+			if (i === 0) return "maxtime";
+			if (i === 1) return "maxmem";
+			if (i === 2) return "max_memfrac";
+		})();
+
+		// All args must be of type number
+		if (!error && typeof args[i] !== "number") {
+			error = new Error(propertyName + " must be a number");
+			error.name = "TypeError";
+		}
+
+		// Specific argument checks
+		if (!error) {
+			switch (i) {
+				case 0: //maxtime
+					if (args[0] <= 0) {
+						error = new Error(propertyName + " must be greater than 0");
+						error.name = "RangeError";
 					}
-					
-					if (i - startIndex == 1) {
-						paramsObject.maxmem = args[i];
-					}
-					
-					if (i - startIndex == 2) {
-						paramsObject.maxmemfrac = args[i];
-					}
-
 					break;
 
-				default:
-					if (i-startIndex == 0) {
-						throw scrypt.errorObject(1, "expecting maxtime as a number");
+				case 1: //maxmem
+					if (args[1] !== parseInt(args[1], 10)) {
+						error = new Error(propertyName + " must be an integer");
+						error.name = "TypeError";
 					}
 
-					if (i-startIndex == 1) {
-						throw scrypt.errorObject(1, "expecting maxmem as a number");
+					if (!error && args[1] < 0) {
+						error = new Error(propertyName + " must be greater than or equal to 0")
+                                                error.name = "RangeError";
 					}
-					
-					if (i-startIndex == 2) {
-						throw scrypt.errorObject(1, "expecting maxmemfrac as a number");
-					}
+					break;
 
+				case 2: //max_memfrac
+					if (args[2] < 0.0 || args[2] > 1.0) {
+						error = new Error(propertyName + " must be between 0.0 and 1.0 inclusive")
+						error.name = "RangeError";
+					}
 					break;
 			}
 		}
 
-		return paramsObject;
+		// Throw error if necessary
+		if (error) {
+			error.propertyName = propertyName;
+			error.propertyValue = args[i];
+			throw error;
+		}
 	}
 
-	//
-	// Scrypt Password Hash
-	//
-	scrypt.passwordHash = function(passwordHash, params) {
+	return args;
+}
 
-		var retFunction = function() {	
-			var args = Array.prototype.slice.apply(arguments),
-				paramsObject;
+var ProcessParamsASyncArguments = function(args) {
+	var error = undefined;
+	CheckEmptyArguments(args, "No arguments present, at least two arguments are needed - the maxtime and callback function");
 
-	        //Determine if there are too little arguments
-			if (args.length < 2) {
-				throw scrypt.errorObject(1, "wrong number of arguments - at least two arguments are needed - key and scrypt parameters JSON object");
-			}
-
-			//Determine if translation function is needed
-			if (args.length > 1 && typeof args[1] !== "object" && typeof args[1] !== "function") {
-				paramsObject = parseScryptParameters(arguments, 1); 
-			}
-
-			//Asyc
-			if (typeof args[args.length-1] === "function") {
-				if (typeof paramsObject !== "undefined") {
-					params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac, function(err, scryptParams) {
-						args.splice(1,Object.keys(paramsObject).length,scryptParams);
-						passwordHash(args[0], args[1], args[2]);
-					});
-				} else {
-					passwordHash(args[0], args[1], args[2]);
-				}
-			//Sync
-			} else {
-				if (typeof paramsObject !== "undefined") {
-					var scryptParams = params(paramsObject.maxtime, paramsObject.maxmem, paramsObject.maxmemfrac);
-					args.splice(1, Object.keys(paramsObject).length, scryptParams);
-				}
-
-				return passwordHash(args[0], args[1]);
+	// find callback
+	var callback_index = (function(){
+		for (var i=0; i < args.length; i++) {
+			if (typeof args[i] === "function") {
+				return i;
 			}
 		}
-		retFunction.config = passwordHash.config;
+	})();
 
-		return retFunction;
-	}(scrypt.passwordHash, scrypt.params);
+	// check callback exists
+	if (callback_index === undefined) {
+		error = new Error("No callback function present");
+		error.name = "SyntaxError";
+		throw error;
+	}
 
-	//
-	// Backward Compatbility
-	//
-	scrypt.passwordHash.config.keyEncoding = "ascii";
-	scrypt.passwordHash.config.outputEncoding = "base64";
-	scrypt.verifyHash.config.hashEncoding = "base64";
-	scrypt.verifyHash.config.keyEncoding = "ascii";
+	// callback cannot be first argument
+	if (callback_index === 0) {
+		error = new Error("At least one argument is needed before the callback - the maxtime");
+		error.name = "SyntaxError";
+		throw error;
+	}
 
-	scrypt.passwordHashSync = scrypt.passwordHash;
-	scrypt.verifyHashSync = scrypt.verifyHash;
+	// remove callback function from args and
+	// put it in it's own variable. This allows
+	// sync check to be used (DRY)
+	var callback = args[callback_index];
+	delete args[callback_index];
 
-	return scrypt;
+	var args = ProcessParamsSyncArguments(args);
+	args[3] = callback;
+
+	return args;
 }
+
+var scrypt = {
+
+	ParamsSync: function() {
+		var args = ProcessParamsSyncArguments(arguments);
+		return scryptNative.ParamsSync(args[0], args[1], args[2]);
+	},
+
+	Params: function() {
+		var args = ProcessParamsASyncArguments(arguments);
+		scryptNative.Params(args[0], args[1], args[2], args[3]);
+	}
+};
+
+var test = scrypt.Params(1, 2 ,0.5, function(err, obj){
+	if (err) console.log(err);
+	else console.log(obj);
+});
+
+module.exports = scrypt;
