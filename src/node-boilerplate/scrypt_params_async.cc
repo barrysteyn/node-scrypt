@@ -1,5 +1,4 @@
 #include "scrypt_params_async.h"
-#include "scrypt_error.h"
 
 //Scrypt is a C library and there needs c linkings
 extern "C" {
