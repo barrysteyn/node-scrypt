@@ -1,7 +1,7 @@
 #include <nan.h>
 #include <node.h>
 
-#include "scrypt_error.h"
+#include "common.h"
 
 //Scrypt is a C library and there needs c linkings
 extern "C" {
@@ -15,7 +15,6 @@ NAN_METHOD(ParamsSync) {
   NanScope();
 
   /* Variable Declaration */
-
   int logN = 0;
   int result = 0;
   uint32_t r = 0;
