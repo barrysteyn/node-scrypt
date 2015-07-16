@@ -38,10 +38,9 @@ using namespace v8;
 //
 // Forward declarations
 //
-
-// Params Sync Function
 NAN_METHOD(ParamsSync);
 NAN_METHOD(Params);
+NAN_METHOD(KDFSync);
 
 //
 // Module initialisation function
@@ -54,6 +53,9 @@ void RegisterModule(Handle<Object> target) {
 
 	target->Set(NanNew<String>("Params"),
 		NanNew<FunctionTemplate>(Params)->GetFunction());
+
+	target->Set(NanNew<String>("KDFSync"),
+		NanNew<FunctionTemplate>(KDFSync)->GetFunction());
 
 /*
 	//KDF

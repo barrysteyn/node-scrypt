@@ -138,14 +138,14 @@
   {
     'target_name': 'scrypt',
     'sources': [
-      'src/node-boilerplate/scrypt_error.cc',
+      'src/node-boilerplate/common.cc',
       'scrypt_node.cc',
       #'src/node-boilerplate/common.cc',
       #'src/node-boilerplate/scrypt_error.cc',
       #'src/node-boilerplate/scrypt_config_object.cc',
       'src/node-boilerplate/scrypt_params_async.cc',
       'src/node-boilerplate/scrypt_params_sync.cc',
-      #'src/node-boilerplate/scrypt_kdf.cc',
+      'src/node-boilerplate/scrypt_kdf_sync.cc',
       #'src/node-boilerplate/scrypt_hash.cc',
       #'src/node-boilerplate/scrypt_verify.cc',
     ],
