@@ -31,7 +31,7 @@ void ScryptKDFVerifyAsyncWorker::HandleOKCallback() {
 }
 
 // Asynchronous access to scrypt params
-NAN_METHOD(KDFVerify) {
+NAN_METHOD(kdfVerify) {
   NanScope();
 
   //

@@ -11,7 +11,7 @@ extern "C" {
 using namespace v8;
 
 //Synchronous access to scrypt params
-NAN_METHOD(KDFVerifySync) {
+NAN_METHOD(kdfVerifySync) {
   NanScope();
 
   //
