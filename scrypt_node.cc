@@ -33,43 +33,43 @@ using namespace v8;
 //
 // Forward declarations
 //
-NAN_METHOD(ParamsSync);
-NAN_METHOD(Params);
-NAN_METHOD(KDFSync);
-NAN_METHOD(KDF);
-NAN_METHOD(KDFVerifySync);
-NAN_METHOD(KDFVerify);
-NAN_METHOD(HashSync);
-NAN_METHOD(Hash);
+NAN_METHOD(paramsSync);
+NAN_METHOD(params);
+NAN_METHOD(kdfSync);
+NAN_METHOD(kdf);
+NAN_METHOD(kdfVerifySync);
+NAN_METHOD(kdfVerify);
+NAN_METHOD(hashSync);
+NAN_METHOD(hash);
 
 //
 // Module initialisation
 //
 void RegisterModule(Handle<Object> target) {
 
-	target->Set(NanNew<String>("ParamsSync"),
-		NanNew<FunctionTemplate>(ParamsSync)->GetFunction());
+	target->Set(NanNew<String>("paramsSync"),
+		NanNew<FunctionTemplate>(paramsSync)->GetFunction());
 
-	target->Set(NanNew<String>("Params"),
-		NanNew<FunctionTemplate>(Params)->GetFunction());
+	target->Set(NanNew<String>("params"),
+		NanNew<FunctionTemplate>(params)->GetFunction());
 
-	target->Set(NanNew<String>("KDFSync"),
-		NanNew<FunctionTemplate>(KDFSync)->GetFunction());
+	target->Set(NanNew<String>("kdfSync"),
+		NanNew<FunctionTemplate>(kdfSync)->GetFunction());
 
-	target->Set(NanNew<String>("KDF"),
-		NanNew<FunctionTemplate>(KDF)->GetFunction());
+	target->Set(NanNew<String>("kdf"),
+		NanNew<FunctionTemplate>(kdf)->GetFunction());
 
-	target->Set(NanNew<String>("VerifySync"),
-		NanNew<FunctionTemplate>(KDFVerifySync)->GetFunction());
+	target->Set(NanNew<String>("verifySync"),
+		NanNew<FunctionTemplate>(kdfVerifySync)->GetFunction());
 
-	target->Set(NanNew<String>("Verify"),
-		NanNew<FunctionTemplate>(KDFVerify)->GetFunction());
+	target->Set(NanNew<String>("verify"),
+		NanNew<FunctionTemplate>(kdfVerify)->GetFunction());
 
-	target->Set(NanNew<String>("HashSync"),
-		NanNew<FunctionTemplate>(HashSync)->GetFunction());
+	target->Set(NanNew<String>("hashSync"),
+		NanNew<FunctionTemplate>(hashSync)->GetFunction());
 
-	target->Set(NanNew<String>("Hash"),
-		NanNew<FunctionTemplate>(Hash)->GetFunction());
+	target->Set(NanNew<String>("hash"),
+		NanNew<FunctionTemplate>(hash)->GetFunction());
 }
 
 NODE_MODULE(scrypt, RegisterModule)

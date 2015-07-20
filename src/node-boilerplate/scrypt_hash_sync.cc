@@ -15,7 +15,7 @@ using namespace v8;
 //
 // Synchronous Scrypt params
 //
-NAN_METHOD(HashSync) {
+NAN_METHOD(hashSync) {
   NanScope();
 
 	//
