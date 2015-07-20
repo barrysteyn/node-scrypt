@@ -29,11 +29,6 @@
 #include <v8.h>
 
 using namespace v8;
-//#include "src/node-boilerplate/scrypt_kdf.h"
-//#include "src/node-boilerplate/scrypt_hash.h"
-//#include "src/node-boilerplate/scrypt_verify.h"
-//#include "src/node-boilerplate/scrypt_params.h"
-//#include "src/node-boilerplate/scrypt_error.h"
 
 //
 // Forward declarations
@@ -41,13 +36,17 @@ using namespace v8;
 NAN_METHOD(ParamsSync);
 NAN_METHOD(Params);
 NAN_METHOD(KDFSync);
+NAN_METHOD(KDF);
+NAN_METHOD(KDFVerifySync);
+NAN_METHOD(KDFVerify);
+NAN_METHOD(HashSync);
+NAN_METHOD(Hash);
 
 //
-// Module initialisation function
+// Module initialisation
 //
 void RegisterModule(Handle<Object> target) {
 
-	//Params (Translation function)
 	target->Set(NanNew<String>("ParamsSync"),
 		NanNew<FunctionTemplate>(ParamsSync)->GetFunction());
 
@@ -57,23 +56,20 @@ void RegisterModule(Handle<Object> target) {
 	target->Set(NanNew<String>("KDFSync"),
 		NanNew<FunctionTemplate>(KDFSync)->GetFunction());
 
-/*
-	//KDF
 	target->Set(NanNew<String>("KDF"),
-		NanNew<FunctionTemplate>(CreateKeyDerivationFunction)->GetFunction());
+		NanNew<FunctionTemplate>(KDF)->GetFunction());
 
-	//Hash function
-	target->Set(NanNew<String>("Hash"),
-		NanNew<FunctionTemplate>(CreateHashFunction)->GetFunction());
+	target->Set(NanNew<String>("VerifySync"),
+		NanNew<FunctionTemplate>(KDFVerifySync)->GetFunction());
 
-	//Verify hash
 	target->Set(NanNew<String>("Verify"),
-		NanNew<FunctionTemplate>(CreateVerifyFunction)->GetFunction());
+		NanNew<FunctionTemplate>(KDFVerify)->GetFunction());
 
-	//Error Object
-	target->Set(NanNew<String>("errorObject"),
-		NanNew<FunctionTemplate>(MakeErrorObject)->GetFunction());
-*/
+	target->Set(NanNew<String>("HashSync"),
+		NanNew<FunctionTemplate>(HashSync)->GetFunction());
+
+	target->Set(NanNew<String>("Hash"),
+		NanNew<FunctionTemplate>(Hash)->GetFunction());
 }
 
 NODE_MODULE(scrypt, RegisterModule)

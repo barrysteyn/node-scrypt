@@ -37,12 +37,12 @@ Barry Steyn barry.steyn@gmail.com
 // Creates a password hash. This is the actual key derivation function
 //
 int
-KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uint32_t r, uint32_t p) {
+KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* kdf, uint32_t logN, uint32_t r, uint32_t p) {
 	uint64_t N=1;
 	uint8_t dk[64],
-		salt[32],
-		hbuf[32];
-	uint8_t * key_hmac = &dk[32];
+					salt[32],
+					hbuf[32];
+	uint8_t *key_hmac = &dk[32];
 	SHA256_CTX ctx;
 	HMAC_SHA256_CTX hctx;
 	int rc;
@@ -57,24 +57,24 @@ KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uint
 		return (3);
 
 	/* Construct the hash. */
-	memcpy(hash, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
-	hash[6] = 0;
-	hash[7] = logN;
-	be32enc(&hash[8], r);
-	be32enc(&hash[12], p);
-	memcpy(&hash[16], salt, 32);
+	memcpy(kdf, "scrypt", 6); //Sticking with Colin Percival's format of putting scrypt at the beginning
+	kdf[6] = 0;
+	kdf[7] = logN;
+	be32enc(&kdf[8], r);
+	be32enc(&kdf[12], p);
+	memcpy(&kdf[16], salt, 32);
 
 	/* Add hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, hash, 48);
+	scrypt_SHA256_Update(&ctx, kdf, 48);
 	scrypt_SHA256_Final(hbuf, &ctx);
-	memcpy(&hash[48], hbuf, 16);
+	memcpy(&kdf[48], hbuf, 16);
 
 	/* Add hash signature (used for verifying password). */
 	HMAC_SHA256_Init(&hctx, key_hmac, 32);
-	HMAC_SHA256_Update(&hctx, hash, 64);
+	HMAC_SHA256_Update(&hctx, kdf, 64);
 	HMAC_SHA256_Final(hbuf, &hctx);
-	memcpy(&hash[64], hbuf, 32);
+	memcpy(&kdf[64], hbuf, 32);
 
 	return 0; //success
 }
@@ -83,27 +83,27 @@ KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* hash, uint32_t logN, uint
 //  Verifies password hash (also ensures hash integrity at same time)
 //
 int
-Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
+Verify(const uint8_t* kdf, const uint8_t* passwd, size_t passwdSize) {
 	uint64_t N=0;
 	uint32_t r=0, p=0;
 	uint8_t dk[64],
-		salt[32],
-		hbuf[32];
+					salt[32],
+					hbuf[32];
 	uint8_t * key_hmac = &dk[32];
 	HMAC_SHA256_CTX hctx;
 	SHA256_CTX ctx;
 
 	/* Parse N, r, p, salt. */
-	N = (uint64_t)1 << hash[7]; //Remember, hash[7] is actually LogN
-	r = be32dec(&hash[8]);
-	p = be32dec(&hash[12]);
-	memcpy(salt, &hash[16], 32);
+	N = (uint64_t)1 << kdf[7]; //Remember, kdf[7] is actually LogN
+	r = be32dec(&kdf[8]);
+	p = be32dec(&kdf[12]);
+	memcpy(salt, &kdf[16], 32);
 
 	/* Verify hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, hash, 48);
+	scrypt_SHA256_Update(&ctx, kdf, 48);
 	scrypt_SHA256_Final(hbuf, &ctx);
-	if (memcmp(&hash[48], hbuf, 16))
+	if (memcmp(&kdf[48], hbuf, 16))
 		return (7);
 
 	/* Compute Derived Key */
@@ -112,9 +112,9 @@ Verify(const uint8_t* hash, const uint8_t* passwd, size_t passwdSize) {
 
 	/* Check hash signature (i.e., verify password). */
 	HMAC_SHA256_Init(&hctx, key_hmac, 32);
-	HMAC_SHA256_Update(&hctx, hash, 64);
+	HMAC_SHA256_Update(&hctx, kdf, 64);
 	HMAC_SHA256_Final(hbuf, &hctx);
-	if (memcmp(hbuf, &hash[64], 32))
+	if (memcmp(hbuf, &kdf[64], 32))
 		return (11);
 
 	return (0); //Success
