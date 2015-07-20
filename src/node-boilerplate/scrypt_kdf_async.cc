@@ -22,14 +22,14 @@ void ScryptKDFAsyncWorker::HandleOKCallback() {
 
   Local<Value> argv[] = {
     NanNull(),
-    PersistentHandle->Get(NanNew<String>("KDFResult"))
+		GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("KDFResult"))
   };
 
   callback->Call(2, argv);
 }
 
 // Asynchronous access to scrypt params
-NAN_METHOD(KDF) {
+NAN_METHOD(kdf) {
   NanScope();
 
   //

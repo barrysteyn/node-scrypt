@@ -33,7 +33,7 @@ void ScryptParamsAsyncWorker::HandleOKCallback() {
 }
 
 // Asynchronous access to scrypt params
-NAN_METHOD(Params) {
+NAN_METHOD(params) {
   NanScope();
 
 	//

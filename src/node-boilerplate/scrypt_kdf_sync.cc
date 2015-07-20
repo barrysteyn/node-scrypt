@@ -15,7 +15,7 @@ using namespace v8;
 //
 // Synchronous Scrypt params
 //
-NAN_METHOD(KDFSync) {
+NAN_METHOD(kdfSync) {
   NanScope();
 
   //

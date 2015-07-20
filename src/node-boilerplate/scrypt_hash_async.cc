@@ -22,14 +22,14 @@ void ScryptHashAsyncWorker::HandleOKCallback() {
 
 	Local<Value> argv[] = {
     NanNull(),
-		PersistentHandle->Get(NanNew<v8::String>("HashBuffer"))
+		GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("HashBuffer"))
   };
 
   callback->Call(2, argv);
 }
 
 // Asynchronous access to scrypt params
-NAN_METHOD(Hash) {
+NAN_METHOD(hash) {
   NanScope();
 
   //

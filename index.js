@@ -1,11 +1,8 @@
 "use strict";
 
-var ScryptNative = require("./build/Release/scrypt");
-//module.exports = scrypt;
-//var scryptParameters = scrypt.ParamsSync(10, 10240, 0.9);
-//console.log(scryptParameters);
+var scryptNative = require("./build/Release/scrypt");
 
-var CheckNumberOfArguments = function(args, message, numberOfArguments) {
+var checkNumberOfArguments = function(args, message, numberOfArguments) {
 	var err_msg = (message !== undefined) ? message : "No arguments are present";
 
 	if (args.length < numberOfArguments) {
@@ -17,7 +14,7 @@ var CheckNumberOfArguments = function(args, message, numberOfArguments) {
 //
 // Description Here
 //
-var CheckCallbackArgument = function(args, callback_index, needed_position, message) {
+var checkCallbackArgument = function(args, callback_index, needed_position, message) {
 	if (callback_index === undefined) {
 		var message = (args.length)
 			? "No callback function present"
@@ -34,7 +31,7 @@ var CheckCallbackArgument = function(args, callback_index, needed_position, mess
 //
 // Description here
 //
-var CheckScryptParametersObject = function(params) {
+var checkScryptParametersObject = function(params) {
 	var error = undefined;
 
 	if (typeof params !== "object") {
@@ -72,10 +69,10 @@ var CheckScryptParametersObject = function(params) {
 	}
 }
 
-var ProcessParamsSyncArguments = function(args) {
+var processParamsSyncArguments = function(args) {
 	var error = undefined;
 
-	CheckNumberOfArguments(args, "At least one argument is needed - the maxtime", 1);
+	checkNumberOfArguments(args, "At least one argument is needed - the maxtime", 1);
 
 	// Set defaults (if necessary)
 	if (args[1] === undefined) args[1] = 0; //maxmem default to 0
@@ -131,7 +128,7 @@ var ProcessParamsSyncArguments = function(args) {
 	return args;
 }
 
-var ProcessParamsASyncArguments = function(args) {
+var processParamsASyncArguments = function(args) {
 	var error = undefined;
 
 	// find callback
@@ -163,14 +160,14 @@ var ProcessParamsASyncArguments = function(args) {
 	// sync check to be used (DRY)
 	var callback = args[callback_index];
 	delete args[callback_index];
-	var args = ProcessParamsSyncArguments(args);
+	var args = processParamsSyncArguments(args);
 	args[3] = callback;
 
 	return args;
 }
 
-var ProcessKDFSyncArguments = function(args) {
-	CheckNumberOfArguments(args, "At least two arguments are needed - the key and the Scrypt paramaters object", 2)
+var processKDFSyncArguments = function(args) {
+	checkNumberOfArguments(args, "At least two arguments are needed - the key and the Scrypt paramaters object", 2)
 
 	//
 	// Check key argument
@@ -188,12 +185,12 @@ var ProcessKDFSyncArguments = function(args) {
 	//
 	// Check Scrypt Parameters object
 	//
-	CheckScryptParametersObject(args[1])
+	checkScryptParametersObject(args[1])
 
 	return args;
 }
 
-var ProcessKDFASyncArguments = function(args) {
+var processKDFASyncArguments = function(args) {
 	//
 	// Check callback function
 	//
@@ -204,16 +201,16 @@ var ProcessKDFASyncArguments = function(args) {
 			}
 		}
 	})();
-	CheckCallbackArgument(args, callback_index, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object");
+	checkCallbackArgument(args, callback_index, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object");
 
 	//
 	// Check other arguments (with sync version)
 	//
-	return ProcessKDFSyncArguments(args);
+	return processKDFSyncArguments(args);
 }
 
-var ProcessVerifySyncArguments = function(args) {
-	CheckNumberOfArguments(args, "At least two arguments are needed - the KDF and the key", 2);
+var processVerifySyncArguments = function(args) {
+	checkNumberOfArguments(args, "At least two arguments are needed - the KDF and the key", 2);
 
 	//
 	// Check KDF
@@ -244,7 +241,7 @@ var ProcessVerifySyncArguments = function(args) {
 	return args;
 }
 
-var ProcessVerifyASyncArguments = function(args) {
+var processVerifyASyncArguments = function(args) {
 	//
 	// Check callback function
 	//
@@ -255,16 +252,16 @@ var ProcessVerifyASyncArguments = function(args) {
 			}
 		}
 	})();
-	CheckCallbackArgument(args, callback_index, 2, "At least two arguments are needed before the callback function - the KDF and the key");
+	checkCallbackArgument(args, callback_index, 2, "At least two arguments are needed before the callback function - the KDF and the key");
 
 	//
 	// Check other arguments (with sync version)
 	//
-	return ProcessVerifySyncArguments(args);
+	return processVerifySyncArguments(args);
 }
 
-var ProcessHashSyncArguments = function(args) {
-	CheckNumberOfArguments(args, "At least four arguments are needed - the key to hash, the scrypt params object, the output length of the hash and the salt", 4);
+var processHashSyncArguments = function(args) {
+	checkNumberOfArguments(args, "At least four arguments are needed - the key to hash, the scrypt params object, the output length of the hash and the salt", 4);
 
 	//
 	// Check Key
@@ -282,7 +279,7 @@ var ProcessHashSyncArguments = function(args) {
 	//
 	// Check Scrypt Parameters object
 	//
-	CheckScryptParametersObject(args[1])
+	checkScryptParametersObject(args[1])
 
 	//
 	// Check the hash output length
@@ -308,7 +305,7 @@ var ProcessHashSyncArguments = function(args) {
 	return args;
 }
 
-var ProcessHashASyncArguments = function(args) {
+var processHashASyncArguments = function(args) {
 	//
 	// Check callback function
 	//
@@ -319,59 +316,57 @@ var ProcessHashASyncArguments = function(args) {
 			}
 		}
 	})();
-	CheckCallbackArgument(args, callback_index, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
+	checkCallbackArgument(args, callback_index, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
 
 	//
 	// Check other arguments (with sync version)
 	//
-	return ProcessHashSyncArguments(args);
+	return processHashSyncArguments(args);
 }
 
 //
 // Scrypt Object
 //
-var Scrypt = {
-	ParamsSync: function() {
-		var args = ProcessParamsSyncArguments(arguments);
-		return ScryptNative.ParamsSync(args[0], args[1], args[2]);
+var scrypt = {
+	paramsSync: function() {
+		var args = processParamsSyncArguments(arguments);
+		return scryptNative.paramsSync(args[0], args[1], args[2]);
 	},
 
-	Params: function() {
-		var args = ProcessParamsASyncArguments(arguments);
-		ScryptNative.Params(args[0], args[1], args[2], args[3]);
+	params: function() {
+		var args = processParamsASyncArguments(arguments);
+		scryptNative.params(args[0], args[1], args[2], args[3]);
 	},
 
-	KDFSync: function() {
-		var args = ProcessKDFSyncArguments(arguments);
-		return ScryptNative.KDFSync(args[0], args[1]);
+	kdfSync: function() {
+		var args = processKDFSyncArguments(arguments);
+		return scryptNative.kdfSync(args[0], args[1]);
 	},
 
-	KDF: function() {
-		var args = ProcessKDFASyncArguments(arguments);
-		ScryptNative.KDF(args[0], args[1], args[2]);
+	kdf: function() {
+		var args = processKDFASyncArguments(arguments);
+		scryptNative.kdf(args[0], args[1], args[2]);
 	},
 
-	VerifySync: function() {
-		var args = ProcessVerifySyncArguments(arguments);
-		return ScryptNative.VerifySync(args[0], args[1]);
+	verifySync: function() {
+		var args = processVerifySyncArguments(arguments);
+		return scryptNative.verifySync(args[0], args[1]);
 	},
 
-	Verify: function() {
-		var args = ProcessVerifyASyncArguments(arguments);
-		ScryptNative.Verify(args[0], args[1], args[2]);
+	verify: function() {
+		var args = processVerifyASyncArguments(arguments);
+		scryptNative.verify(args[0], args[1], args[2]);
 	},
 
-	HashSync: function() {
-		var args = ProcessHashSyncArguments(arguments);
-		return ScryptNative.HashSync(args[0], args[1], args[2], args[3]);
+	hashSync: function() {
+		var args = processHashSyncArguments(arguments);
+		return scryptNative.hashSync(args[0], args[1], args[2], args[3]);
 	},
 
-	Hash: function() {
-		var args = ProcessHashASyncArguments(arguments);
-		ScryptNative.Hash(args[0], args[1], args[2], args[3], args[4]);
+	hash: function() {
+		var args = processHashASyncArguments(arguments);
+		scryptNative.hash(args[0], args[1], args[2], args[3], args[4]);
 	}
 };
 
-//Scrypt.KDF();
-
-module.exports = Scrypt;
+module.exports = scrypt;
