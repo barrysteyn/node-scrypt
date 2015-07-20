@@ -120,6 +120,7 @@
       'src/scryptwrapper/hash.c'
     ],
     'include_dirs': [
+      'src/scryptwrapper/inc',
       'scrypt/scrypt-1.1.6/lib/util',
       'scrypt/scrypt-1.1.6/lib/crypto',
       'scrypt/scrypt-1.1.6/lib/scryptenc',
@@ -138,21 +139,22 @@
   {
     'target_name': 'scrypt',
     'sources': [
-      'src/node-boilerplate/common.cc',
-      'scrypt_node.cc',
-      #'src/node-boilerplate/common.cc',
-      #'src/node-boilerplate/scrypt_error.cc',
-      #'src/node-boilerplate/scrypt_config_object.cc',
+      'src/node-boilerplate/scrypt_common.cc',
       'src/node-boilerplate/scrypt_params_async.cc',
       'src/node-boilerplate/scrypt_params_sync.cc',
+      'src/node-boilerplate/scrypt_kdf_async.cc',
       'src/node-boilerplate/scrypt_kdf_sync.cc',
-      #'src/node-boilerplate/scrypt_hash.cc',
-      #'src/node-boilerplate/scrypt_verify.cc',
+      'src/node-boilerplate/scrypt_kdf-verify_sync.cc',
+      'src/node-boilerplate/scrypt_kdf-verify_async.cc',
+      'src/node-boilerplate/scrypt_hash_sync.cc',
+      'src/node-boilerplate/scrypt_hash_async.cc',
+      'scrypt_node.cc'
     ],
     'include_dirs': [
       'node_modules/nan',
       'src/util',
-      'src/scryptwrapper',
+      'src/scryptwrapper/inc',
+      'src/node-boilerplate/inc'
     ],
     'cflags': ['<@(compiler-flags)'],
     'conditions': [

@@ -1,7 +1,7 @@
 #ifndef _SCRYPTASYNC_H_
 #define _SCRYPTASYNC_H_
 
-#include "common.h"
+#include "scrypt_common.h"
 
 //
 // Scrypt Async Worker

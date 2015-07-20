@@ -1,3 +1,6 @@
+#include <nan.h>
+#include <node.h>
+
 #include "scrypt_params_async.h"
 
 //Scrypt is a C library and there needs c linkings
@@ -33,15 +36,11 @@ void ScryptParamsAsyncWorker::HandleOKCallback() {
 NAN_METHOD(Params) {
   NanScope();
 
+	//
+  // Create Scrypt Async Worker
   //
-  // Arguments From JavaScript
-  //
-  double maxtime = args[0]->NumberValue();
-  double maxmemfrac = args[1]->NumberValue();
-  size_t maxmem = args[2]->Uint32Value();
   NanCallback *callback = new NanCallback(args[3].As<Function>());
+  NanAsyncQueueWorker(new ScryptParamsAsyncWorker(callback, args));
 
-  // Call Async Worker
-  NanAsyncQueueWorker(new ScryptParamsAsyncWorker(callback, maxtime, maxmemfrac, maxmem));
   NanReturnUndefined();
 }
