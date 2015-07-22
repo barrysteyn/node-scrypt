@@ -93,6 +93,23 @@ describe("Scrypt Params", function() {
   });
 
   describe("Asynchronous functionality with incorrect arguments", function() {
+    var promise = undefined;
+
+    // Disables promises for async test (if promises are available)
+    before(function() {
+      if (typeof Promise !== "undefined") {
+        promise = Promise;
+        Promise = undefined;
+      }
+    });
+
+    // Restores promises
+    after(function() {
+      if (typeof Promise === "undefined" && promise) {
+        Promise = promise;
+      }
+    });
+
     it("Will throw SyntexError exception if called without arguments", function () {
      expect(scrypt.params)
 	     .to.throw(SyntaxError)
@@ -102,7 +119,7 @@ describe("Scrypt Params", function() {
     it("Will throw a SyntaxError if no callback function is present", function() {
       expect(function() {scrypt.params(1);})
         .to.throw(SyntaxError)
-        .to.match(/^SyntaxError: No callback function present$/);
+        .to.match(/^SyntaxError: No callback function present, and Promises are not available$/);
     })
 
     it("Will throw a SyntaxError if callback function is the first argument present", function() {
