@@ -23,7 +23,7 @@ NAN_METHOD(hashSync) {
   //
 	const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0]));
   const size_t key_size = node::Buffer::Length(args[0]);
-	const Scrypt::Params params = args[1]->ToObject();
+	const NodeScrypt::Params params = args[1]->ToObject();
 	const size_t hash_size = args[2]->Uint32Value();
 	const uint8_t* salt_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[3]));
 	const size_t salt_size = node::Buffer::Length(args[3]);
@@ -43,7 +43,7 @@ NAN_METHOD(hashSync) {
   // Error handling
   //
 	if (result) {
-		NanThrowError(Scrypt::ScryptError(result));
+		NanThrowError(NodeScrypt::ScryptError(result));
   }
 
 	NanReturnValue(hash_result);

@@ -36,11 +36,10 @@ void ScryptParamsAsyncWorker::HandleOKCallback() {
 NAN_METHOD(params) {
   NanScope();
 
-	//
+  //
   // Create Scrypt Async Worker
   //
-  NanCallback *callback = new NanCallback(args[3].As<Function>());
-  NanAsyncQueueWorker(new ScryptParamsAsyncWorker(callback, args));
+  NanAsyncQueueWorker(new ScryptParamsAsyncWorker(args));
 
   NanReturnUndefined();
 }

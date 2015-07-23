@@ -28,7 +28,7 @@ NAN_METHOD(kdfSync) {
   //
 	const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0])); //assume args[0] is a buffer
   const size_t keySize = node::Buffer::Length(args[0]);
-	const Scrypt::Params params = args[1]->ToObject();
+	const NodeScrypt::Params params = args[1]->ToObject();
 
 	//
   // Scrypt key derivation function
@@ -39,7 +39,7 @@ NAN_METHOD(kdfSync) {
   // Error handling
   //
 	if (result) {
-		NanThrowError(Scrypt::ScryptError(result));
+		NanThrowError(NodeScrypt::ScryptError(result));
   }
 
 	NanReturnValue(kdfResult);
