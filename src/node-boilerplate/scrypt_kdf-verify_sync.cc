@@ -30,7 +30,7 @@ NAN_METHOD(kdfVerifySync) {
   // Return result (or error)
   //
 	if (result && result != 11) { // 11 is the "error" code for an incorrect match
-		NanThrowError(Scrypt::ScryptError(result));
+		NanThrowError(NodeScrypt::ScryptError(result));
   }
 
 	NanReturnValue((!result) ? NanTrue() : NanFalse());

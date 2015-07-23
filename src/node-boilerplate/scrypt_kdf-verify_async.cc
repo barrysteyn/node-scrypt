@@ -13,7 +13,7 @@ using namespace v8;
 void ScryptKDFVerifyAsyncWorker::Execute() {
   //
   // Scrypt KDF Verification function
-	//
+  //
   result = Verify(kdf_ptr, key_ptr, key_size);
   match = (result == 0);
   result = (result == 11) ? 0 : result; // Set result to 0 if 11 so error not thrown
@@ -22,23 +22,21 @@ void ScryptKDFVerifyAsyncWorker::Execute() {
 void ScryptKDFVerifyAsyncWorker::HandleOKCallback() {
   NanScope();
 
-	Local<Value> argv[] = {
+  Local<Value> argv[] = {
     NanNull(),
-		(match) ? NanTrue() : NanFalse()
+    (match) ? NanTrue() : NanFalse()
   };
 
   callback->Call(2, argv);
 }
 
-// Asynchronous access to scrypt params
 NAN_METHOD(kdfVerify) {
   NanScope();
 
   //
   // Create Scrypt Async Worker
   //
-  NanCallback *callback = new NanCallback(args[2].As<Function>());
-  NanAsyncQueueWorker(new ScryptKDFVerifyAsyncWorker(callback, args));
+  NanAsyncQueueWorker(new ScryptKDFVerifyAsyncWorker(args));
 
   NanReturnUndefined();
 }

@@ -13,7 +13,8 @@ var checkNumberOfArguments = function(args, message, numberOfArguments) {
 }
 
 //
-// Description Here
+// Checks async arguments. Will throw error if callback does not exist and
+// promises are not available
 //
 var checkAsyncArguments = function(args, callback_least_needed_pos, message) {
 	checkNumberOfArguments(args);
@@ -358,12 +359,12 @@ var scrypt = {
 		}
 	},
 
-	kdfVerifySync: function() {
+	verifyKdfSync: function() {
 		var args = processVerifySyncArguments(arguments);
 		return scryptNative.verifySync(args[0], args[1]);
 	},
 
-	kdfVerify: function() {
+	verifyKdf: function() {
 		var args = processVerifyASyncArguments(arguments);
 
 		if (typeof args[2] !== "function") {
