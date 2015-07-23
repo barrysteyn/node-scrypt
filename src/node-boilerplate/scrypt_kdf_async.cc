@@ -13,7 +13,7 @@ using namespace v8;
 void ScryptKDFAsyncWorker::Execute() {
   //
   // Scrypt key derivation function
-	//
+  //
   result = KDF(key_ptr, key_size, KDFResult_ptr, params.N, params.r, params.p);
 }
 
@@ -22,7 +22,7 @@ void ScryptKDFAsyncWorker::HandleOKCallback() {
 
   Local<Value> argv[] = {
     NanNull(),
-		GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("KDFResult"))
+    GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("KDFResult"))
   };
 
   callback->Call(2, argv);
@@ -35,8 +35,7 @@ NAN_METHOD(kdf) {
   //
   // Create Scrypt Async Worker
   //
-  NanCallback *callback = new NanCallback(args[2].As<Function>());
-  NanAsyncQueueWorker(new ScryptKDFAsyncWorker(callback, args));
+  NanAsyncQueueWorker(new ScryptKDFAsyncWorker(args));
 
   NanReturnUndefined();
 }

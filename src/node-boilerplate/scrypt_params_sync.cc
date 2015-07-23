@@ -37,7 +37,7 @@ NAN_METHOD(paramsSync) {
   // Error handling
   //
 	if (result) {
-		NanThrowError(Scrypt::ScryptError(result));
+		NanThrowError(NodeScrypt::ScryptError(result));
   }
 
 	//
