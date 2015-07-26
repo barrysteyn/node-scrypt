@@ -44,7 +44,7 @@ var checkAsyncArguments = function(args, callback_least_needed_pos, message) {
 }
 
 //
-// Description here
+// Checks the scrypt parameters object
 //
 var checkScryptParametersObject = function(params) {
 	var error = undefined;
@@ -84,7 +84,7 @@ var checkScryptParametersObject = function(params) {
 	}
 }
 
-var processParamsSyncArguments = function(args) {
+var processParamsArguments = function(args) {
 	var error = undefined;
 
 	checkNumberOfArguments(args, "At least one argument is needed - the maxtime", 1);
@@ -143,32 +143,7 @@ var processParamsSyncArguments = function(args) {
 	return args;
 }
 
-var processParamsASyncArguments = function(args) {
-	//
-	// Check async specific arguments
-	//
-	var callback = undefined;
-	var callback_index = checkAsyncArguments(args, 1, "At least one argument is needed before the callback - the maxtime");
-
-	// If not using promise (so using callback),
-	// remove callback function from args and
-	// put it in it's own variable. This allows
-	// sync check to be used (DRY)
-	if (callback_index) {
-		callback = args[callback_index];
-		delete args[callback_index];
-	}
-
-	var args = processParamsSyncArguments(args);
-
-	if (callback) {
-		args[3] = callback;
-	}
-
-	return args;
-}
-
-var processKDFSyncArguments = function(args) {
+var processKDFArguments = function(args) {
 	checkNumberOfArguments(args, "At least two arguments are needed - the key and the Scrypt paramaters object", 2)
 
 	//
@@ -192,19 +167,7 @@ var processKDFSyncArguments = function(args) {
 	return args;
 }
 
-var processKDFASyncArguments = function(args) {
-	//
-	// Check async specific arguments
-	//
-	checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object");
-
-	//
-	// Check other arguments (with sync version)
-	//
-	return processKDFSyncArguments(args);
-}
-
-var processVerifySyncArguments = function(args) {
+var processVerifyArguments = function(args) {
 	checkNumberOfArguments(args, "At least two arguments are needed - the KDF and the key", 2);
 
 	//
@@ -236,19 +199,7 @@ var processVerifySyncArguments = function(args) {
 	return args;
 }
 
-var processVerifyASyncArguments = function(args) {
-	//
-	// Check async specific arguments
-	//
-	checkAsyncArguments(args, 2, "At least two arguments are needed before the callback function - the KDF and the key");
-
-	//
-	// Check other arguments (with sync version)
-	//
-	return processVerifySyncArguments(args);
-}
-
-var processHashSyncArguments = function(args) {
+var processHashArguments = function(args) {
 	checkNumberOfArguments(args, "At least four arguments are needed - the key to hash, the scrypt params object, the output length of the hash and the salt", 4);
 
 	//
@@ -293,33 +244,23 @@ var processHashSyncArguments = function(args) {
 	return args;
 }
 
-var processHashASyncArguments = function(args) {
-	//
-	// Check async specific arguments
-	//
-	checkAsyncArguments(args, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
-
-	//
-	// Check other arguments (with sync version)
-	//
-	return processHashSyncArguments(args);
-}
-
 //
 // Scrypt Object
 //
 var scrypt = {
 	paramsSync: function() {
-		var args = processParamsSyncArguments(arguments);
+		var args = processParamsArguments(arguments);
 		return scryptNative.paramsSync(args[0], args[1], args[2]);
 	},
 
 	params: function() {
-		var args = processParamsASyncArguments(arguments);
+		var args = arguments
+			, callback_index = checkAsyncArguments(args, 1, "At least one argument is needed before the callback - the maxtime");
 
-		if (typeof args[3] !== "function") {
+		if (callback_index === undefined) {
 			// Promise
 			return new Promise(function(resolve, reject) {
+				args = processParamsArguments(args);
 				scryptNative.params(args[0], args[1], args[2], function(err, params) {
 					if (err) {
 						reject(err);
@@ -330,21 +271,32 @@ var scrypt = {
 			})
 		} else {
 			// Normal async with callback
+
+			// If not using promise (so using callback),
+			// remove callback function from args and
+			// put it in it's own variable. This allows
+			// sync check to be used (DRY)
+			var callback = args[callback_index];
+			delete args[callback_index];
+			args = processParamsArguments(args);
+			args[3] = callback;
 			scryptNative.params(args[0], args[1], args[2], args[3]);
 		}
 	},
 
 	kdfSync: function() {
-		var args = processKDFSyncArguments(arguments);
+		var args = processKDFArguments(arguments);
 		return scryptNative.kdfSync(args[0], args[1]);
 	},
 
 	kdf: function() {
-		var args = processKDFASyncArguments(arguments);
+		var args = arguments
+			, callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object");
 
-		if (typeof args[2] !== "function") {
+		if (callback_index === undefined) {
 			// Promise
 			return new Promise(function(resolve, reject) {
+				args = processKDFArguments(args);
 				scryptNative.kdf(args[0], args[1], function(err, kdfResult) {
 					if (err) {
 						reject(err);
@@ -355,21 +307,24 @@ var scrypt = {
 			});
 		} else {
 			// Normal async with callback
+			args = processKDFArguments(arguments);
 			scryptNative.kdf(args[0], args[1], args[2]);
 		}
 	},
 
 	verifyKdfSync: function() {
-		var args = processVerifySyncArguments(arguments);
+		var args = processVerifyArguments(arguments);
 		return scryptNative.verifySync(args[0], args[1]);
 	},
 
 	verifyKdf: function() {
-		var args = processVerifyASyncArguments(arguments);
+		var args = arguments
+			, callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the callback function - the KDF and the key");
 
-		if (typeof args[2] !== "function") {
+		if (callback_index === undefined) {
 			// Promise
 			return new Promise(function(resolve, reject) {
+				args = processVerifyArguments(args);
 				scryptNative.verify(args[0], args[1], function(err, match) {
 					if (err) {
 						reject(err);
@@ -380,21 +335,24 @@ var scrypt = {
 			})
 		} else {
 			// Normal async with callback
+			args = processVerifyArguments(args);
 			scryptNative.verify(args[0], args[1], args[2]);
 		}
 	},
 
 	hashSync: function() {
-		var args = processHashSyncArguments(arguments);
+		var args = processHashArguments(arguments);
 		return scryptNative.hashSync(args[0], args[1], args[2], args[3]);
 	},
 
 	hash: function() {
-		var args = processHashASyncArguments(arguments);
+		var args = arguments
+			, callback_index = checkAsyncArguments(args, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
 
-		if (typeof args[4] !== "function") {
+		if (callback_index === undefined) {
 			//Promise
 			return new Promise(function(resolve, reject) {
+				args = processHashArguments(arguments);
 				scryptNative.hash(args[0], args[1], args[2], args[3], function(err, hash) {
 					if (err) {
 						reject(err);
@@ -405,6 +363,7 @@ var scrypt = {
 			});
 		} else {
 			// Normal async with callback
+			args = processHashArguments(arguments);
 			scryptNative.hash(args[0], args[1], args[2], args[3], args[4]);
 		}
 	}
