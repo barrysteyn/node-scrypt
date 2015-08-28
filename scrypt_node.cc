@@ -30,6 +30,10 @@
 
 using namespace v8;
 
+using Nan::GetFunction;
+using Nan::New;
+using Nan::Set;
+
 //
 // Forward declarations
 //
@@ -45,31 +49,31 @@ NAN_METHOD(hash);
 //
 // Module initialisation
 //
-void RegisterModule(Handle<Object> target) {
+NAN_MODULE_INIT(InitAll) {
 
-	target->Set(NanNew<String>("paramsSync"),
-		NanNew<FunctionTemplate>(paramsSync)->GetFunction());
+	Set(target, Nan::New<String>("paramsSync").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(paramsSync)).ToLocalChecked());
 
-	target->Set(NanNew<String>("params"),
-		NanNew<FunctionTemplate>(params)->GetFunction());
+	Set(target, Nan::New<String>("params").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(params)).ToLocalChecked());
 
-	target->Set(NanNew<String>("kdfSync"),
-		NanNew<FunctionTemplate>(kdfSync)->GetFunction());
+	Set(target, Nan::New<String>("kdfSync").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(kdfSync)).ToLocalChecked());
 
-	target->Set(NanNew<String>("kdf"),
-		NanNew<FunctionTemplate>(kdf)->GetFunction());
+	Set(target, Nan::New<String>("kdf").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(kdf)).ToLocalChecked());
 
-	target->Set(NanNew<String>("verifySync"),
-		NanNew<FunctionTemplate>(kdfVerifySync)->GetFunction());
+	Set(target, Nan::New<String>("verifySync").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(kdfVerifySync)).ToLocalChecked());
 
-	target->Set(NanNew<String>("verify"),
-		NanNew<FunctionTemplate>(kdfVerify)->GetFunction());
+	Set(target, Nan::New<String>("verify").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(kdfVerify)).ToLocalChecked());
 
-	target->Set(NanNew<String>("hashSync"),
-		NanNew<FunctionTemplate>(hashSync)->GetFunction());
+	Set(target, Nan::New<String>("hashSync").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(hashSync)).ToLocalChecked());
 
-	target->Set(NanNew<String>("hash"),
-		NanNew<FunctionTemplate>(hash)->GetFunction());
+	Set(target, Nan::New<String>("hash").ToLocalChecked(),
+		GetFunction(Nan::New<FunctionTemplate>(hash)).ToLocalChecked());
 }
 
-NODE_MODULE(scrypt, RegisterModule)
+NODE_MODULE(scrypt, InitAll)

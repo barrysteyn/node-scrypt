@@ -20,23 +20,16 @@ void ScryptKDFVerifyAsyncWorker::Execute() {
 }
 
 void ScryptKDFVerifyAsyncWorker::HandleOKCallback() {
-  NanScope();
+  Nan::HandleScope scope;
 
   Local<Value> argv[] = {
-    NanNull(),
-    (match) ? NanTrue() : NanFalse()
+    Nan::Null(),
+    (match) ? Nan::True() : Nan::False()
   };
 
   callback->Call(2, argv);
 }
 
 NAN_METHOD(kdfVerify) {
-  NanScope();
-
-  //
-  // Create Scrypt Async Worker
-  //
-  NanAsyncQueueWorker(new ScryptKDFVerifyAsyncWorker(args));
-
-  NanReturnUndefined();
+  Nan::AsyncQueueWorker(new ScryptKDFVerifyAsyncWorker(info));
 }

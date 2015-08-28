@@ -16,19 +16,17 @@ using namespace v8;
 // Synchronous Scrypt params
 //
 NAN_METHOD(kdfSync) {
-  NanScope();
-
   //
 	// Variable Declaration
 	//
-	Local<Value> kdfResult = NanNewBufferHandle(96);
+	Local<Value> kdfResult = Nan::NewBuffer(96).ToLocalChecked();
 
 	//
   // Arguments from JavaScript
   //
-	const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0])); //assume args[0] is a buffer
-  const size_t keySize = node::Buffer::Length(args[0]);
-	const NodeScrypt::Params params = args[1]->ToObject();
+	const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0])); //assume info[0] is a buffer (checked in JS land)
+  const size_t keySize = node::Buffer::Length(info[0]);
+	const NodeScrypt::Params params = info[1]->ToObject();
 
 	//
   // Scrypt key derivation function
@@ -39,8 +37,8 @@ NAN_METHOD(kdfSync) {
   // Error handling
   //
 	if (result) {
-		NanThrowError(NodeScrypt::ScryptError(result));
+		Nan::ThrowError(NodeScrypt::ScryptError(result));
   }
 
-	NanReturnValue(kdfResult);
+	info.GetReturnValue().Set(kdfResult);
 }

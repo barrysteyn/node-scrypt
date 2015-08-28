@@ -25,9 +25,6 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _SCRYPTCOMMON_H_
 #define _SCRYPTCOMMON_H_
 
-#include <nan.h>
-#include <node.h>
-
 namespace NodeScrypt {
 
 	//
@@ -38,10 +35,10 @@ namespace NodeScrypt {
 		const uint32_t r;
 		const uint32_t p;
 
-		Params(const v8::Local<v8::Object> &lval) :
-			N(lval->Get(NanNew<v8::String>("N"))->Uint32Value()),
-			r(lval->Get(NanNew<v8::String>("r"))->Uint32Value()),
-			p(lval->Get(NanNew<v8::String>("p"))->Uint32Value()) {}
+		Params(const v8::Local<v8::Object> &obj) :
+			N(obj->Get(Nan::New("N").ToLocalChecked())->Uint32Value()),
+			r(obj->Get(Nan::New("r").ToLocalChecked())->Uint32Value()),
+			p(obj->Get(Nan::New("p").ToLocalChecked())->Uint32Value()) {}
 	};
 
 	//

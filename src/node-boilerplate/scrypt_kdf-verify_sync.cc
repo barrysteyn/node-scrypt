@@ -12,14 +12,12 @@ using namespace v8;
 
 //Synchronous access to scrypt params
 NAN_METHOD(kdfVerifySync) {
-  NanScope();
-
-  //
+	//
 	// Variable Declaration
 	//
-  const uint8_t* kdf_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0]));
-  const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(args[1]));
-  const size_t key_size = node::Buffer::Length(args[1]);
+  const uint8_t* kdf_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]));
+  const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[1]));
+  const size_t key_size = node::Buffer::Length(info[1]);
 
 	//
   // Scrypt KDF Verification
@@ -30,8 +28,8 @@ NAN_METHOD(kdfVerifySync) {
   // Return result (or error)
   //
 	if (result && result != 11) { // 11 is the "error" code for an incorrect match
-		NanThrowError(NodeScrypt::ScryptError(result));
+		Nan::ThrowError(NodeScrypt::ScryptError(result));
   }
 
-	NanReturnValue((!result) ? NanTrue() : NanFalse());
+	info.GetReturnValue().Set((!result) ? Nan::True() : Nan::False());
 }
