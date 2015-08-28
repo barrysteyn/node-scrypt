@@ -42,11 +42,11 @@ void ScryptHashAsyncWorker::Execute() {
 }
 
 void ScryptHashAsyncWorker::HandleOKCallback() {
-  NanScope();
+  Nan::HandleScope scope;
 
 	Local<Value> argv[] = {
-    NanNull(),
-		GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("HashBuffer"))
+    Nan::Null(),
+		GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("HashBuffer").ToLocalChecked())
   };
 
   callback->Call(2, argv);
@@ -56,12 +56,5 @@ void ScryptHashAsyncWorker::HandleOKCallback() {
 // Asynchronous Scrypt Params
 //
 NAN_METHOD(hash) {
-  NanScope();
-	
-  //
-  // Scrypt Async Worker
-  //
-  NanAsyncQueueWorker(new ScryptHashAsyncWorker(args));
-
-  NanReturnUndefined();
+  Nan::AsyncQueueWorker(new ScryptHashAsyncWorker(info));
 }

@@ -16,16 +16,16 @@ void ScryptParamsAsyncWorker::Execute() {
 }
 
 void ScryptParamsAsyncWorker::HandleOKCallback() {
-  NanScope();
+  Nan::HandleScope scope;
 
   // Returned params in JSON object
-  Local <Object> obj = NanNew<Object>();
-  obj->Set(NanNew<String>("N"), NanNew<Integer>(logN));
-	obj->Set(NanNew<String>("r"), NanNew<Integer>(r));
-	obj->Set(NanNew<String>("p"), NanNew<Integer>(p));
+  Local <Object> obj = Nan::New<Object>();
+  obj->Set(Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
+	obj->Set(Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
+	obj->Set(Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
 
   Local<Value> argv[] = {
-    NanNull(),
+    Nan::Null(),
     obj
   };
 
@@ -34,12 +34,5 @@ void ScryptParamsAsyncWorker::HandleOKCallback() {
 
 // Asynchronous access to scrypt params
 NAN_METHOD(params) {
-  NanScope();
-
-  //
-  // Create Scrypt Async Worker
-  //
-  NanAsyncQueueWorker(new ScryptParamsAsyncWorker(args));
-
-  NanReturnUndefined();
+  Nan::AsyncQueueWorker(new ScryptParamsAsyncWorker(info));
 }

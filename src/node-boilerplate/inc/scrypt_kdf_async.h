@@ -29,17 +29,18 @@ Barry Steyn barry.steyn@gmail.com
 
 class ScryptKDFAsyncWorker : public ScryptAsyncWorker {
   public:
-    ScryptKDFAsyncWorker(_NAN_METHOD_ARGS) :
-      ScryptAsyncWorker(new NanCallback(args[2].As<v8::Function>())),
+    ScryptKDFAsyncWorker(Nan::NAN_METHOD_ARGS_TYPE args) :
+      ScryptAsyncWorker(new Nan::Callback(args[2].As<v8::Function>())),
       key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0]))),
       key_size(node::Buffer::Length(args[0])),
       params(args[1]->ToObject())
     {
-      ScryptPeristentObject = NanNew<v8::Object>();
-      ScryptPeristentObject->Set(NanNew<v8::String>("keyBuffer"), args[0]);
-      ScryptPeristentObject->Set(NanNew<v8::String>("KDFResult"), NanNewBufferHandle(96));
+      ScryptPeristentObject = Nan::New<v8::Object>();
+      ScryptPeristentObject->Set(Nan::New("keyBuffer").ToLocalChecked(), args[0]);
+      ScryptPeristentObject->Set(Nan::New("KDFResult").ToLocalChecked(), Nan::NewBuffer(96).ToLocalChecked());
       SaveToPersistent("ScryptPeristentObject", ScryptPeristentObject);
-      KDFResult_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(ScryptPeristentObject->Get(NanNew<v8::String>("KDFResult"))));
+
+      KDFResult_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(ScryptPeristentObject->Get(Nan::New("KDFResult").ToLocalChecked())));
     };
 
     void Execute();

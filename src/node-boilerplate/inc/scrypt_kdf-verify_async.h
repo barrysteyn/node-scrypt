@@ -29,16 +29,16 @@ Barry Steyn barry.steyn@gmail.com
 
 class ScryptKDFVerifyAsyncWorker : public ScryptAsyncWorker {
   public:
-    ScryptKDFVerifyAsyncWorker(_NAN_METHOD_ARGS) :
-      ScryptAsyncWorker(new NanCallback(args[2].As<v8::Function>())),
-      kdf_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0]))),
-      key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[1]))),
-      key_size(node::Buffer::Length(args[1])),
+    ScryptKDFVerifyAsyncWorker(Nan::NAN_METHOD_ARGS_TYPE info) :
+      ScryptAsyncWorker(new Nan::Callback(info[2].As<v8::Function>())),
+      kdf_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]))),
+      key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[1]))),
+      key_size(node::Buffer::Length(info[1])),
       match(false)
     {
-      ScryptPeristentObject = NanNew<v8::Object>();
-      ScryptPeristentObject->Set(NanNew<v8::String>("KDFBuffer"), args[0]);
-      ScryptPeristentObject->Set(NanNew<v8::String>("KeyBuffer"), args[1]);
+      ScryptPeristentObject = Nan::New<v8::Object>();
+      ScryptPeristentObject->Set(Nan::New("KDFBuffer").ToLocalChecked(), info[0]);
+      ScryptPeristentObject->Set(Nan::New("KeyBuffer").ToLocalChecked(), info[1]);
       SaveToPersistent("ScryptPeristentObject", ScryptPeristentObject);
     };
 
