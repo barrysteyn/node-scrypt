@@ -12,8 +12,6 @@ using namespace v8;
 
 //Synchronous access to scrypt params
 NAN_METHOD(paramsSync) {
-  NanScope();
-
 	//
   // Variable Declaration
 	//
@@ -24,9 +22,9 @@ NAN_METHOD(paramsSync) {
 	//
   // Arguments from JavaScript
   //
-	const double maxtime = args[0]->NumberValue();
-  const size_t maxmem = args[2]->Uint32Value();
-  const double maxmemfrac = args[1]->NumberValue();
+	const double maxtime = info[0]->NumberValue();
+  const size_t maxmem = info[2]->Uint32Value();
+  const double maxmemfrac = info[1]->NumberValue();
 
 	//
   // Scrypt: calculate input parameters
@@ -37,16 +35,16 @@ NAN_METHOD(paramsSync) {
   // Error handling
   //
 	if (result) {
-		NanThrowError(NodeScrypt::ScryptError(result));
+		Nan::ThrowError(NodeScrypt::ScryptError(result));
   }
 
 	//
   // Return values in JSON object
   //
-	Local <Object> obj = NanNew<Object>();
-  obj->Set(NanNew<String>("N"), NanNew<Integer>(logN));
-	obj->Set(NanNew<String>("r"), NanNew<Integer>(r));
-	obj->Set(NanNew<String>("p"), NanNew<Integer>(p));
+	Local <Object> obj = Nan::New<Object>();
+  obj->Set(Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
+	obj->Set(Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
+	obj->Set(Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
 
-  NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }

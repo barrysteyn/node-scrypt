@@ -73,10 +73,8 @@ namespace NodeScrypt {
 	// Creates a Scrypt specific JavaScript Error object
 	//
 	v8::Local<v8::Value> ScryptError(const int error) {
-		NanEscapableScope();
-		v8::Local<v8::Value> err = NanError(ScryptErrorDescr(error), error);
-		v8::Local<v8::Object> obj = err.As<v8::Object>();
-		obj->Set(NanNew<v8::String>("name"), NanNew<v8::String>("ScryptError"));
-		return NanEscapeScope(err);
+		Nan::EscapableHandleScope scope;
+		v8::Local<v8::Value> scryptError = Nan::Error(ScryptErrorDescr(error));
+		return scope.Escape(scryptError);
 	}
 } //end Scrypt namespace

@@ -18,11 +18,11 @@ void ScryptKDFAsyncWorker::Execute() {
 }
 
 void ScryptKDFAsyncWorker::HandleOKCallback() {
-  NanScope();
+  Nan::HandleScope scope;
 
   Local<Value> argv[] = {
-    NanNull(),
-    GetFromPersistent("ScryptPeristentObject")->Get(NanNew<String>("KDFResult"))
+    Nan::Null(),
+    GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("KDFResult").ToLocalChecked())
   };
 
   callback->Call(2, argv);
@@ -30,12 +30,5 @@ void ScryptKDFAsyncWorker::HandleOKCallback() {
 
 // Asynchronous access to scrypt params
 NAN_METHOD(kdf) {
-  NanScope();
-
-  //
-  // Create Scrypt Async Worker
-  //
-  NanAsyncQueueWorker(new ScryptKDFAsyncWorker(args));
-
-  NanReturnUndefined();
+  Nan::AsyncQueueWorker(new ScryptKDFAsyncWorker(info));
 }

@@ -37,15 +37,15 @@ Barry Steyn barry.steyn@gmail.com
 //  (1) Creation of Scrypt specific Error Object
 //  (2) result integer that denotes the response from the Scrypt C library
 //  (3) ScryptPeristentObject that holds input arguments from JS land
-class ScryptAsyncWorker : public NanAsyncWorker {
+class ScryptAsyncWorker : public Nan::AsyncWorker {
   public:
-    ScryptAsyncWorker(NanCallback* callback) : NanAsyncWorker(callback), result(0) {};
+    ScryptAsyncWorker(Nan::Callback* callback) : Nan::AsyncWorker(callback), result(0) {};
 
     //
     // Overrides Nan, needed for creating Scrypt Error
     //
     void HandleErrorCallback() {
-      NanScope();
+      Nan::HandleScope scope;
 
       v8::Local<v8::Value> argv[] = {
           NodeScrypt::ScryptError(result)
@@ -57,12 +57,13 @@ class ScryptAsyncWorker : public NanAsyncWorker {
     // Overrides Nan, needed for checking result
     //
     void WorkComplete() {
-      NanScope();
+      Nan::HandleScope scope;
 
       if (result == 0)
         HandleOKCallback();
       else
         HandleErrorCallback();
+
       delete callback;
       callback = NULL;
     }
