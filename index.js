@@ -153,7 +153,7 @@ var processKDFArguments = function(args) {
 		// Convert string to buffer (if necessary)
 		args[0] = new Buffer(args[0]);
 	else if (!Buffer.isBuffer(args[0])) {
-		var error = new TypeError("key type is incorrect: It can only be of type string or Buffer");
+		var error = new TypeError("Key type is incorrect: It can only be of type string or Buffer");
 		error.propertyName = "key";
 		error.propertyValue = args[0];
 		throw error;
@@ -190,7 +190,7 @@ var processVerifyArguments = function(args) {
 		// Convert string to buffer (if necessary)
 		args[1] = new Buffer(args[1]);
 	else if (!Buffer.isBuffer(args[1])) {
-		var error = new TypeError("key type is incorrect: It can only be of type string or Buffer");
+		var error = new TypeError("Key type is incorrect: It can only be of type string or Buffer");
 		error.propertyName = "key";
 		error.propertyValue = args[1];
 		throw error;
@@ -224,7 +224,7 @@ var processHashArguments = function(args) {
 	// Check the hash output length
 	//
 	if (typeof args[2] !== "number" || args[2] !== parseInt(args[2],10)) {
-		error = new TypeError("hash length must be an integer");
+		error = new TypeError("Hash length must be an integer");
 		throw error;
 	}
 
