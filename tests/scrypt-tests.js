@@ -77,12 +77,12 @@ describe("Scrypt Params", function() {
 
   describe("Synchronous functionality with correct arguments", function() {
     it("Should return a JSON object when only maxtime is defined", function() {
-    	var params = scrypt.paramsSync(1);
+      var params = scrypt.paramsSync(1);
       examine(params);
     });
 
     it("Should return a JSON object when only maxtime and maxmem are defined", function() {
-    	var params = scrypt.paramsSync(1, 2);
+      var params = scrypt.paramsSync(1, 2);
       examine(params);
     });
 
@@ -199,14 +199,14 @@ describe("Scrypt KDF Function", function() {
   describe("Synchronous functionality with incorrect arguments", function(){
     it("Will throw SyntexError exception if called without arguments", function () {
      expect(scrypt.kdfSync)
-	     .to.throw(SyntaxError)
+       .to.throw(SyntaxError)
        .to.match(/^SyntaxError: At least two arguments are needed - the key and the Scrypt paramaters object$/);
     });
 
     it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
       expect(function(){scrypt.kdfSync(1123, {N:1, r:1, p:1})})
         .to.throw(TypeError)
-        .to.match(/^TypeError: key type is incorrect: It can only be of type string or Buffer$/);
+        .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
     })
 
     it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
@@ -244,7 +244,7 @@ describe("Scrypt KDF Function", function() {
     it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
       expect(function(){scrypt.kdf(1123, {N:1, r:1, p:1}, function(){})})
         .to.throw(TypeError)
-        .to.match(/^TypeError: key type is incorrect: It can only be of type string or Buffer$/);
+        .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
     })
 
     it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
@@ -277,6 +277,241 @@ describe("Scrypt KDF Function", function() {
           expect(result1.toString("base64"))
             .to.not.equal(result2.toString("base64"));
           done();
+        });
+      });
+    });
+  });
+});
+
+describe("Scrypt Hash Function", function() {
+  describe("Create Hash", function() {
+    describe("Synchronous functionality with incorrect arguments", function() {
+      it("Will throw SyntexError exception if called without arguments", function () {
+       expect(scrypt.hashSync)
+         .to.throw(SyntaxError)
+         .to.match(/^SyntaxError: At least four arguments are needed - the key to hash, the scrypt params object, the output length of the hash and the salt$/);
+      });
+
+      it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
+        expect(function(){scrypt.hashSync(1123, {N:1, r:1, p:1}, 32, "NaCl")})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
+      })
+
+      it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
+        expect(function(){scrypt.hashSync("hash something", {N:1, r:1}, 32, "NaCl")})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Scrypt params object does not have 'p' property present$/);
+      })
+
+      it("Will throw a TypeError if the hash length is not an integer", function() {
+        expect(function(){scrypt.hashSync("hash something", {N:1, r:1, p:1}, 32.5, new Buffer("NaCl"))})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Hash length must be an integer$/);
+
+          expect(function(){scrypt.hashSync("hash something", {N:1, r:1, p:1}, "thirty-two", "NaCl")})
+            .to.throw(TypeError)
+            .to.match(/^TypeError: Hash length must be an integer$/);
+      })
+
+      it("Will throw a TypeError if the salt is not a string or a Buffer object", function() {
+        expect(function(){scrypt.hashSync("hash something", {N:1, r:1, p:1}, 32, 45)})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Salt type is incorrect: It can only be of type string or Buffer$/);
+      })
+    });
+
+    describe("Synchronous functionality with correct arguments", function() {
+      var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
+      it("Will return a buffer object containing the hash with a string input", function() {
+        var result = scrypt.hashSync("hash something", {N:1, r:1, p:1}, hash_length, "NaCl");
+        expect(result)
+          .to.be.an.instanceof(Buffer);
+        expect(result)
+          .to.have.length(hash_length);
+      })
+
+      it("Will be deterministic if salts are identical", function() {
+        var result1 = scrypt.hashSync(new Buffer("hash something"), {N:1, r:1, p:1}, hash_length, "NaCl");
+        expect(result1)
+          .to.be.an.instanceof(Buffer);
+        expect(result1)
+          .to.have.length(hash_length);
+
+        var result2 = scrypt.hashSync("hash something", {N:1, r:1, p:1}, hash_length, new Buffer("NaCl"));
+        expect(result2)
+          .to.be.an.instanceof(Buffer);
+        expect(result2)
+          .to.have.length(hash_length);
+
+        expect(result1.toString("base64"))
+          .to.equal(result2.toString("base64"));
+      })
+    });
+
+    describe("Asynchronous functionality with incorrect arguments", function() {
+      it("Will throw SyntexError exception if called without arguments", function () {
+        expect(scrypt.hash)
+          .to.throw(SyntaxError)
+          .to.match(/^SyntaxError: No arguments present$/);
+      });
+      
+      it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
+        expect(function(){scrypt.hash(1123, {N:1, r:1, p:1}, 32, "NaCl", function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
+      })
+
+      it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
+        expect(function(){scrypt.hash("hash something", {N:1, r:1}, 32, "NaCl", function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Scrypt params object does not have 'p' property present$/);
+      })
+
+      it("Will throw a TypeError if the hash length is not an integer", function() {
+        expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, 32.5, new Buffer("NaCl"), function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Hash length must be an integer$/);
+
+          expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, "thirty-two", "NaCl", function(){})})
+            .to.throw(TypeError)
+            .to.match(/^TypeError: Hash length must be an integer$/);
+      })
+
+      it("Will throw a TypeError if the salt is not a string or a Buffer object", function() {
+        expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, 32, 45, function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Salt type is incorrect: It can only be of type string or Buffer$/);
+      })
+    });
+
+    describe("Asynchronous functionality with correct arguments", function() {
+      var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
+      it("Will return a buffer object containing the hash with a string input", function(done) {
+        scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, "NaCl", function(err, result){
+          expect(result)
+	   .to.be.an.instanceof(Buffer);
+	  expect(result)
+	   .to.have.length(hash_length);
+          expect(err)
+            .to.not.exist;
+
+	  done();
+	});
+      });
+
+      it("Will be deterministic if salts are identical", function(done) {
+        scrypt.hash(new Buffer("hash something"), {N:1, r:1, p:1}, hash_length, "NaCl", function(err, result1) {
+          expect(result1)
+            .to.be.an.instanceof(Buffer);
+          expect(result1)
+            .to.have.length(hash_length);
+          expect(err)
+            .to.not.exist;
+
+          scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, new Buffer("NaCl"), function(err, result2) {
+            expect(result2)
+              .to.be.an.instanceof(Buffer);
+            expect(result2)
+              .to.have.length(hash_length);
+            expect(err)
+              .to.not.exist;
+
+            expect(result1.toString("base64"))
+              .to.equal(result2.toString("base64"));
+            
+            done();
+          });
+        })
+      });
+    });
+  });
+
+  describe("Verify Hash", function() {
+    describe("Synchronous functionality with incorrect arguments", function() {
+      it("Will throw SyntexError exception if called without arguments", function () {
+       expect(scrypt.verifyKdfSync)
+         .to.throw(SyntaxError)
+         .to.match(/^SyntaxError: At least two arguments are needed - the KDF and the key$/);
+      });
+      
+      it("Will throw a TypeError if the KDF is not a string or a Buffer object", function() {
+        expect(function(){scrypt.verifyKdfSync(1232,"key")})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: KDF type is incorrect: It can only be of type string or Buffer$/);
+      });
+      
+      it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
+        expect(function(){scrypt.verifyKdfSync("KDF", 1232)})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
+      });
+
+      it("Will throw an Error if KDF buffer is not a valid scrypt-encrypted block", function() {
+        expect(function(){scrypt.verifyKdfSync("KDF", "key")})
+          .to.throw(Error)
+          .to.match(/^Error: data is not a valid scrypt-encrypted block$/);
+      });
+    });
+
+    describe("Synchronous functionality with correct arguments", function() {
+      var key = "kdf"
+        , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+
+      it("Will produce a boolean value", function(){
+          expect(scrypt.verifyKdfSync(kdf, key))
+            .to.be.a('boolean');
+          
+          expect(scrypt.verifyKdfSync(kdf, "different key"))
+            .to.be.a('boolean');
+      });
+    });
+
+    describe("Asynchronous functionality with incorrect arguments", function() {
+      it("Will throw SyntexError exception if called without arguments", function () {
+       expect(scrypt.verifyKdf)
+         .to.throw(SyntaxError)
+         .to.match(/^SyntaxError: No arguments present$/);
+      });
+      
+      it("Will throw a TypeError if the KDF is not a string or a Buffer object", function() {
+        expect(function(){scrypt.verifyKdf(1232,"key", function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: KDF type is incorrect: It can only be of type string or Buffer$/);
+      });
+      
+      it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
+        expect(function(){scrypt.verifyKdfSync("KDF", 1232, function(){})})
+          .to.throw(TypeError)
+          .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
+      });
+
+      it("Will throw an Error if KDF buffer is not a valid scrypt-encrypted block", function() {
+        expect(function(){scrypt.verifyKdfSync("KDF", "key", function(){})})
+          .to.throw(Error)
+          .to.match(/^Error: data is not a valid scrypt-encrypted block$/);
+      });
+    });
+
+    describe("Asynchronous functionality with correct arguments", function() {
+      var key = "kdf"
+        , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+
+      it("Will produce a boolean value", function(done){
+        scrypt.verifyKdf(kdf, key, function(err, result) {
+          expect(result)
+            .to.be.a('boolean');
+          expect(err)
+            .to.not.exist;
+
+          scrypt.verifyKdf(kdf, "different key", function(err, result) {
+            expect(result)
+              .to.be.a('boolean');
+            expect(err)
+              .to.not.exist;
+
+            done();
+          });
         });
       });
     });
