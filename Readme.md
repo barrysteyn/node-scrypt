@@ -104,7 +104,7 @@ Translates human understandable parameters to scrypt's internal parameters.
 **Note**: In previous versions, this was called *hash*.
 
 Produces a key derivation function that uses the scrypt hash function. This
-should be used for hashing and checking passwords (see (using scrypt passwords)[#using-scrypt-with-passwords] for reasons why).
+should be used for hashing and checking passwords (see [using scrypt passwords](#using-scrypt-with-passwords) for reasons why).
 It was designed by Colin Percival, the author of scrypt.
 
 >
