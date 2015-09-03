@@ -33,7 +33,7 @@
     "chai": "3.0.0"
   },
   "dependencies": {
-    "nan": "1.8.0"
+    "nan": "^2.0.8"
   },
   "licenses": [
     {
