@@ -173,6 +173,7 @@ describe("Scrypt Node Module Tests", function() {
     });
 
     describe("Asynchronous functionality with correct arguments", function() {
+
       it("Should return a JSON object when only maxtime is defined", function(done) {
         scrypt.params(1, function(err, params) {
           examine(params, err);
@@ -228,11 +229,34 @@ describe("Scrypt Node Module Tests", function() {
     });
 
     describe("Asyncrhonous functionality with incorrect arguments", function() {
+      var promise = undefined;
+
+      // Disables promises for async test (if promises are available)
+      before(function() {
+        if (typeof Promise !== "undefined") {
+          promise = Promise;
+          Promise = undefined;
+        }
+      });
+
+      // Restores promises
+      after(function() {
+        if (typeof Promise === "undefined" && promise) {
+          Promise = promise;
+        }
+      });
+
       it("Will throw SyntexError exception if called without arguments", function () {
         expect(scrypt.kdf)
           .to.throw(SyntaxError)
           .to.match(/^SyntaxError: No arguments present$/);
       });
+
+      it("Will throw a SyntaxError if no callback function is present", function() {
+        expect(function() {scrypt.kdf(new Buffer("password"), {N:1, r:1, p:1});})
+          .to.throw(SyntaxError)
+          .to.match(/^SyntaxError: No callback function present, and Promises are not available$/);
+      })
 
       it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
         expect(function(){scrypt.kdf(1123, {N:1, r:1, p:1}, function(){})})
@@ -312,11 +336,34 @@ describe("Scrypt Node Module Tests", function() {
       });
 
       describe("Asynchronous functionality with incorrect arguments", function() {
+        var promise = undefined;
+
+        // Disables promises for async test (if promises are available)
+        before(function() {
+          if (typeof Promise !== "undefined") {
+            promise = Promise;
+            Promise = undefined;
+          }
+        });
+
+        // Restores promises
+        after(function() {
+          if (typeof Promise === "undefined" && promise) {
+            Promise = promise;
+          }
+        });
+
         it("Will throw SyntexError exception if called without arguments", function () {
           expect(scrypt.hash)
             .to.throw(SyntaxError)
             .to.match(/^SyntaxError: No arguments present$/);
         });
+
+        it("Will throw a SyntaxError if no callback function is present", function() {
+          expect(function() {scrypt.hash("hash something", {N:1, r:1, p:1}, 64, "NaCl");})
+            .to.throw(SyntaxError)
+            .to.match(/^SyntaxError: No callback function present, and Promises are not available$/);
+        })
 
         it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
           expect(function(){scrypt.hash(1123, {N:1, r:1, p:1}, 32, "NaCl", function(){})})
@@ -404,11 +451,37 @@ describe("Scrypt Node Module Tests", function() {
       });
 
       describe("Asynchronous functionality with incorrect arguments", function() {
+        var promise = undefined;
+
+        // Disables promises for async test (if promises are available)
+        before(function() {
+          if (typeof Promise !== "undefined") {
+            promise = Promise;
+            Promise = undefined;
+          }
+        });
+
+        // Restores promises
+        after(function() {
+          if (typeof Promise === "undefined" && promise) {
+            Promise = promise;
+          }
+        });
+
         it("Will throw SyntexError exception if called without arguments", function () {
          expect(scrypt.verifyKdf)
            .to.throw(SyntaxError)
            .to.match(/^SyntaxError: No arguments present$/);
         });
+
+        it("Will throw a SyntaxError if no callback function is present", function() {
+          var key = "kdf"
+            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+
+          expect(function() {scrypt.verifyKdf(kdf, key);})
+            .to.throw(SyntaxError)
+            .to.match(/^SyntaxError: No callback function present, and Promises are not available$/);
+        })
 
         it("Will throw a TypeError if the KDF is not a string or a Buffer object", function() {
           expect(function(){scrypt.verifyKdf(1232,"key", function(){})})
