@@ -51,28 +51,28 @@ NAN_METHOD(hash);
 //
 NAN_MODULE_INIT(InitAll) {
 
-	Set(target, Nan::New<String>("paramsSync").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("paramsSync").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(paramsSync)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("params").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("params").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(params)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("kdfSync").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("kdfSync").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(kdfSync)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("kdf").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("kdf").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(kdf)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("verifySync").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("verifySync").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(kdfVerifySync)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("verify").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("verify").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(kdfVerify)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("hashSync").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("hashSync").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(hashSync)).ToLocalChecked());
 
-	Set(target, Nan::New<String>("hash").ToLocalChecked(),
+       Nan::Set(target, Nan::New<String>("hash").ToLocalChecked(),
 		GetFunction(Nan::New<FunctionTemplate>(hash)).ToLocalChecked());
 }
 
