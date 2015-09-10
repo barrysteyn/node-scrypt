@@ -1,6 +1,7 @@
 # Scrypt For Node
 
-## This is a release candidate - please comment on GitHub.
+[![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
+[![npm version](https://badge.fury.io/js/scrypt.svg)](http://badge.fury.io/js/scrypt)
 
 Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's [scrypt]
 (http://www.tarsnap.com/scrypt.html) cryptographic hash utility.
@@ -62,8 +63,8 @@ More information can be found here:
    * Installation instructions: [node-gyp for windows](https://github.com/TooTallNate/node-gyp#installation)
    * Look [here](https://github.com/TooTallNate/node-gyp/wiki/Visual-Studio-2010-Setup) for additional information/helpful hints.
  * OppenSSL for Windows:
-   * [OpenSSL For Windows 32 bit](http://slproweb.com/download/Win32OpenSSL-1_0_2.exe)
-   * [OpenSSL For Windows 64 bit](http://slproweb.com/download/Win64OpenSSL-1_0_2.exe)
+   * [OpenSSL For Windows 32 bit](https://slproweb.com/download/Win32OpenSSL-1_0_2d.exe)
+   * [OpenSSL For Windows 64 bit](https://slproweb.com/download/Win64OpenSSL-1_0_2d.exe)
 
 ### Linux/MacOS
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is needed to build this module. It should be installed globally, that is, with the `-g` switch:
@@ -105,7 +106,8 @@ Translates human understandable parameters to scrypt's internal parameters.
 
 Produces a key derivation function that uses the scrypt hash function. This
 should be used for hashing and checking passwords (see (using scrypt passwords)[#using-scrypt-with-passwords] for reasons why).
-It was designed by Colin Percival, the author of scrypt.
+It was designed by Colin Percival, the author of scrypt. The format
+can be seen [here](http://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050).
 
 >
   scrypt.kdfSync <br>
@@ -145,137 +147,149 @@ This is the raw scrypt hash function.
 
 ## params
 
-    var scrypt = require("scrypt");
+```JavaScript
+var scrypt = require("scrypt");
 
-    //Synchronous
-    try {
-      //Uses 0.1 for maxtime, and default values maxmem and maxmemfrac
-      var scryptParameters = scrypt.paramsSync(0.1);
-      console.log(scryptParameters);
-    } catch(err) {
-      //handle error
-    }
+//Synchronous
+try {
+  //Uses 0.1 for maxtime, and default values maxmem and maxmemfrac
+  var scryptParameters = scrypt.paramsSync(0.1);
+  console.log(scryptParameters);
+} catch(err) {
+  //handle error
+}
 
-    //Asynchronous with callback
-    scrypt.params(0.1, function(err, scryptParameters) {
-      console.log(scryptParameters);
-    });
+//Asynchronous with callback
+scrypt.params(0.1, function(err, scryptParameters) {
+  console.log(scryptParameters);
+});
 
-    //Asynchronous with promise
-    scrypt.params(0.1).then(function(result){
-      console.log(result);
-    }, function(err) {
-      console.log(err);
-    });
+//Asynchronous with promise
+scrypt.params(0.1).then(function(result){
+  console.log(result);
+}, function(err) {
+  console.log(err);
+});
+```
 
 ## kdf
 
-    var scrypt = require("scrypt");
-    var scryptParameters = scrypt.paramsSync(0.1);
-    var key = new Buffer("this is a key"); //could also be a string
+```JavaScript
+var scrypt = require("scrypt");
+var scryptParameters = scrypt.paramsSync(0.1);
+var key = new Buffer("this is a key"); //could also be a string
 
-    //Synchronous example that will output in hexidecimal encoding
-    var kdfResult = scrypt.kdfSync(key, scryptParameters); //should be wrapped in try catch, but leaving it out for brevity
-    console.log("Synchronous result: "+kdfResult.toString("hex"));
+//Synchronous example that will output in hexidecimal encoding
+var kdfResult = scrypt.kdfSync(key, scryptParameters); //should be wrapped in try catch, but leaving it out for brevity
+console.log("Synchronous result: "+kdfResult.toString("hex"));
 
-    //Asynchronous example that expects key to be ascii encoded
-    scrypt.kdf("ascii encoded key", {N: 1, r:1, p:1}, function(err, result){
-      //Note how scrypt parameters was passed as a JSON object
-      console.log("Asynchronous result: "+result.toString("base64"));
-    });
+//Asynchronous example that expects key to be ascii encoded
+scrypt.kdf("ascii encoded key", {N: 1, r:1, p:1}, function(err, result){
+  //Note how scrypt parameters was passed as a JSON object
+  console.log("Asynchronous result: "+result.toString("base64"));
+});
 
-    //Asynchronous with promise
-    scrypt.kdf("ascii encoded key", {N: 1, r:1, p:1}).then(function(result){
-      console.log("Asynchronous result: "+result.toString("base64"));
-    }, function(err){
-    });
+//Asynchronous with promise
+scrypt.kdf("ascii encoded key", {N: 1, r:1, p:1}).then(function(result){
+  console.log("Asynchronous result: "+result.toString("base64"));
+}, function(err){
+});
+```
 
 ## verifyKdf
 
-    var scrypt = require("scrypt");
-    var scryptParameters = scrypt.paramsSync(0.1);
-    var kdfResult = scrypt.kdfSync("password", scryptParameters);
+```JavaScript
+var scrypt = require("scrypt");
+var scryptParameters = scrypt.paramsSync(0.1);
+var kdfResult = scrypt.kdfSync("password", scryptParameters);
 
-    //Synchronous
-    scrypt.verifyKdfSync(kdfResult, "password"); // returns true
-    scrypt.verifyKdfSync(kdfResult, "incorrect password"); // returns false
+//Synchronous
+scrypt.verifyKdfSync(kdfResult, "password"); // returns true
+scrypt.verifyKdfSync(kdfResult, "incorrect password"); // returns false
 
-    //Asynchronous
-    scrypt.verifyKdf(kdfResult, new Buffer("password"), function(err, result) {
-      //result will be true
-    });
+//Asynchronous
+scrypt.verifyKdf(kdfResult, new Buffer("password"), function(err, result) {
+  //result will be true
+});
 
-    //Asynchronous with promise
-    scrypt.verifyKdf(kdfResult, "incorrect password").then(function(result) {
-      //result will be false
-    }, function(err) {
-    });
+//Asynchronous with promise
+scrypt.verifyKdf(kdfResult, "incorrect password").then(function(result) {
+  //result will be false
+}, function(err) {
+});
+```
 
 ## hash
 The [scrypt paper](http://www.tarsnap.com/scrypt/scrypt.pdf) lists four [test vectors](http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-00#page-11) to test implementation. This example will show how to produce these test vectors from within this module.
 
 ### Test Vector 1
 
-    var scrypt = require("scrypt");
-    var key = new Buffer("");
+```JavaScript
+var scrypt = require("scrypt");
+var key = new Buffer("");
 
-    //Synchronous
-    var result = scrypt.hashSync(key,{"N":16,"r":1,"p":1},64,"");
-    console.log(result.toString("hex"));
+//Synchronous
+var result = scrypt.hashSync(key,{"N":16,"r":1,"p":1},64,"");
+console.log(result.toString("hex"));
 
-    //Asynchronous
-    scrypt.hash(key, {"N":16,"r":1,"p":1},64,"", function(err, res) {
-      console.log(result.toString("hex"));
-    });
+//Asynchronous
+scrypt.hash(key, {"N":16,"r":1,"p":1},64,"", function(err, res) {
+  console.log(result.toString("hex"));
+});
 
-    //Asynchronous with promise
-    scrypt.hash(key, {"N":16,"r":1,"p":1},64,"").then(function(result) {
-      console.log(result.toString("hex"));
-    }, function(err){});
+//Asynchronous with promise
+scrypt.hash(key, {"N":16,"r":1,"p":1},64,"").then(function(result) {
+  console.log(result.toString("hex"));
+}, function(err){});
+```
 
 ### Test Vector 2
 
-    var scrypt = require("scrypt");
-    var salt = new Buffer("NaCl");
+```JavaScript
+var scrypt = require("scrypt");
+var salt = new Buffer("NaCl");
 
-    //Synchronous
-    var result = scrypt.hashSync("password", {"N":1024,"r":8,"p":16}, 64, salt);
-    console.log(result.toString("hex"));
+//Synchronous
+var result = scrypt.hashSync("password", {"N":1024,"r":8,"p":16}, 64, salt);
+console.log(result.toString("hex"));
 
-    scrypt.hash("password", {"N":1024,"r":8,"p":16},64,salt, function(err, result) {
-      console.log(result.toString("hex"));
-    });
-
+scrypt.hash("password", {"N":1024,"r":8,"p":16},64,salt, function(err, result) {
+  console.log(result.toString("hex"));
+});
+```
 
 ### Test Vector 3
 
-    var scrypt = require("scrypt");
-    var key = new Buffer("pleaseletmein");
-    var salt = new Buffer("SodiumChloride");
+```JavaScript
+var scrypt = require("scrypt");
+var key = new Buffer("pleaseletmein");
+var salt = new Buffer("SodiumChloride");
 
-    //Synchronous
-    var result = scrypt.hashSync(key,{"N":16384,"r":8,"p":1},64,salt);
-    console.log(result.toString("hex"));
+//Synchronous
+var result = scrypt.hashSync(key,{"N":16384,"r":8,"p":1},64,salt);
+console.log(result.toString("hex"));
 
-    //Asynchronous
-    scrypt.hash(key, {"N":16384,"r":8,"p":1}, 64, salt, function(err, result) {
-      console.log(result.toString("hex"));
-    });
-
+//Asynchronous
+scrypt.hash(key, {"N":16384,"r":8,"p":1}, 64, salt, function(err, result) {
+  console.log(result.toString("hex"));
+});
+```
 
 ### Test Vector 4
 Note: This test vector is very taxing in terms of resources.
 
-    var scrypt = require("scrypt");
+```JavaScript
+var scrypt = require("scrypt");
 
-    //Synchronous
-    var result = scrypt.hashSync("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
-    console.log(result.toString("hex"));
+//Synchronous
+var result = scrypt.hashSync("pleaseletmein",{"N":1048576,"r":8,"p":1},64,"SodiumChloride");
+console.log(result.toString("hex"));
 
-    //Asynchronous
-    scrypt.hash("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, result) {
-      console.log(result.toString("hex"));
-    });
+//Asynchronous
+scrypt.hash("pleaseletmein", {"N":1048576,"r":8,"p":1},64,"SodiumChloride", function(err, result) {
+  console.log(result.toString("hex"));
+});
+```
 
 # FAQ
 ## General
@@ -342,7 +356,8 @@ In fact, their biggest problem was that they used [sha1](http://en.wikipedia.org
 a very fast hash function.
 
 ### If random salts are used, why do all resulting KDF's start with *c2NyeXB0*?
-The kdf function adds the word *"scrypt"* as prefix. The reason for this is because
+The kdf has a [specific format](http://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050):
+The word *"scrypt"* is added as a prefix. The reason for this is because
 I am sticking to Colin Percival's (the creator of scrypt) reference implementation,
 whereby he prefixes *scrypt* in this way. The base64 encoding of the ascii *"scrypt"*
 is *c2NyeXB0*. The scrypt parameters are then appended. Users of scrypt normally do
@@ -374,8 +389,17 @@ are vastly different (even though it is the same password being hashed). This is
 the **random** salt that has been added, ensuring that no two hashes will ever be identical,
 even if the password that is being hashed is the same.
 
-For those that are curious or paranoid, please look at how the kdf is both [produced](https://github.com/barrysteyn/node-scrypt/blob/master/src/scryptwrapper/hash.c#L37-81)
-and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/scryptwrapper/hash.c#L83-122) (you are going to need some knowledge of the [C language](http://c.learncodethehardway.org/book/) for this).
+For those that are curious or paranoid, please look at how the kdf is both [produced](https://github.com/barrysteyn/node-scrypt/blob/master/src/scryptwrapper/keyderivation.c#L36-L80)
+and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/scryptwrapper/keyderivation.c#L82-L121) (you are going to need some knowledge of the [C language](http://c.learncodethehardway.org/book/) for this).
+
+# Roadmap
+
+## Incorportate version 1.2.0
+Colin Percival has released a new version of scrypt, the first new version in five
+years. While it is not more secure than the current version, it does allow things
+to be done with more ease (like support for other platforms).
+
+## Better Windows support
 
 # Credits
 The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project.
