@@ -30,7 +30,8 @@
   },
   "devDependencies": {
     "mocha": "2.2.5",
-    "chai": "3.0.0"
+    "chai": "3.0.0",
+    "chai-as-promised": "^5.1.0"
   },
   "dependencies": {
     "nan": "^2.0.8"

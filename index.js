@@ -352,7 +352,7 @@ var scrypt = {
 		if (callback_index === undefined) {
 			//Promise
 			return new Promise(function(resolve, reject) {
-				args = processHashArguments(arguments);
+				args = processHashArguments(args);
 				scryptNative.hash(args[0], args[1], args[2], args[3], function(err, hash) {
 					if (err) {
 						reject(err);
