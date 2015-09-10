@@ -1,9 +1,13 @@
-var assert = require("chai").assert
-  , expect = require("chai").expect
+var chai = require("chai")
+  , chaiAsPromised = require("chai-as-promised")
   , scrypt = require("../");
 
+chai.use(chaiAsPromised);
+
+var expect = chai.expect;
+
 describe("Scrypt Node Module Tests", function() {
-  describe("Syntax", function() {
+  describe("Scrypt Params Function", function() {
     //Examines a returned Params JSON object
     var examine = function(obj, err) {
       expect(err)
@@ -173,7 +177,6 @@ describe("Scrypt Node Module Tests", function() {
     });
 
     describe("Asynchronous functionality with correct arguments", function() {
-
       it("Should return a JSON object when only maxtime is defined", function(done) {
         scrypt.params(1, function(err, params) {
           examine(params, err);
@@ -194,6 +197,31 @@ describe("Scrypt Node Module Tests", function() {
           done();
         });
       });
+    });
+
+    describe("Promise asynchronous functionality with correct arguments", function() {
+      if (typeof Promise !== "undefined") {
+        it("Should return a JSON object when only maxtime is defined", function(done){
+          scrypt.params(1).then(function(params) {
+            examine(params);
+            done();
+          });
+        });
+
+        it("Should return a JSON object when only maxtime and maxmem are defined", function(done) {
+          scrypt.params(1, 2).then(function(params) {
+            examine(params);
+            done();
+          });
+        });
+
+        it("Should return a JSON object when maxtime, maxmem and max_memfrac are defined", function(done) {
+          scrypt.params(1, 2, 0.5).then(function(params) {
+            examine(params);
+            done();
+          });
+        });
+      }
     });
   });
 
@@ -283,6 +311,20 @@ describe("Scrypt Node Module Tests", function() {
           done();
         });
       });
+    });
+
+    describe("Promise asynchronous functionality with correct arguments", function() {
+      if (typeof Promise !== "undefined") {
+        it("Will return a buffer object containing the KDF with a buffer input", function(done) {
+          scrypt.kdf(new Buffer("password"), {N:1, r:1, p:1}).then(function(result) {
+            expect(result)
+              .to.be.an.instanceof(Buffer);
+            expect(result)
+              .to.have.length.above(0);
+            done();
+          });
+        });
+      }
     });
   });
 
@@ -408,6 +450,21 @@ describe("Scrypt Node Module Tests", function() {
   	       });
         });
       });
+
+      describe("Promise asynchronous functionality with correct arguments", function() {
+        if (typeof Promise !== "undefined") {
+          var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
+          it("Will return a buffer object containing the hash with a string input", function(done) {
+            scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, "NaCl").then(function(result){
+              expect(result)
+                .to.be.an.instanceof(Buffer);
+          	  expect(result)
+                .to.have.length(hash_length);
+    	        done();
+    	       });
+          });
+        }
+      });
     });
 
     describe("Verify Hash", function() {
@@ -509,20 +566,43 @@ describe("Scrypt Node Module Tests", function() {
         it("Will produce a boolean value", function(done){
           scrypt.verifyKdf(kdf, key, function(err, result) {
             expect(result)
-              .to.be.a('boolean');
+              .to.be.a('boolean')
+              .to.equal(true);
             expect(err)
               .to.not.exist;
 
             scrypt.verifyKdf(kdf, "different key", function(err, result) {
               expect(result)
-                .to.be.a('boolean');
+                .to.be.a('boolean')
+                .to.equal(false);
               expect(err)
                 .to.not.exist;
-
               done();
             });
           });
         });
+      });
+
+      describe("Promise asynchronous functionality with correct arguments", function() {
+        var key = "kdf"
+          , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+
+        if (typeof Promise !== "undefined") {
+          it("Will produce a boolean value", function(done){
+            scrypt.verifyKdf(kdf, key).then(function(result) {
+              expect(result)
+                .to.be.a('boolean')
+                .to.equal(true);
+
+              scrypt.verifyKdf(kdf, "different key").then(function(result) {
+                expect(result)
+                  .to.be.a('boolean')
+                  .to.equal(false);
+                done();
+              });
+            });
+          });
+        }
       });
     });
   });
