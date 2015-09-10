@@ -93,11 +93,11 @@ Translates human understandable parameters to scrypt's internal parameters.
 
 >
   scrypt.paramsSync <br>
-  scrypt.params(maxtime, [maxmem], [max_memfrac], [function(err, obj) {}])
+  scrypt.params(maxtime, [maxmem, [max_memfrac]], [function(err, obj) {}])
 
   * maxtime - [REQUIRED] - a decimal (double) representing the maximum amount of time in seconds scrypt will spend when computing the derived key.
   * maxmem - [OPTIONAL] - an integer, specifying the maximum number of bytes of RAM used when computing the derived encryption key. If not present, will default to 0.
-  * maxmemfrac - [OPTIONAL] - a double value between 0.0 and 1.0, representing the fraction (normalized percentage value) of the available RAM used when computing the derived key. If not present, will default to 0.5.
+  * maxmemfrac - [OPTIONAL only if maxmem is present] - a double value between 0.0 and 1.0, representing the fraction (normalized percentage value) of the available RAM used when computing the derived key. If not present, will default to 0.5.
   * callback_function - [OPTIONAL] - not applicable to synchronous function. If present in async function, then it will be treated as a normal async callback. If not present, a Promise will be returned if ES6 promises are available. If not present and ES6 promises are not present, a SyntaxError will be thrown.
 
 ## kdf
