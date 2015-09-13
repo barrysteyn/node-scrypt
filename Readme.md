@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/barrysteyn/node-scrypt.png?branch=master)](https://travis-ci.org/barrysteyn/node-scrypt)
 [![npm version](https://badge.fury.io/js/scrypt.svg)](http://badge.fury.io/js/scrypt)
 
-Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html)
-cryptographic hash utility.
+Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's
+[scrypt](https://www.tarsnap.com/scrypt.html) cryptographic hash utility.
 
 As should be the case with any security tool, this library should be scrutinized
 by anyone using it. If you find or suspect an issue with the code- please bring
@@ -105,8 +105,9 @@ Translates human understandable parameters to scrypt's internal parameters.
 **Note**: In previous versions, this was called *hash*.
 
 Produces a key derivation function that uses the scrypt hash function. This
-should be used for hashing and checking passwords (see (using scrypt passwords)[#using-scrypt-with-passwords] for reasons why).
-It was designed by Colin Percival, the author of scrypt. The format
+should be used for hashing and checking passwords as it incorporates salt as well
+as [HMAC](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) into
+its format. It is based on a design by Colin Percival, the author of scrypt. The format
 can be seen [here](http://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050).
 
 >
