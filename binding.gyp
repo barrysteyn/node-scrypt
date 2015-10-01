@@ -22,7 +22,7 @@
         ],
       }],
       ['OS!="win"', {
-        'config_libs': '<!(scrypt/configuration/posixconfig)',
+        'config_libs': '<!(scrypt/scrypt-1.2.0/configure)',
         'conditions': [
           ['target_arch=="ia32"',{
             'compiler-flags': [
@@ -31,12 +31,12 @@
           }],
         ],
         'scrypt_platform_specific_files': [
-          'scrypt/scrypt-1.1.6/lib/util/memlimit.c',
-          'scrypt/scrypt-1.1.6/lib/scryptenc/scryptenc.c',
-          'scrypt/scrypt-1.1.6/lib/crypto/crypto_aesctr.c',
+          'scrypt/scrypt-1.2.0/lib/util/memlimit.c',
+          'scrypt/scrypt-1.2.0/lib/scryptenc/scryptenc.c',
+          'scrypt/scrypt-1.2.0/lib/crypto/crypto_aesctr.c',
         ],
         'platform_specific_include_dirs': [
-          'scrypt/scrypt-1.1.6/lib/scryptenc',
+          'scrypt/scrypt-1.2.0/lib/scryptenc',
         ],
       }],
 
