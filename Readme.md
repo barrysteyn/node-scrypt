@@ -28,7 +28,7 @@ previous version. Some highlights:
 
 ### Migrating To Version 5
 Version 5 is not backward compatible, but it should still be easy to migrate.
-Please read the [api section]() to see what's changed. One big change that is
+Please read the [api section](#api) to see what's changed. One big change that is
 worth noting is a name change: What used to be called **hash** has now been
 changed to **kdf** and conversely, what was **kdf** is now called **hash**.
 
