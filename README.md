@@ -43,6 +43,7 @@ changed to **kdf** and conversely, what was **kdf** is now called **hash**.
    * [hash](#hash) - the raw underlying scrypt hash function
  * [Example Usage](#example-usage)
  * [FAQ](#faq)
+ * [Roadmap and Changelog](#roadmap)
  * [Credits](#credits)
 
 # Scrypt
@@ -394,13 +395,7 @@ For those that are curious or paranoid, please look at how the kdf is both [prod
 and [verified](https://github.com/barrysteyn/node-scrypt/blob/master/src/scryptwrapper/keyderivation.c#L82-L121) (you are going to need some knowledge of the [C language](http://c.learncodethehardway.org/book/) for this).
 
 # Roadmap
-
-## Incorportate version 1.2.0
-Colin Percival has released a new version of scrypt, the first new version in five
-years. While it is not more secure than the current version, it does allow things
-to be done with more ease (like support for other platforms).
-
-## Better Windows support
+See [changelog](https://github.com/barrysteyn/node-scrypt/blob/master/changelog.md) for upcoming features.
 
 # Credits
 The scrypt library is Colin Percival's [scrypt](http://www.tarsnap.com/scrypt.html) project.
