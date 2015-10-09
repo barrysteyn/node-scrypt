@@ -87,8 +87,8 @@ Verify(const uint8_t* kdf, const uint8_t* passwd, size_t passwdSize) {
 	uint64_t N=0;
 	uint32_t r=0, p=0;
 	uint8_t dk[64],
-					salt[32],
-					hbuf[32];
+                salt[32],
+                hbuf[32];
 	uint8_t * key_hmac = &dk[32];
 	HMAC_SHA256_CTX hctx;
 	SHA256_CTX ctx;

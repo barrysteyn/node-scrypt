@@ -158,6 +158,13 @@ var processKDFArguments = function(args) {
 		error.propertyValue = args[0];
 		throw error;
 	}
+	
+	// Check resulting buffer is not empty
+	if (!args[0].length) {
+		var error = new Error("Input key is empty");
+		error.propertyValue = args[0];
+		throw error;
+	}
 
 	//
 	// Check Scrypt Parameters object
@@ -183,6 +190,13 @@ var processVerifyArguments = function(args) {
 		throw error;
 	}
 
+	// Check resulting buffer is not empty
+	if (!args[0].length) {
+		var error = new Error("Input KDF is empty");
+		error.propertyValue = args[0];
+		throw error;
+	}
+
 	//
 	// Check Key
 	//
@@ -192,6 +206,13 @@ var processVerifyArguments = function(args) {
 	else if (!Buffer.isBuffer(args[1])) {
 		var error = new TypeError("Key type is incorrect: It can only be of type string or Buffer");
 		error.propertyName = "key";
+		error.propertyValue = args[1];
+		throw error;
+	}
+
+	// Check resulting key is not empty
+	if (!args[1].length) {
+		var error = new Error("Input key is empty");
 		error.propertyValue = args[1];
 		throw error;
 	}
