@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [5.4.0] - 2015-10-09
+### Fixed
+- Check for empty buffer (see #97)
+
 ## [5.3.0] - 2015-10-08
 ### Added
 - This changelog file
