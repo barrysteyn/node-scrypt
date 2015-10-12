@@ -138,11 +138,12 @@ This is the raw scrypt hash function.
 
 >
   scrypt.hashSync <br>
-  scrypt.hash(key, paramsObject, output_length, function(err, obj){})
+  scrypt.hash(key, paramsObject, output_length, salt, function(err, obj){})
 
   * key - [REQUIRED] - a string (or buffer) representing the key (password) that is to be checked.
   * paramsObject - [REQUIRED] - parameters to control scrypt hashing (see params above).
   * output_length - [REQUIRED] - the length of the resulting hashed output.
+  * salt - [REQUIRED] - a string (or buffer) used for salt. The string (or buffer) can be empty.
   * callback_function - [OPTIONAL] - not applicable to synchronous function. If present in async function, then it will be treated as a normal async callback. If not present, a Promise will be returned if ES6 promises are available. If not present and ES6 promises are not present, a SyntaxError will be thrown.
 
 # Example Usage
