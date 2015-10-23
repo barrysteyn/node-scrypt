@@ -45,6 +45,7 @@
     "url": "https://github.com/barrysteyn/node-scrypt/issues"
   },
   "scripts": {
+    "preinstall": "(cd scrypt/scrypt-1.2.0 && ./configure)",
     "test": "mocha tests/scrypt-tests.js"
   }
 }
