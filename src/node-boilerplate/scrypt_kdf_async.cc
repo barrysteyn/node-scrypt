@@ -11,24 +11,24 @@ extern "C" {
 using namespace v8;
 
 void ScryptKDFAsyncWorker::Execute() {
-  //
-  // Scrypt key derivation function
-  //
-  result = KDF(key_ptr, key_size, KDFResult_ptr, params.N, params.r, params.p);
+    //
+    // Scrypt key derivation function
+    //
+    result = KDF(key_ptr, key_size, KDFResult_ptr, params.N, params.r, params.p, salt_ptr);
 }
 
 void ScryptKDFAsyncWorker::HandleOKCallback() {
-  Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
-  Local<Value> argv[] = {
-    Nan::Null(),
-    GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("KDFResult").ToLocalChecked())
-  };
+    Local<Value> argv[] = {
+        Nan::Null(),
+        GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("KDFResult").ToLocalChecked())
+    };
 
-  callback->Call(2, argv);
+    callback->Call(2, argv);
 }
 
 // Asynchronous access to scrypt params
 NAN_METHOD(kdf) {
-  Nan::AsyncQueueWorker(new ScryptKDFAsyncWorker(info));
+    Nan::AsyncQueueWorker(new ScryptKDFAsyncWorker(info));
 }

@@ -1,6 +1,7 @@
 "use strict";
 
-var scryptNative = require("./build/Release/scrypt");
+var scryptNative = require("./build/Release/scrypt")
+  , Crypto = require("crypto");
 
 var checkNumberOfArguments = function(args, message, numberOfArguments) {
 	if (message === undefined) message = "No arguments present";
@@ -307,31 +308,36 @@ var scrypt = {
 
 	kdfSync: function() {
 		var args = processKDFArguments(arguments);
-		return scryptNative.kdfSync(args[0], args[1]);
+		return scryptNative.kdfSync(args[0], args[1], Crypto.randomBytes(256));
 	},
 
-	kdf: function() {
-		var args = arguments
-			, callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object");
+    kdf: function() {
+        var args = arguments
+          , callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object")
+          , that = this;
 
-		if (callback_index === undefined) {
-			// Promise
-			return new Promise(function(resolve, reject) {
-				args = processKDFArguments(args);
-				scryptNative.kdf(args[0], args[1], function(err, kdfResult) {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(kdfResult);
-					}
-				})
-			});
-		} else {
-			// Normal async with callback
-			args = processKDFArguments(arguments);
-			scryptNative.kdf(args[0], args[1], args[2]);
-		}
-	},
+        args = processKDFArguments(args);
+
+        Crypto.randomBytes(256, function(err, salt) {
+            if (err) throw err;
+
+            if (callback_index === undefined) {
+                // Promise
+                return new Promise(function(resolve, reject) {
+                    scryptNative.kdf(args[0], args[1], salt, function(err, kdfResult) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(kdfResult);
+                        }
+                    })
+                });
+            } else {
+                // Normal async with callback
+                scryptNative.kdf(args[0], args[1], salt, args[2]);
+            }
+        });
+    },
 
 	verifyKdfSync: function() {
 		var args = processVerifyArguments(arguments);
@@ -370,10 +376,11 @@ var scrypt = {
 		var args = arguments
 			, callback_index = checkAsyncArguments(args, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
 
+		args = processHashArguments(args);
+
 		if (callback_index === undefined) {
 			//Promise
 			return new Promise(function(resolve, reject) {
-				args = processHashArguments(args);
 				scryptNative.hash(args[0], args[1], args[2], args[3], function(err, hash) {
 					if (err) {
 						reject(err);
@@ -384,10 +391,11 @@ var scrypt = {
 			});
 		} else {
 			// Normal async with callback
-			args = processHashArguments(arguments);
 			scryptNative.hash(args[0], args[1], args[2], args[3], args[4]);
 		}
 	}
 };
+
+//scrypt.kdf(1123, {N:1, r:1, p:1}, function(){});
 
 module.exports = scrypt;

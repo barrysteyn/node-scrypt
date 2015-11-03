@@ -256,7 +256,7 @@ describe("Scrypt Node Module Tests", function() {
       });
     });
 
-    describe("Asyncrhonous functionality with incorrect arguments", function() {
+    describe("Asynchronous functionality with incorrect arguments", function() {
       var promise = undefined;
 
       // Disables promises for async test (if promises are available)

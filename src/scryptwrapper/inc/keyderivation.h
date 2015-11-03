@@ -28,7 +28,7 @@ Barry Steyn barry.steyn@gmail.com
 #define _SCRYPTHASH_H_
 
 int
-KDF(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t);
+KDF(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t, const uint8_t*);
 
 int
 Verify(const uint8_t*, const uint8_t*, size_t);

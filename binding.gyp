@@ -1,6 +1,5 @@
 {
   'variables': {
-    'openssl_include%':'<(node_root_dir)/deps/openssl/openssl/include',
     'compiler-flags': [],
   },
 
@@ -60,7 +59,6 @@
 	'scrypt/scrypt-1.2.0/lib/scryptenc/',
       ],
       'cflags': ['<@(compiler-flags)'],
-      'conditions': [['OS=="win"', {'include_dirs': ['scrypt/win/include']}]],
       'defines': [
         'HAVE_CONFIG_H'
       ],
@@ -86,9 +84,6 @@
         'src/node-boilerplate/inc'
       ],
       'cflags': ['<@(compiler-flags)'],
-      'conditions': [
-        ['OS=="win"', {'libraries': ['-l<(openssl_lib)']}],
-      ],
       'dependencies': ['scrypt_wrapper','scrypt_lib'],
     }
   ],

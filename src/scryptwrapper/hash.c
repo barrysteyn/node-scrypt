@@ -25,17 +25,23 @@ Barry Steyn barry.steyn@gmail.com
 */
 
 #include <sys/types.h>
+#include <errno.h>
 #include "crypto_scrypt.h"
+#include "pickparams.h"
 
 //
 // This is the actual key derivation function.
 // It is binary safe and is exposed to this module for
 // access to the underlying key derivation function of Scrypt
 //
-int
+unsigned int
 ScryptHashFunction(const uint8_t* key, size_t keylen, const uint8_t *salt, size_t saltlen, uint64_t N, uint32_t r, uint32_t p,uint8_t *buf, size_t buflen) {
-	if (crypto_scrypt(key, keylen, salt, saltlen, N, r, p, buf, buflen))
-		return (3);
-
-	return 0; //success
+	unsigned int error = 0;
+	if (crypto_scrypt(key, keylen, salt, saltlen, N, r, p, buf, buflen)) {
+		error |= (errno << 16);
+		error |= 3;
+		return (error);
+	}
+	
+	return (0);
 }

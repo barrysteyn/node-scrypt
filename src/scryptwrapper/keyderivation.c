@@ -37,19 +37,13 @@ Barry Steyn barry.steyn@gmail.com
 // Creates a password hash. This is the actual key derivation function
 //
 int
-KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* kdf, uint32_t logN, uint32_t r, uint32_t p) {
+KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* kdf, uint32_t logN, uint32_t r, uint32_t p, const uint8_t* salt) {
 	uint64_t N=1;
 	uint8_t dk[64],
-					salt[32],
-					hbuf[32];
-	uint8_t *key_hmac = &dk[32];
+                hbuf[32];
+        uint8_t *key_hmac = &dk[32];
 	SHA256_CTX ctx;
 	HMAC_SHA256_CTX hctx;
-	int rc;
-
-	/* Get Some Salt */
-	if ((rc = getsalt(salt, 32)) != 0)
-		return (rc);
 
 	/* Generate the derived keys. */
 	N <<= logN;
@@ -66,8 +60,8 @@ KDF(const uint8_t* passwd, size_t passwdSize, uint8_t* kdf, uint32_t logN, uint3
 
 	/* Add hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, kdf, 48);
-	scrypt_SHA256_Final(hbuf, &ctx);
+	SHA256_Update(&ctx, kdf, 48);
+	SHA256_Final(hbuf, &ctx);
 	memcpy(&kdf[48], hbuf, 16);
 
 	/* Add hash signature (used for verifying password). */
@@ -101,8 +95,8 @@ Verify(const uint8_t* kdf, const uint8_t* passwd, size_t passwdSize) {
 
 	/* Verify hash checksum. */
 	SHA256_Init(&ctx);
-	scrypt_SHA256_Update(&ctx, kdf, 48);
-	scrypt_SHA256_Final(hbuf, &ctx);
+	SHA256_Update(&ctx, kdf, 48);
+	SHA256_Final(hbuf, &ctx);
 	if (memcmp(&kdf[48], hbuf, 16))
 		return (7);
 
