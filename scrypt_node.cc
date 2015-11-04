@@ -34,7 +34,7 @@ using namespace v8;
 // Forward declarations
 //
 NAN_METHOD(paramsSync);
-NAN_METHOD(params);
+//NAN_METHOD(params);
 NAN_METHOD(kdfSync);
 NAN_METHOD(kdf);
 NAN_METHOD(kdfVerifySync);
@@ -50,8 +50,8 @@ NAN_MODULE_INIT(InitAll) {
 	Nan::Set(target, Nan::New<String>("paramsSync").ToLocalChecked(),
 		Nan::GetFunction(Nan::New<FunctionTemplate>(paramsSync)).ToLocalChecked());
 
-	Nan::Set(target, Nan::New<String>("params").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(params)).ToLocalChecked());
+	//Nan::Set(target, Nan::New<String>("params").ToLocalChecked(),
+	//	Nan::GetFunction(Nan::New<FunctionTemplate>(params)).ToLocalChecked());
 
 	Nan::Set(target, Nan::New<String>("kdfSync").ToLocalChecked(),
 		Nan::GetFunction(Nan::New<FunctionTemplate>(kdfSync)).ToLocalChecked());

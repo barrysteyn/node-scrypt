@@ -25,7 +25,7 @@
         'scrypt/scrypt-1.2.0/libcperciva/util/warnp.c',
         'scrypt/scrypt-1.2.0/libcperciva/alg/sha256.c',
         'scrypt/scrypt-1.2.0/libcperciva/util/insecure_memzero.c',
-        'scrypt/scrypt-1.2.0/lib/util/memlimit.c',
+        #'scrypt/scrypt-1.2.0/lib/util/memlimit.c',
         'scrypt/scrypt-1.2.0/lib/scryptenc/scryptenc_cpuperf.c',
       ],
       'include_dirs': [
@@ -44,19 +44,19 @@
       'target_name': 'scrypt_wrapper',
       'type' : 'static_library',
       'sources': [
-        'src/util/salt.c',
+        'src/util/memlimit.c',
         'src/scryptwrapper/keyderivation.c',
         'src/scryptwrapper/pickparams.c',
         'src/scryptwrapper/hash.c'
       ],
       'include_dirs': [
         'src/scryptwrapper/inc',
-        'src/util',  # can remove once salt is not needed
+        'src',
         'scrypt/scrypt-1.2.0/libcperciva/alg',
         'scrypt/scrypt-1.2.0/libcperciva/util',
         'scrypt/scrypt-1.2.0/lib/crypto',
-	'scrypt/scrypt-1.2.0/lib/util/',
-	'scrypt/scrypt-1.2.0/lib/scryptenc/',
+        'scrypt/scrypt-1.2.0/lib/util/',
+        'scrypt/scrypt-1.2.0/lib/scryptenc/',
       ],
       'cflags': ['<@(compiler-flags)'],
       'defines': [
@@ -67,7 +67,7 @@
       'target_name': 'scrypt',
       'sources': [
         'src/node-boilerplate/scrypt_common.cc',
-        'src/node-boilerplate/scrypt_params_async.cc',
+        #'src/node-boilerplate/scrypt_params_async.cc',
         'src/node-boilerplate/scrypt_params_sync.cc',
         'src/node-boilerplate/scrypt_kdf_async.cc',
         'src/node-boilerplate/scrypt_kdf_sync.cc',

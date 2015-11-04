@@ -28,7 +28,6 @@ Barry Steyn barry.steyn@gmail.com
 #include "hash.h"
 #include "pickparams.h"
 #include "sysendian.h"
-#include "salt.h"
 
 #include <stdlib.h>
 #include <string.h>

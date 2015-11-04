@@ -1,7 +1,8 @@
 "use strict";
 
 var scryptNative = require("./build/Release/scrypt")
-  , Crypto = require("crypto");
+  , Crypto = require("crypto")
+  , Os = require("os");
 
 var checkNumberOfArguments = function(args, message, numberOfArguments) {
 	if (message === undefined) message = "No arguments present";
@@ -272,7 +273,7 @@ var processHashArguments = function(args) {
 var scrypt = {
 	paramsSync: function() {
 		var args = processParamsArguments(arguments);
-		return scryptNative.paramsSync(args[0], args[1], args[2]);
+		return scryptNative.paramsSync(args[0], args[1], args[2], Os.totalmem());
 	},
 
 	params: function() {
@@ -396,6 +397,6 @@ var scrypt = {
 	}
 };
 
-//scrypt.kdf(1123, {N:1, r:1, p:1}, function(){});
+console.log(scrypt.paramsSync(1));
 
 module.exports = scrypt;

@@ -29,14 +29,20 @@ Barry Steyn barry.steyn@gmail.com
 
 #include "pickparams.h"
 #include "scryptenc_cpuperf.h"
-#include "memlimit.h"
+#include "util/memlimit.h"
+
+
+///remove
+
+#include <stdio.h>
+//end remove
 
 /*
  * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables.
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
  */
 int
-pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, double maxmemfrac) {
+pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, double maxmemfrac, size_t osfreemem) {
     //Note: logN (as opposed to N) is calculated here. This is because it is compact (it can be represented by an int)
     //      and it is easy (and quick) to convert to N by right shifting bits. Most importantly, using logN only requires
     //      32 bits to be stored. Seeing as it is embedded inside the hash, the smaller the better
@@ -47,7 +53,7 @@ pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, d
     int rc;
 
     /* Figure out how much memory to use. */
-    if (memtouse(maxmem, maxmemfrac, &memlimit))
+    if (memtouse(maxmem, maxmemfrac, osfreemem, &memlimit))
         return (1);
 
     /* Figure out how fast the CPU is. */

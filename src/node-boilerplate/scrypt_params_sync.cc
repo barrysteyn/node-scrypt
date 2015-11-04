@@ -25,11 +25,12 @@ NAN_METHOD(paramsSync) {
 	const double maxtime = info[0]->NumberValue();
   const size_t maxmem = info[2]->Uint32Value();
   const double maxmemfrac = info[1]->NumberValue();
+	const size_t osfreemem = info[3]->NumberValue();
 
 	//
   // Scrypt: calculate input parameters
   //
-	const int result = pickparams(&logN, &r, &p, maxtime, maxmem, maxmemfrac);
+	const int result = pickparams(&logN, &r, &p, maxtime, maxmem, maxmemfrac, osfreemem);
 
 	//
   // Error handling
