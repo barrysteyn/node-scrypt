@@ -25,7 +25,6 @@
         'scrypt/scrypt-1.2.0/libcperciva/util/warnp.c',
         'scrypt/scrypt-1.2.0/libcperciva/alg/sha256.c',
         'scrypt/scrypt-1.2.0/libcperciva/util/insecure_memzero.c',
-        #'scrypt/scrypt-1.2.0/lib/util/memlimit.c',
         'scrypt/scrypt-1.2.0/lib/scryptenc/scryptenc_cpuperf.c',
       ],
       'include_dirs': [
@@ -67,7 +66,7 @@
       'target_name': 'scrypt',
       'sources': [
         'src/node-boilerplate/scrypt_common.cc',
-        #'src/node-boilerplate/scrypt_params_async.cc',
+        'src/node-boilerplate/scrypt_params_async.cc',
         'src/node-boilerplate/scrypt_params_sync.cc',
         'src/node-boilerplate/scrypt_kdf_async.cc',
         'src/node-boilerplate/scrypt_kdf_sync.cc',

@@ -27,7 +27,7 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _PICKPARAMS_H_
 #define _PICKPARAMS_H_
 
-int
+unsigned int
 pickparams(int*, uint32_t*, uint32_t*, double, size_t, double, size_t);
 
 #endif /* !_PICKPARAMS_H_ */

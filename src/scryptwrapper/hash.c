@@ -24,6 +24,8 @@ freely, subject to the following restrictions:
 Barry Steyn barry.steyn@gmail.com
 */
 
+#include <stdio.h>
+
 #include <sys/types.h>
 #include <errno.h>
 #include "crypto_scrypt.h"
@@ -36,12 +38,12 @@ Barry Steyn barry.steyn@gmail.com
 //
 unsigned int
 ScryptHashFunction(const uint8_t* key, size_t keylen, const uint8_t *salt, size_t saltlen, uint64_t N, uint32_t r, uint32_t p,uint8_t *buf, size_t buflen) {
-	unsigned int error = 0;
-	if (crypto_scrypt(key, keylen, salt, saltlen, N, r, p, buf, buflen)) {
-		error |= (errno << 16);
-		error |= 3;
-		return (error);
-	}
-	
-	return (0);
+  int rc = crypto_scrypt(key, keylen, salt, saltlen, N, r, p, buf, buflen);
+  unsigned int error = (rc == 0) ? 0 : 3;
+
+  if (error && errno) {
+    error |= (errno << 16);
+  }
+
+  return (error);
 }

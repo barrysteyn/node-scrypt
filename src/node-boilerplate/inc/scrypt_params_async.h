@@ -31,10 +31,11 @@ Barry Steyn barry.steyn@gmail.com
 class ScryptParamsAsyncWorker : public ScryptAsyncWorker {
   public:
     ScryptParamsAsyncWorker(Nan::NAN_METHOD_ARGS_TYPE info) :
-      ScryptAsyncWorker(new Nan::Callback(info[3].As<v8::Function>())),
+      ScryptAsyncWorker(new Nan::Callback(info[4].As<v8::Function>())),
       maxtime(info[0]->NumberValue()),
       maxmemfrac(info[1]->NumberValue()),
-      maxmem(info[2]->ToUint32()->Value())
+      maxmem(info[2]->NumberValue()),
+      osfreemem(info[3]->NumberValue())
     {
       logN = 0;
       r = 0;
@@ -48,6 +49,7 @@ class ScryptParamsAsyncWorker : public ScryptAsyncWorker {
     const double maxtime;
     const double maxmemfrac;
     const size_t maxmem;
+    const size_t osfreemem;
 
     int logN;
     uint32_t r;

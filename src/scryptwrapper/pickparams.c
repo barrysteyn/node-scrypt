@@ -41,7 +41,7 @@ Barry Steyn barry.steyn@gmail.com
  * Given maxmem, maxmemfrac and maxtime, this functions calculates the N,r,p variables.
  * Values for N,r,p are machine dependent. This is copied directly from Colin Percival's srypt reference code
  */
-int
+unsigned int
 pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, double maxmemfrac, size_t osfreemem) {
     //Note: logN (as opposed to N) is calculated here. This is because it is compact (it can be represented by an int)
     //      and it is easy (and quick) to convert to N by right shifting bits. Most importantly, using logN only requires
@@ -58,7 +58,7 @@ pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, d
 
     /* Figure out how fast the CPU is. */
     if ((rc = scryptenc_cpuperf(&opps)) != 0)
-        return (rc);
+        return ((unsigned int)(rc)); // type cast works since Colin is only using positive integers
     opslimit = opps * maxtime;
 
     /* Allow a minimum of 2^15 salsa20/8 cores. */
@@ -66,7 +66,7 @@ pickparams(int *logN, uint32_t *r, uint32_t *p, double maxtime, size_t maxmem, d
         opslimit = 32768;
 
     /* Set r to 8 */
-	*r = 8; // r is the underlying block size, Colin Percival defaults to 8 in his reference implementation
+    *r = 8; // r is the underlying block size, Colin Percival defaults to 8 in his reference implementation
 
     /*
     * The memory limit requires that 128Nr <= memlimit, while the CPU

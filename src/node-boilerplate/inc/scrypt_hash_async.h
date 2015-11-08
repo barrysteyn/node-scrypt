@@ -34,7 +34,7 @@ class ScryptHashAsyncWorker : public ScryptAsyncWorker {
       key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]))),
       key_size(node::Buffer::Length(info[0])),
       params(info[1]->ToObject()),
-      hash_size(info[2]->Uint32Value()),
+      hash_size(info[2]->NumberValue()),
       salt_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[3]))),
       salt_size(node::Buffer::Length(info[3]))
     {
@@ -53,10 +53,10 @@ class ScryptHashAsyncWorker : public ScryptAsyncWorker {
   private:
     const uint8_t* key_ptr;
     const size_t key_size;
-  	const NodeScrypt::Params params;
-  	const size_t hash_size;
-  	const uint8_t* salt_ptr;
-  	const size_t salt_size;
+    const NodeScrypt::Params params;
+    const size_t hash_size;
+    const uint8_t* salt_ptr;
+    const size_t salt_size;
     uint8_t* hash_ptr;
 };
 

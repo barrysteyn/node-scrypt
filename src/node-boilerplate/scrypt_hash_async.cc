@@ -29,7 +29,7 @@ Barry Steyn barry.steyn@gmail.com
 
 //C linkings needed for Scrypt
 extern "C" {
-	#include "hash.h"
+  #include "hash.h"
 }
 
 using namespace v8;
@@ -44,9 +44,9 @@ void ScryptHashAsyncWorker::Execute() {
 void ScryptHashAsyncWorker::HandleOKCallback() {
   Nan::HandleScope scope;
 
-	Local<Value> argv[] = {
+  Local<Value> argv[] = {
     Nan::Null(),
-		GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("HashBuffer").ToLocalChecked())
+    GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("HashBuffer").ToLocalChecked())
   };
 
   callback->Call(2, argv);

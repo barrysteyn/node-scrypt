@@ -33,50 +33,50 @@ describe("Scrypt Node Module Tests", function() {
     describe("Synchronous functionality with incorrect arguments", function () {
       it("Will throw SyntexError exception if called without arguments", function () {
        expect(scrypt.paramsSync)
-  	     .to.throw(SyntaxError)
+         .to.throw(SyntaxError)
          .to.match(/^SyntaxError: At least one argument is needed - the maxtime$/);
       });
 
       it("Will throw a RangeError exception if maxtime argument is less than zero", function() {
         expect(function() { scrypt.paramsSync(-1); })
-  	      .to.throw(RangeError)
+          .to.throw(RangeError)
           .to.match(/^RangeError: maxtime must be greater than 0$/);
       });
 
       it("Will throw a TypeError exception if maxmem is not an integer", function() {
-      	expect(function() { scrypt.paramsSync(1, 2.4); })
-      		.to.throw(TypeError)
-      		.to.match(/^TypeError: maxmem must be an integer$/);
+        expect(function() { scrypt.paramsSync(1, 2.4); })
+          .to.throw(TypeError)
+          .to.match(/^TypeError: maxmem must be an integer$/);
       });
 
       it("Will throw a RangeError exception if maxmem is less than 0", function() {
-      	expect(function() { scrypt.paramsSync(1, -2); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: maxmem must be greater than or equal to 0$/);
+        expect(function() { scrypt.paramsSync(1, -2); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: maxmem must be greater than or equal to 0$/);
       });
 
       it("Will throw a RangeError exception if max_memfrac is not between 0.0 and 1.0", function() {
-      	expect(function() { scrypt.paramsSync(1, 2, -0.1); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
+        expect(function() { scrypt.paramsSync(1, 2, -0.1); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
 
-      	expect(function() { scrypt.paramsSync(1, 2, 1.1); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
+        expect(function() { scrypt.paramsSync(1, 2, 1.1); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
       });
 
       it("Will throw a TypeError if any arguments are not numbers", function() {
-      	var args = [1, 2, 0.9];
+        var args = [1, 2, 0.9];
 
-      	for (var i=0; i < args.length; i++) {
-      		var temp = args[i];
-      		args[i] = "not a number";
-      		expect(function() { scrypt.paramsSync(args[0], args[1], args[2]); })
-      			.to.throw(TypeError)
-      			.to.match(/^TypeError: (maxtime|maxmem|max_memfrac) must be a number$/);
+        for (var i=0; i < args.length; i++) {
+          var temp = args[i];
+          args[i] = "not a number";
+          expect(function() { scrypt.paramsSync(args[0], args[1], args[2]); })
+            .to.throw(TypeError)
+            .to.match(/^TypeError: (maxtime|maxmem|max_memfrac) must be a number$/);
 
           args[i] = temp;
-      	}
+        }
       });
     });
 
@@ -92,7 +92,7 @@ describe("Scrypt Node Module Tests", function() {
       });
 
       it("Should return a JSON object when maxtime, maxmem and max_memfrac are defined", function() {
-      	var params = scrypt.paramsSync(1, 2, 0.5);
+        var params = scrypt.paramsSync(1, 2, 0.5);
         examine(params);
       });
     });
@@ -117,7 +117,7 @@ describe("Scrypt Node Module Tests", function() {
 
       it("Will throw SyntexError exception if called without arguments", function () {
        expect(scrypt.params)
-  	     .to.throw(SyntaxError)
+         .to.throw(SyntaxError)
          .to.match(/^SyntaxError: No arguments present$/);
       });
 
@@ -135,44 +135,44 @@ describe("Scrypt Node Module Tests", function() {
 
       it("Will throw a RangeError exception if maxtime argument is less than zero", function() {
         expect(function() { scrypt.params(-1, function(){}); })
-  	      .to.throw(RangeError)
+          .to.throw(RangeError)
           .to.match(/^RangeError: maxtime must be greater than 0$/);
       });
 
       it("Will throw a TypeError exception if maxmem is not an integer", function() {
-      	expect(function() { scrypt.params(1, 2.4, function(){}); })
-      		.to.throw(TypeError)
-      		.to.match(/^TypeError: maxmem must be an integer$/);
+        expect(function() { scrypt.params(1, 2.4, function(){}); })
+          .to.throw(TypeError)
+          .to.match(/^TypeError: maxmem must be an integer$/);
       });
 
       it("Will throw a RangeError exception if maxmem is less than 0", function() {
-      	expect(function() { scrypt.params(1, -2, function(){}); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: maxmem must be greater than or equal to 0$/);
+        expect(function() { scrypt.params(1, -2, function(){}); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: maxmem must be greater than or equal to 0$/);
       });
 
       it("Will throw a RangeError exception if max_memfrac is not between 0.0 and 1.0", function() {
-      	expect(function() { scrypt.params(1, 2, -0.1, function(){}); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
+        expect(function() { scrypt.params(1, 2, -0.1, function(){}); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
 
-      	expect(function() { scrypt.params(1, 2, 1.1, function(){}); })
-      		.to.throw(RangeError)
-      		.to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
+        expect(function() { scrypt.params(1, 2, 1.1, function(){}); })
+          .to.throw(RangeError)
+          .to.match(/^RangeError: max_memfrac must be between 0.0 and 1.0 inclusive$/);
       });
 
       it("Will throw a TypeError if any arguments are not numbers", function() {
-      	var args = [1, 2, 0.9];
+        var args = [1, 2, 0.9];
 
-      	for (var i=0; i < args.length; i++) {
-      		var temp = args[i];
-      		args[i] = "not a number";
-      		expect(function() { scrypt.params(args[0], args[1], args[2], function(){}); })
-      			.to.throw(TypeError)
-      			.to.match(/^TypeError: (maxtime|maxmem|max_memfrac) must be a number$/);
+        for (var i=0; i < args.length; i++) {
+          var temp = args[i];
+          args[i] = "not a number";
+          expect(function() { scrypt.params(args[0], args[1], args[2], function(){}); })
+            .to.throw(TypeError)
+            .to.match(/^TypeError: (maxtime|maxmem|max_memfrac) must be a number$/);
 
           args[i] = temp;
-      	}
+        }
       });
     });
 
@@ -369,7 +369,7 @@ describe("Scrypt Node Module Tests", function() {
       describe("Synchronous functionality with correct arguments", function() {
         var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
         it("Will return a buffer object containing the hash with a string input", function() {
-          var result = scrypt.hashSync("hash something", {N:1, r:1, p:1}, hash_length, "NaCl");
+          var result = scrypt.hashSync("hash something", {N:16, r:1, p:1}, hash_length, "NaCl");
           expect(result)
             .to.be.an.instanceof(Buffer);
           expect(result)
@@ -402,35 +402,35 @@ describe("Scrypt Node Module Tests", function() {
         });
 
         it("Will throw a SyntaxError if no callback function is present", function() {
-          expect(function() {scrypt.hash("hash something", {N:1, r:1, p:1}, 64, "NaCl");})
+          expect(function() {scrypt.hash("hash something", {N:16, r:1, p:1}, 64, "NaCl");})
             .to.throw(SyntaxError)
             .to.match(/^SyntaxError: No callback function present, and Promises are not available$/);
         })
 
         it("Will throw a TypeError if the key is not a string or a Buffer object", function() {
-          expect(function(){scrypt.hash(1123, {N:1, r:1, p:1}, 32, "NaCl", function(){})})
+          expect(function(){scrypt.hash(1123, {N:16, r:1, p:1}, 32, "NaCl", function(){})})
             .to.throw(TypeError)
             .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
         })
 
         it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
-          expect(function(){scrypt.hash("hash something", {N:1, r:1}, 32, "NaCl", function(){})})
+          expect(function(){scrypt.hash("hash something", {N:16, r:1}, 32, "NaCl", function(){})})
             .to.throw(TypeError)
             .to.match(/^TypeError: Scrypt params object does not have 'p' property present$/);
         })
 
         it("Will throw a TypeError if the hash length is not an integer", function() {
-          expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, 32.5, new Buffer("NaCl"), function(){})})
+          expect(function(){scrypt.hash("hash something", {N:16, r:1, p:1}, 32.5, new Buffer("NaCl"), function(){})})
             .to.throw(TypeError)
             .to.match(/^TypeError: Hash length must be an integer$/);
 
-            expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, "thirty-two", "NaCl", function(){})})
+            expect(function(){scrypt.hash("hash something", {N:16, r:1, p:1}, "thirty-two", "NaCl", function(){})})
               .to.throw(TypeError)
               .to.match(/^TypeError: Hash length must be an integer$/);
         })
 
         it("Will throw a TypeError if the salt is not a string or a Buffer object", function() {
-          expect(function(){scrypt.hash("hash something", {N:1, r:1, p:1}, 32, 45, function(){})})
+          expect(function(){scrypt.hash("hash something", {N:16, r:1, p:1}, 32, 45, function(){})})
             .to.throw(TypeError)
             .to.match(/^TypeError: Salt type is incorrect: It can only be of type string or Buffer$/);
         })
@@ -439,15 +439,15 @@ describe("Scrypt Node Module Tests", function() {
       describe("Asynchronous functionality with correct arguments", function() {
         var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
         it("Will return a buffer object containing the hash with a string input", function(done) {
-          scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, "NaCl", function(err, result){
+          scrypt.hash("hash something", {N:16, r:1, p:1}, hash_length, "NaCl", function(err, result){
             expect(result)
               .to.be.an.instanceof(Buffer);
-        	  expect(result)
+            expect(result)
               .to.have.length(hash_length);
             expect(err)
               .to.not.exist;
-  	        done();
-  	       });
+            done();
+           });
         });
       });
 
@@ -455,13 +455,13 @@ describe("Scrypt Node Module Tests", function() {
         if (typeof Promise !== "undefined") {
           var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
           it("Will return a buffer object containing the hash with a string input", function(done) {
-            scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, "NaCl").then(function(result){
+            scrypt.hash("hash something", {N:16, r:1, p:1}, hash_length, "NaCl").then(function(result){
               expect(result)
                 .to.be.an.instanceof(Buffer);
-          	  expect(result)
+              expect(result)
                 .to.have.length(hash_length);
-    	        done();
-    	       });
+              done();
+             });
           });
         }
       });
@@ -496,7 +496,7 @@ describe("Scrypt Node Module Tests", function() {
 
       describe("Synchronous functionality with correct arguments", function() {
         var key = "kdf"
-          , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+          , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
         it("Will produce a boolean value", function(){
             expect(scrypt.verifyKdfSync(kdf, key))
@@ -533,7 +533,7 @@ describe("Scrypt Node Module Tests", function() {
 
         it("Will throw a SyntaxError if no callback function is present", function() {
           var key = "kdf"
-            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+            , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
           expect(function() {scrypt.verifyKdf(kdf, key);})
             .to.throw(SyntaxError)
@@ -561,7 +561,7 @@ describe("Scrypt Node Module Tests", function() {
 
       describe("Asynchronous functionality with correct arguments", function() {
         var key = "kdf"
-          , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+          , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
         it("Will produce a boolean value", function(done){
           scrypt.verifyKdf(kdf, key, function(err, result) {
@@ -585,7 +585,7 @@ describe("Scrypt Node Module Tests", function() {
 
       describe("Promise asynchronous functionality with correct arguments", function() {
         var key = "kdf"
-          , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+          , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
         if (typeof Promise !== "undefined") {
           it("Will produce a boolean value", function(done){
@@ -664,8 +664,8 @@ describe("Scrypt Node Module Tests", function() {
     describe("Kdf Logic", function() {
       describe("Synchronous", function() {
         it("Will use random salt to ensure no two KDFs are the same, even if the keys are identical", function(){
-          var result1 = scrypt.kdfSync("password", {N:1, r:1, p:1})
-            , result2 = scrypt.kdfSync("password", {N:1, r:1, p:1});
+          var result1 = scrypt.kdfSync("password", {N:16, r:1, p:1})
+            , result2 = scrypt.kdfSync("password", {N:16, r:1, p:1});
 
           expect(result1.toString("base64"))
             .to.not.equal(result2.toString("base64"));
@@ -673,7 +673,7 @@ describe("Scrypt Node Module Tests", function() {
 
         it("Will correctly verify hash as true if identical keys are used for kdf and verify", function(){
           var key = "this is a key"
-            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1})
+            , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1})
             , result = scrypt.verifyKdfSync(kdf, key);
 
           expect(result)
@@ -683,7 +683,7 @@ describe("Scrypt Node Module Tests", function() {
 
         it("Will correctly verify hash as false if different keys are used for kdf and verify", function(){
           var key = "this is a key"
-            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1})
+            , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1})
             , result = scrypt.verifyKdfSync(kdf, new Buffer("Another key"));
 
           expect(result)
@@ -694,10 +694,10 @@ describe("Scrypt Node Module Tests", function() {
 
       describe("Asynchronous", function() {
         it("Will use random salt to ensure no two KDFs are the same, even if the keys are identical", function(done) {
-          scrypt.kdf("password", {N:1, r:1, p:1}, function(err, result1) {
+          scrypt.kdf("password", {N:16, r:1, p:1}, function(err, result1) {
             expect(err)
               .to.not.exist;
-            scrypt.kdf("password", {N:1, r:1, p:1}, function(err, result2) {
+            scrypt.kdf("password", {N:16, r:1, p:1}, function(err, result2) {
               expect(err)
                 .to.not.exist;
               expect(result1.toString("base64"))
@@ -709,7 +709,7 @@ describe("Scrypt Node Module Tests", function() {
 
         it("Will correctly verify hash as true if identical keys are used for kdf and verify", function(done){
           var key = "this is a key"
-            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+            , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
           scrypt.verifyKdf(kdf, key, function(err, result) {
             expect(result)
@@ -723,7 +723,7 @@ describe("Scrypt Node Module Tests", function() {
 
         it("Will correctly verify hash as false if different keys are used for kdf and verify", function(done){
           var key = "this is a key"
-            , kdf = scrypt.kdfSync(key, {N:1, r:1, p:1});
+            , kdf = scrypt.kdfSync(key, {N:16, r:1, p:1});
 
           scrypt.verifyKdf(kdf, "Another Key", function(err, result) {
             expect(result)
@@ -741,13 +741,13 @@ describe("Scrypt Node Module Tests", function() {
       var hash_length = Math.floor(Math.random() * 100) + 1; //Choose random number between 1 and 100
       describe("Synchronous", function() {
         it("Will be deterministic if salts are identical", function() {
-          var result1 = scrypt.hashSync(new Buffer("hash something"), {N:1, r:1, p:1}, hash_length, "NaCl");
+          var result1 = scrypt.hashSync(new Buffer("hash something"), {N:16, r:1, p:1}, hash_length, "NaCl");
           expect(result1)
             .to.be.an.instanceof(Buffer);
           expect(result1)
             .to.have.length(hash_length);
 
-          var result2 = scrypt.hashSync("hash something", {N:1, r:1, p:1}, hash_length, new Buffer("NaCl"));
+          var result2 = scrypt.hashSync("hash something", {N:16, r:1, p:1}, hash_length, new Buffer("NaCl"));
           expect(result2)
             .to.be.an.instanceof(Buffer);
           expect(result2)
@@ -760,7 +760,7 @@ describe("Scrypt Node Module Tests", function() {
 
       describe("Asynchronous", function() {
         it("Will be deterministic if salts are identical", function(done) {
-          scrypt.hash(new Buffer("hash something"), {N:1, r:1, p:1}, hash_length, "NaCl", function(err, result1) {
+          scrypt.hash(new Buffer("hash something"), {N:16, r:1, p:1}, hash_length, "NaCl", function(err, result1) {
             expect(result1)
               .to.be.an.instanceof(Buffer);
             expect(result1)
@@ -768,7 +768,7 @@ describe("Scrypt Node Module Tests", function() {
             expect(err)
               .to.not.exist;
 
-            scrypt.hash("hash something", {N:1, r:1, p:1}, hash_length, new Buffer("NaCl"), function(err, result2) {
+            scrypt.hash("hash something", {N:16, r:1, p:1}, hash_length, new Buffer("NaCl"), function(err, result2) {
               expect(result2)
                 .to.be.an.instanceof(Buffer);
               expect(result2)

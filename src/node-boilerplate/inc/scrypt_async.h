@@ -72,8 +72,8 @@ class ScryptAsyncWorker : public Nan::AsyncWorker {
     //
     // Scrypt specific state
     //
-    v8::Local<v8::Object> ScryptPeristentObject; // Anything persisten stored here
-    int result; // Result of Scrypt functions
+    v8::Local<v8::Object> ScryptPeristentObject; // Anything persistent stored here
+    unsigned int result; // Result of Scrypt functions
 };
 
 #endif /* _SCRYPTASYNC_H_ */

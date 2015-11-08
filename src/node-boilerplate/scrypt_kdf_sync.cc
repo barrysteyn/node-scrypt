@@ -32,7 +32,7 @@ NAN_METHOD(kdfSync) {
     //
     // Scrypt key derivation function
     //
-    const int result = KDF(key_ptr, keySize, reinterpret_cast<uint8_t*>(node::Buffer::Data(kdfResult)), params.N, params.r, params.p, salt_ptr);
+    const unsigned int result = KDF(key_ptr, keySize, reinterpret_cast<uint8_t*>(node::Buffer::Data(kdfResult)), params.N, params.r, params.p, salt_ptr);
 
     //
     // Error handling

@@ -27,24 +27,24 @@ Barry Steyn barry.steyn@gmail.com
 
 namespace NodeScrypt {
 
-	//
-	// Holds N,r and p parameters
-	//
-	struct Params {
-		const uint32_t N;
-		const uint32_t r;
-		const uint32_t p;
+  //
+  // Holds N,r and p parameters
+  //
+  struct Params {
+    const uint32_t N;
+    const uint32_t r;
+    const uint32_t p;
 
-		Params(const v8::Local<v8::Object> &obj) :
-			N(obj->Get(Nan::New("N").ToLocalChecked())->Uint32Value()),
-			r(obj->Get(Nan::New("r").ToLocalChecked())->Uint32Value()),
-			p(obj->Get(Nan::New("p").ToLocalChecked())->Uint32Value()) {}
-	};
+    Params(const v8::Local<v8::Object> &obj) :
+      N(obj->Get(Nan::New("N").ToLocalChecked())->Uint32Value()),
+      r(obj->Get(Nan::New("r").ToLocalChecked())->Uint32Value()),
+      p(obj->Get(Nan::New("p").ToLocalChecked())->Uint32Value()) {}
+  };
 
-	//
-	// Create a Scrypt error
-	//
-	v8::Local<v8::Value> ScryptError(const int error);
+  //
+  // Create a Scrypt error
+  //
+  v8::Local<v8::Value> ScryptError(const unsigned int error);
 };
 
 #endif /* _SCRYPTCOMMON_H_ */

@@ -27,10 +27,10 @@ Barry Steyn barry.steyn@gmail.com
 #ifndef _SCRYPTHASH_H_
 #define _SCRYPTHASH_H_
 
-int
+unsigned int
 KDF(const uint8_t*, size_t, uint8_t*, uint32_t, uint32_t, uint32_t, const uint8_t*);
 
-int
+unsigned int
 Verify(const uint8_t*, const uint8_t*, size_t);
 
 #endif /* !_SCRYPTHASH_H_ */
