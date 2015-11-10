@@ -311,7 +311,7 @@ var scrypt = {
                           } else {
                               resolve(kdfResult);
                           }
-                      })
+                      });
                   });
             } else {
                 // Normal async with callback

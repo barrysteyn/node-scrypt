@@ -1,6 +1,21 @@
 {
   'variables': {
     'compiler-flags': [],
+    'conditions': [
+      ['OS=="win"', {
+        'scrypt_platform_specific_files': [
+	      'scrypt/win/mman.c',
+	      'scrypt/win/gettimeofday.c'
+	    ],
+        'scrypt_platform_specific_includes': [
+	      'scrypt/win/include',
+        ],
+      }],
+      ['OS!="win"',{
+        'scrypt_platform_specific_files': [],
+        'scrypt_platform_specific_includes': [],
+      }]
+    ],
   },
 
   'target_defaults': {
@@ -17,6 +32,19 @@
 
   'targets': [
     {
+      'target_name': 'copied_files',
+      'conditions': [
+        ['OS=="win"', {
+          'copies' : [{
+            'destination':'scrypt/scrypt-1.2.0/',
+            'files' : [
+              'scrypt/win/include/config.h'
+            ]
+          }],
+        }]
+      ]
+    },
+    {
       'target_name': 'scrypt_lib',
       'type' : 'static_library',
       'sources': [
@@ -26,6 +54,7 @@
         'scrypt/scrypt-1.2.0/libcperciva/alg/sha256.c',
         'scrypt/scrypt-1.2.0/libcperciva/util/insecure_memzero.c',
         'scrypt/scrypt-1.2.0/lib/scryptenc/scryptenc_cpuperf.c',
+	    '<@(scrypt_platform_specific_files)',
       ],
       'include_dirs': [
         'scrypt/scrypt-1.2.0/',
@@ -33,11 +62,13 @@
         'scrypt/scrypt-1.2.0/libcperciva/alg',
         'scrypt/scrypt-1.2.0/libcperciva/util',
         'scrypt/scrypt-1.2.0/lib/crypto',
+	    '<@(scrypt_platform_specific_includes)',
       ],
       'cflags': ['<@(compiler-flags)'],
       'defines': [
         'HAVE_CONFIG_H'
       ],
+      'dependencies': ['copied_files'],
     },
     {
       'target_name': 'scrypt_wrapper',
@@ -56,6 +87,7 @@
         'scrypt/scrypt-1.2.0/lib/crypto',
         'scrypt/scrypt-1.2.0/lib/util/',
         'scrypt/scrypt-1.2.0/lib/scryptenc/',
+	    '<@(scrypt_platform_specific_includes)',
       ],
       'cflags': ['<@(compiler-flags)'],
       'defines': [

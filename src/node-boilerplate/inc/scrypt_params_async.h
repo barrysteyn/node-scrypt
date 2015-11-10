@@ -34,8 +34,8 @@ class ScryptParamsAsyncWorker : public ScryptAsyncWorker {
       ScryptAsyncWorker(new Nan::Callback(info[4].As<v8::Function>())),
       maxtime(info[0]->NumberValue()),
       maxmemfrac(info[1]->NumberValue()),
-      maxmem(info[2]->NumberValue()),
-      osfreemem(info[3]->NumberValue())
+      maxmem(info[2]->IntegerValue()),
+      osfreemem(info[3]->IntegerValue())
     {
       logN = 0;
       r = 0;

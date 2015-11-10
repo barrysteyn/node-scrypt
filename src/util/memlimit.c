@@ -29,12 +29,12 @@ Barry Steyn barry.steyn@gmail.com
 int
 memtouse(size_t maxmem, double maxmemfrac, size_t memlimit_min, size_t * memlimit)
 {
-  size_t memavail;
+    size_t memavail;
 
 	/* Only use the specified fraction of the available memory. */
 	if ((maxmemfrac > 0.5) || (maxmemfrac == 0.0))
 		maxmemfrac = 0.5;
-	memavail = maxmemfrac * memlimit_min;
+	memavail = (size_t)(maxmemfrac * (double)memlimit_min);
 
 	/* Don't use more than the specified maximum. */
 	if ((maxmem > 0) && (memavail > maxmem))

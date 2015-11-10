@@ -22,14 +22,14 @@ NAN_METHOD(hashSync) {
   const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]));
   const size_t key_size = node::Buffer::Length(info[0]);
   const NodeScrypt::Params params = info[1]->ToObject();
-  const size_t hash_size = info[2]->NumberValue();
+  const size_t hash_size = info[2]->IntegerValue();
   const uint8_t* salt_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[3]));
   const size_t salt_size = node::Buffer::Length(info[3]);
 
   //
   // Variable Declaration
   //
-  Local<Value> hash_result = Nan::NewBuffer(hash_size).ToLocalChecked();
+  Local<Value> hash_result = Nan::NewBuffer(static_cast<uint32_t>(hash_size)).ToLocalChecked();
   uint8_t* hash_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(hash_result));
 
   //

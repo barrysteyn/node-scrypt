@@ -316,7 +316,7 @@ describe("Scrypt Node Module Tests", function() {
     describe("Promise asynchronous functionality with correct arguments", function() {
       if (typeof Promise !== "undefined") {
         it("Will return a buffer object containing the KDF with a buffer input", function(done) {
-          scrypt.kdf(new Buffer("password"), {N:1, r:1, p:1}).then(function(result) {
+          scrypt.kdf(new Buffer("password"), {N:16, r:1, p:1}).then(function(result) {
             expect(result)
               .to.be.an.instanceof(Buffer);
             expect(result)
