@@ -291,37 +291,40 @@ var scrypt = {
     return scryptNative.kdfSync(args[0], args[1], Crypto.randomBytes(256));
   },
 
-    kdf: function() {
-        var args = arguments
-          , callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object")
-          , that = this;
+  kdf: function() {
+    var args = arguments
+      , callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object")
+      , that = this;
 
-        args = processKDFArguments(args);
+    args = processKDFArguments(args);
 
+    if (callback_index === undefined) { // promise
+      return new Promise(function(resolve, reject) {
+
+        // Get some async salt
         Crypto.randomBytes(256, function(err, salt) {
-            if (callback_index === undefined) {
-                // Promise
-                if (err) // Crypto.randomBytes err
-                  return Promise.reject(err);
-                else
-                  return new Promise(function(resolve, reject) {
-                      scryptNative.kdf(args[0], args[1], salt, function(err, kdfResult) {
-                          if (err) {
-                              reject(err);
-                          } else {
-                              resolve(kdfResult);
-                          }
-                      });
-                  });
-            } else {
-                // Normal async with callback
-                if (err) // Crypto.randomBytes err
-                  args[2](err); // call callback with error
-                else
-                  scryptNative.kdf(args[0], args[1], salt, args[2]);
-            }
+          if (err) reject(err);
+          else {
+            scryptNative.kdf(args[0], args[1], salt, function(err, kdfResult) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(kdfResult);
+              }
+            });
+          }
         });
-    },
+      });
+    } else { // Normal async with callback
+      Crypto.randomBytes(256, function(err, salt) {
+        // Normal async with callback
+        if (err) // Crypto.randomBytes err
+          args[2](err); // call callback with error
+        else
+          scryptNative.kdf(args[0], args[1], salt, args[2]);
+      });
+    }
+  },
 
   verifyKdfSync: function() {
     var args = processVerifyArguments(arguments);
