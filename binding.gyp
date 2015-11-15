@@ -1,20 +1,26 @@
 {
   'variables': {
     'compiler-flags': [],
+    'scrypt_platform_specific_files': [],
+    'scrypt_platform_specific_includes': [],
     'conditions': [
       ['OS=="win"', {
         'scrypt_platform_specific_files': [
-	      'scrypt/win/mman.c',
-	      'scrypt/win/gettimeofday.c'
-	    ],
+          'scrypt/win/mman.c',
+          'scrypt/win/gettimeofday.c'
+        ],
         'scrypt_platform_specific_includes': [
-	      'scrypt/win/include',
+          'scrypt/win/include',
         ],
       }],
       ['OS!="win"',{
-        'scrypt_platform_specific_files': [],
-        'scrypt_platform_specific_includes': [],
-      }]
+        'compiler-flags': ['-std=c++11']
+      }],
+      ['OS=="mac"', {
+        'xcode_settings': {
+          'OTHER_CPLUSPLUSFLAGS' : ['-stdlib=libc++'],
+        },
+      }],
     ],
   },
 
@@ -54,7 +60,7 @@
         'scrypt/scrypt-1.2.0/libcperciva/alg/sha256.c',
         'scrypt/scrypt-1.2.0/libcperciva/util/insecure_memzero.c',
         'scrypt/scrypt-1.2.0/lib/scryptenc/scryptenc_cpuperf.c',
-	    '<@(scrypt_platform_specific_files)',
+        '<@(scrypt_platform_specific_files)',
       ],
       'include_dirs': [
         'scrypt/scrypt-1.2.0/',
@@ -62,9 +68,8 @@
         'scrypt/scrypt-1.2.0/libcperciva/alg',
         'scrypt/scrypt-1.2.0/libcperciva/util',
         'scrypt/scrypt-1.2.0/lib/crypto',
-	    '<@(scrypt_platform_specific_includes)',
+        '<@(scrypt_platform_specific_includes)',
       ],
-      'cflags': ['<@(compiler-flags)'],
       'defines': [
         'HAVE_CONFIG_H'
       ],
@@ -87,9 +92,8 @@
         'scrypt/scrypt-1.2.0/lib/crypto',
         'scrypt/scrypt-1.2.0/lib/util/',
         'scrypt/scrypt-1.2.0/lib/scryptenc/',
-	    '<@(scrypt_platform_specific_includes)',
+        '<@(scrypt_platform_specific_includes)',
       ],
-      'cflags': ['<@(compiler-flags)'],
       'defines': [
         'HAVE_CONFIG_H'
       ],
