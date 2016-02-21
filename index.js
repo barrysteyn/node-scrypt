@@ -369,7 +369,7 @@ var scrypt = {
   },
 
   hash: function() {
-    var args = argumentsToArgs.apply(null, arguments),
+    var args = argumentsToArgs.apply(null, arguments)
       , callback_index = checkAsyncArguments(args, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
 
     args = processHashArguments(args);
