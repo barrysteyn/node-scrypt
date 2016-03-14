@@ -54,7 +54,7 @@
       'target_name': 'scrypt_lib',
       'type' : 'static_library',
       'sources': [
-        'scrypt/scrypt-1.2.0/lib/crypto/crypto_scrypt.c',
+        'scrypt/scrypt-1.2.0/lib/crypto/crypto_scrypt-ref.c',
         'scrypt/scrypt-1.2.0/lib/crypto/crypto_scrypt_smix.c',
         'scrypt/scrypt-1.2.0/libcperciva/util/warnp.c',
         'scrypt/scrypt-1.2.0/libcperciva/alg/sha256.c',
