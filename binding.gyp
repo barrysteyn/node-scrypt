@@ -73,6 +73,9 @@
       'defines': [
         'HAVE_CONFIG_H'
       ],
+      'conditions': [
+        ['OS=="win"', { 'defines' : [ 'inline=__inline' ] }],
+      ],
       'dependencies': ['copied_files'],
     },
     {
@@ -96,6 +99,9 @@
       ],
       'defines': [
         'HAVE_CONFIG_H'
+      ],
+      'conditions': [
+        ['OS=="win"', { 'defines' : [ 'inline=__inline' ] }],
       ],
     },
     {
