@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.2] - 2016-04-17
+### Fixed
+- Microsoft compile issues
+
 ## [5.4.1] - 2015-10-12
 ### Fixed
 - Corrected Hash API documentation in README
