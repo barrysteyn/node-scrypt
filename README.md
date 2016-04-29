@@ -73,9 +73,10 @@ More information can be found here:
  * [Node-Gyp](https://github.com/TooTallNate/node-gyp) for Windows:
    * Installation instructions: [node-gyp for windows](https://github.com/TooTallNate/node-gyp#installation)
    * Look [here](https://github.com/TooTallNate/node-gyp/wiki/Visual-Studio-2010-Setup) for additional information/helpful hints.
- * OppenSSL for Windows:
-   * [OpenSSL For Windows 32 bit](https://slproweb.com/download/Win32OpenSSL-1_0_2d.exe)
-   * [OpenSSL For Windows 64 bit](https://slproweb.com/download/Win64OpenSSL-1_0_2d.exe)
+ * OpenSSL for Windows:
+   * [OpenSSL For Windows 32 bit](https://slproweb.com/download/Win32OpenSSL-1_0_2g.exe)
+   * [OpenSSL For Windows 64 bit](https://slproweb.com/download/Win64OpenSSL-1_0_2g.exe)
+   * Look [here](https://wiki.openssl.org/index.php/Binaries) for other sources.
 
 ### Linux/MacOS
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is needed to build this module. It should be installed globally, that is, with the `-g` switch:
