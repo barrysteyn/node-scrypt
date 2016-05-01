@@ -1,7 +1,7 @@
 {
   "name": "scrypt",
   "description": "The scrypt crypto library for NodeJS",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "license": "zlib",
   "keywords": [
     "scrypt",
