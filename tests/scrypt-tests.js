@@ -611,26 +611,26 @@ describe("Scrypt Node Module Tests", function() {
     describe("Test vectors", function() {
       describe("Synchronous", function() {
         it("Vector 1: Will produce an identical vector to scrypt paper", function() {
-          var result = scrypt.hashSync("", {"N":16,"r":1,"p":1}, 64, "");
+          var result = scrypt.hashSync("", {"N":4,"r":1,"p":1}, 64, "");
           expect(result.toString("hex"))
             .to.equal("77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906");
         })
 
         it("Vector 2: Will produce an identical vector to scrypt paper", function() {
-          var result = scrypt.hashSync("password",{"N":1024,"r":8,"p":16},64, new Buffer("NaCl"));
+          var result = scrypt.hashSync("password",{"N":10,"r":8,"p":16},64, new Buffer("NaCl"));
           expect(result.toString("hex"))
             .to.equal("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640");
         })
 
         it("Vector 3: Will produce an identical vector to scrypt paper", function() {
-          var result = scrypt.hashSync(new Buffer("pleaseletmein"),{"N":16384,"r":8,"p":1},64, "SodiumChloride");
+          var result = scrypt.hashSync(new Buffer("pleaseletmein"),{"N":14,"r":8,"p":1},64, "SodiumChloride");
           expect(result.toString("hex"))
             .to.equal("7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887");
         })
       });
       describe("Aynchronous", function() {
         it("Vector 1: Will produce an identical vector to scrypt paper", function(done) {
-          scrypt.hash("", {"N":16,"r":1,"p":1}, 64, "", function(err, result) {
+          scrypt.hash("", {"N":4,"r":1,"p":1}, 64, "", function(err, result) {
             expect(result.toString("hex"))
               .to.equal("77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906");
             expect(err)
@@ -640,7 +640,7 @@ describe("Scrypt Node Module Tests", function() {
         });
 
         it("Vector 2: Will produce an identical vector to scrypt paper", function(done) {
-          scrypt.hash(new Buffer("password"),{"N":1024,"r":8,"p":16},64, new Buffer("NaCl"), function(err, result) {
+          scrypt.hash(new Buffer("password"),{"N":10,"r":8,"p":16},64, new Buffer("NaCl"), function(err, result) {
             expect(result.toString("hex"))
               .to.equal("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640");
               expect(err)
@@ -650,7 +650,7 @@ describe("Scrypt Node Module Tests", function() {
         });
 
         it("Vector 3: Will produce an identical vector to scrypt paper", function(done) {
-          scrypt.hash("pleaseletmein",{"N":16384,"r":8,"p":1},64, "SodiumChloride", function(err, result) {
+          scrypt.hash("pleaseletmein",{"N":14,"r":8,"p":1},64, "SodiumChloride", function(err, result) {
             expect(result.toString("hex"))
               .to.equal("7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887");
               expect(err)

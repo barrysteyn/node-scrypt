@@ -38,7 +38,7 @@ using namespace v8;
 // Scrypt Hash Function
 //
 void ScryptHashAsyncWorker::Execute() {
-  result = ScryptHashFunction(key_ptr, key_size, salt_ptr, salt_size, params.N, params.r, params.p, hash_ptr, hash_size);
+  result = Hash(key_ptr, key_size, salt_ptr, salt_size, params.N, params.r, params.p, hash_ptr, hash_size);
 }
 
 void ScryptHashAsyncWorker::HandleOKCallback() {

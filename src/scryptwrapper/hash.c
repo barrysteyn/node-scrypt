@@ -30,6 +30,19 @@ Barry Steyn barry.steyn@gmail.com
 #include <errno.h>
 #include "crypto_scrypt.h"
 #include "pickparams.h"
+#include "hash.h"
+
+//
+// This is the function that the hash and hashSync api functions use.
+// Does final modifications to parameters
+//
+unsigned int
+Hash(const uint8_t* key, size_t keylen, const uint8_t *salt, size_t saltlen, uint64_t logN, uint32_t r, uint32_t p, uint8_t *buf, size_t buflen) {
+  uint64_t N=1;
+
+  N <<= logN;
+  return (ScryptHashFunction(key, keylen, salt, saltlen, N, r, p, buf, buflen));
+}
 
 //
 // This is the actual key derivation function.
