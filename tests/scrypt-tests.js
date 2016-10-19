@@ -239,10 +239,16 @@ describe("Scrypt Node Module Tests", function() {
           .to.match(/^TypeError: Key type is incorrect: It can only be of type string or Buffer$/);
       })
 
-      it("Will throw a TypeError if the Scrypt params object is incorrect", function() {
+      it("Will throw a TypeError if the Scrypt params object is missing 'r' property", function() {
         expect(function(){scrypt.kdfSync("password", {N:1, p:1})})
           .to.throw(TypeError)
           .to.match(/^TypeError: Scrypt params object does not have 'r' property present$/);
+      })
+
+      it("Will throw a TypeError if the Scrypt params object has 'N' property out of range", function() {
+        expect(function(){scrypt.kdfSync("password", {N:65536, r:1, p:1})})
+          .to.throw(RangeError)
+          .to.match(/^RangeError: Scrypt params object 'N' property is out of range$/);
       })
     });
 
