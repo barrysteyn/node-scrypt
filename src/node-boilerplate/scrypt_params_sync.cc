@@ -23,8 +23,8 @@ NAN_METHOD(paramsSync) {
   // Arguments from JavaScript
   //
   const double maxtime = info[0]->NumberValue();
-  const size_t maxmem = info[2]->IntegerValue();
-  const double maxmemfrac = info[1]->NumberValue();
+  const size_t maxmem = info[1]->IntegerValue();
+  const double maxmemfrac = info[2]->NumberValue();
   const size_t osfreemem = info[3]->IntegerValue();
 
   //

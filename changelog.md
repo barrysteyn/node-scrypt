@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.?] - 2017-12-28
+### Fixed
+- Bugfix for `params()` and `paramsSync()` argument ordering of `maxmem` and `maxmemfrac` to match documentation.
+
 ## [6.0.2] - 2016-04-17
 ### Fixed
 - Microsoft compile issues
