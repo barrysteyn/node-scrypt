@@ -243,7 +243,7 @@ var result = scrypt.hashSync(key,{"N":16,"r":1,"p":1},64,"");
 console.log(result.toString("hex"));
 
 //Asynchronous
-scrypt.hash(key, {"N":16,"r":1,"p":1},64,"", function(err, res) {
+scrypt.hash(key, {"N":16,"r":1,"p":1},64,"", function(err, result) {
   console.log(result.toString("hex"));
 });
 
