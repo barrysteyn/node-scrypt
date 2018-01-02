@@ -27,10 +27,10 @@ Barry Steyn barry.steyn@gmail.com
 #include "sha256.h"
 #include "hash.h"
 #include "pickparams.h"
-#include "sysendian.h"
 
 #include <stdlib.h>
 #include <string.h>
+#include <sysendian.h>
 
 //
 // Creates a password hash. This is the actual key derivation function
