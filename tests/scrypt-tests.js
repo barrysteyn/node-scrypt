@@ -223,6 +223,18 @@ describe("Scrypt Node Module Tests", function() {
         });
       }
     });
+
+    describe("Sanity check results of paramSync calls", function() {
+      it("Should return p>1 for a 4MB maxmem limit and 10s maxtime", function() {
+        var params = scrypt.paramsSync(10, Math.pow(2, 22));
+        expect(params.p).to.be.above(1);
+      });
+
+      it("Should return p==1 for a 32MB maxmem limit and 0.001s maxtime", function() {
+        var params = scrypt.paramsSync(0.001, Math.pow(2, 25));
+        expect(params.p).to.be.equal(1);
+      });
+    });
   });
 
   describe("Scrypt KDF Function", function() {
