@@ -33,8 +33,8 @@ class ScryptHashAsyncWorker : public ScryptAsyncWorker {
       ScryptAsyncWorker(new Nan::Callback(info[4].As<v8::Function>())),
       key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]))),
       key_size(node::Buffer::Length(info[0])),
-      params(info[1]->ToObject()),
-      hash_size(info[2]->IntegerValue()),
+      params(Nan::To<v8::Object>(info[1]).ToLocalChecked()),
+      hash_size(Nan::To<int64_t>(info[2]).ToChecked()),
       salt_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[3]))),
       salt_size(static_cast<size_t>(node::Buffer::Length(info[3])))
     {

@@ -32,10 +32,10 @@ class ScryptParamsAsyncWorker : public ScryptAsyncWorker {
   public:
     ScryptParamsAsyncWorker(Nan::NAN_METHOD_ARGS_TYPE info) :
       ScryptAsyncWorker(new Nan::Callback(info[4].As<v8::Function>())),
-      maxtime(info[0]->NumberValue()),
-      maxmemfrac(info[1]->NumberValue()),
-      maxmem(info[2]->IntegerValue()),
-      osfreemem(info[3]->IntegerValue())
+      maxtime(Nan::To<double>(info[0]).ToChecked()),
+      maxmemfrac(Nan::To<double>(info[1]).ToChecked()),
+      maxmem(Nan::To<int64_t>(info[2]).ToChecked()),
+      osfreemem(Nan::To<int64_t>(info[3]).ToChecked())
     {
       logN = 0;
       r = 0;

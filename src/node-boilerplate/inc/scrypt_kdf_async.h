@@ -33,7 +33,7 @@ class ScryptKDFAsyncWorker : public ScryptAsyncWorker {
       ScryptAsyncWorker(new Nan::Callback(args[3].As<v8::Function>())),
       key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[0]))),
       key_size(node::Buffer::Length(args[0])),
-      params(args[1]->ToObject()),
+      params(Nan::To<v8::Object>(args[1]).ToLocalChecked()),
       salt_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[2])))
     {
       ScryptPeristentObject = Nan::New<v8::Object>();

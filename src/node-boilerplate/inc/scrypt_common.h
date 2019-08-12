@@ -36,9 +36,9 @@ namespace NodeScrypt {
     const uint32_t p;
 
     Params(const v8::Local<v8::Object> &obj) :
-      N(obj->Get(Nan::New("N").ToLocalChecked())->Uint32Value()),
-      r(obj->Get(Nan::New("r").ToLocalChecked())->Uint32Value()),
-      p(obj->Get(Nan::New("p").ToLocalChecked())->Uint32Value()) {}
+      N(Nan::To<uint32_t>(obj->Get(Nan::New("N").ToLocalChecked())).ToChecked()),
+      r(Nan::To<uint32_t>(obj->Get(Nan::New("r").ToLocalChecked())).ToChecked()),
+      p(Nan::To<uint32_t>(obj->Get(Nan::New("p").ToLocalChecked())).ToChecked()) {}
   };
 
   //

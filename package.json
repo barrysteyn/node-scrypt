@@ -34,7 +34,7 @@
     "chai-as-promised": "^5.1.0"
   },
   "dependencies": {
-    "nan": "^2.0.8"
+    "nan": "^2.14.0"
   },
   "licenses": [
     {

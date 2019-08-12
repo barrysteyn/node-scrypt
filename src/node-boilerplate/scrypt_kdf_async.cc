@@ -22,7 +22,7 @@ void ScryptKDFAsyncWorker::HandleOKCallback() {
 
     Local<Value> argv[] = {
         Nan::Null(),
-        GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("KDFResult").ToLocalChecked())
+        Nan::To<v8::Object>(GetFromPersistent("ScryptPeristentObject")).ToLocalChecked()->Get(Nan::New("KDFResult").ToLocalChecked())
     };
 
     callback->Call(2, argv);

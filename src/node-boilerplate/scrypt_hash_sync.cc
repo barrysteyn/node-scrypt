@@ -21,8 +21,8 @@ NAN_METHOD(hashSync) {
   //
   const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]));
   const size_t key_size = node::Buffer::Length(info[0]);
-  const NodeScrypt::Params params = info[1]->ToObject();
-  const size_t hash_size = info[2]->IntegerValue();
+  const NodeScrypt::Params params = Nan::To<v8::Object>(info[1]).ToLocalChecked();
+  const size_t hash_size = Nan::To<int64_t>(info[2]).ToChecked();
   const uint8_t* salt_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[3]));
   const size_t salt_size = node::Buffer::Length(info[3]);
 

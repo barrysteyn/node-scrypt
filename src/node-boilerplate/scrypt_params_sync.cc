@@ -22,10 +22,10 @@ NAN_METHOD(paramsSync) {
   //
   // Arguments from JavaScript
   //
-  const double maxtime = info[0]->NumberValue();
-  const size_t maxmem = info[2]->IntegerValue();
-  const double maxmemfrac = info[1]->NumberValue();
-  const size_t osfreemem = info[3]->IntegerValue();
+  const double maxtime = Nan::To<double>(info[0]).ToChecked();
+  const size_t maxmem = Nan::To<int64_t>(info[2]).ToChecked();
+  const double maxmemfrac = Nan::To<double>(info[1]).ToChecked();
+  const size_t osfreemem = Nan::To<int64_t>(info[3]).ToChecked();
 
   //
   // Scrypt: calculate input parameters
