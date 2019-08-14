@@ -37,12 +37,12 @@ class ScryptKDFAsyncWorker : public ScryptAsyncWorker {
       salt_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(args[2])))
     {
       ScryptPeristentObject = Nan::New<v8::Object>();
-      ScryptPeristentObject->Set(Nan::New("keyBuffer").ToLocalChecked(), args[0]);
-      ScryptPeristentObject->Set(Nan::New("KDFResult").ToLocalChecked(), Nan::NewBuffer(96).ToLocalChecked());
-      ScryptPeristentObject->Set(Nan::New("salt").ToLocalChecked(), args[2]);
+      Nan::Set(ScryptPeristentObject, Nan::New("keyBuffer").ToLocalChecked(), args[0]);
+      Nan::Set(ScryptPeristentObject, Nan::New("KDFResult").ToLocalChecked(), Nan::NewBuffer(96).ToLocalChecked());
+      Nan::Set(ScryptPeristentObject, Nan::New("salt").ToLocalChecked(), args[2]);
       SaveToPersistent("ScryptPeristentObject", ScryptPeristentObject);
 
-      KDFResult_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(ScryptPeristentObject->Get(Nan::New("KDFResult").ToLocalChecked())));
+      KDFResult_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(Nan::Get(ScryptPeristentObject, Nan::New("KDFResult").ToLocalChecked()).ToLocalChecked()));
     };
 
     void Execute();
