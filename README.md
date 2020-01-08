@@ -4,7 +4,7 @@
 [![npm version](https://badge.fury.io/js/scrypt.svg)](http://badge.fury.io/js/scrypt)
 
 #WARNING!!!
-This module is deprecated. Instead, use https://nodejs.org/api/crypto.html#crypto_crypto_scrypt_password_salt_keylen_options_callback
+This module is deprecated. Instead, use https://nodejs.org/api/crypto.html#crypto_crypto_scrypt_password_salt_keylen_options_callback. And for scrypt.params, use [scrypt-kdf's pickParams function](https://www.npmjs.com/package/scrypt-kdf).
 
 Scrypt for Node/IO is a native node/io C++ wrapper for Colin Percival's
 [scrypt](https://www.tarsnap.com/scrypt.html) cryptographic hash utility.
