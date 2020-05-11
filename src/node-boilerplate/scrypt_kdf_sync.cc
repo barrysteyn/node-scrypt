@@ -26,7 +26,7 @@ NAN_METHOD(kdfSync) {
     //
     const uint8_t* key_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0])); //assume info[0] is a buffer (checked in JS land)
     const size_t keySize = node::Buffer::Length(info[0]);
-    const NodeScrypt::Params params = info[1]->ToObject();
+    const NodeScrypt::Params params = Nan::To<v8::Object>(info[1]).ToLocalChecked();
     const uint8_t* salt_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(info[2]));
 
     //

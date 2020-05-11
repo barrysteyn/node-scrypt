@@ -22,10 +22,10 @@ NAN_METHOD(paramsSync) {
   //
   // Arguments from JavaScript
   //
-  const double maxtime = info[0]->NumberValue();
-  const size_t maxmem = info[2]->IntegerValue();
-  const double maxmemfrac = info[1]->NumberValue();
-  const size_t osfreemem = info[3]->IntegerValue();
+  const double maxtime = Nan::To<double>(info[0]).ToChecked();
+  const size_t maxmem = Nan::To<int64_t>(info[2]).ToChecked();
+  const double maxmemfrac = Nan::To<double>(info[1]).ToChecked();
+  const size_t osfreemem = Nan::To<int64_t>(info[3]).ToChecked();
 
   //
   // Scrypt: calculate input parameters
@@ -43,9 +43,9 @@ NAN_METHOD(paramsSync) {
   // Return values in JSON object
   //
   Local <Object> obj = Nan::New<Object>();
-  obj->Set(Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
-  obj->Set(Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
-  obj->Set(Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
+  Nan::Set(obj, Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
+  Nan::Set(obj, Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
+  Nan::Set(obj, Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
 
   info.GetReturnValue().Set(obj);
 }

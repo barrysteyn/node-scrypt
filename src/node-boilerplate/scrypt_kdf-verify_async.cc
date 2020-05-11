@@ -27,7 +27,7 @@ void ScryptKDFVerifyAsyncWorker::HandleOKCallback() {
     (match) ? Nan::True() : Nan::False()
   };
 
-  callback->Call(2, argv);
+  callback->Call(2, argv, async_resource);
 }
 
 NAN_METHOD(kdfVerify) {

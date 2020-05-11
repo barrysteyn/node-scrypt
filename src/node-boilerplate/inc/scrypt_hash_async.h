@@ -33,18 +33,18 @@ class ScryptHashAsyncWorker : public ScryptAsyncWorker {
       ScryptAsyncWorker(new Nan::Callback(info[4].As<v8::Function>())),
       key_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[0]))),
       key_size(node::Buffer::Length(info[0])),
-      params(info[1]->ToObject()),
-      hash_size(info[2]->IntegerValue()),
+      params(Nan::To<v8::Object>(info[1]).ToLocalChecked()),
+      hash_size(Nan::To<int64_t>(info[2]).ToChecked()),
       salt_ptr(reinterpret_cast<uint8_t*>(node::Buffer::Data(info[3]))),
       salt_size(static_cast<size_t>(node::Buffer::Length(info[3])))
     {
       ScryptPeristentObject = Nan::New<v8::Object>();
-      ScryptPeristentObject->Set(Nan::New("KeyBuffer").ToLocalChecked(), info[0]);
-      ScryptPeristentObject->Set(Nan::New("HashBuffer").ToLocalChecked(), Nan::NewBuffer(static_cast<uint32_t>(hash_size)).ToLocalChecked());
-      ScryptPeristentObject->Set(Nan::New("SaltBuffer").ToLocalChecked(), info[3]);
+      Nan::Set(ScryptPeristentObject, Nan::New("KeyBuffer").ToLocalChecked(), info[0]);
+      Nan::Set(ScryptPeristentObject, Nan::New("HashBuffer").ToLocalChecked(), Nan::NewBuffer(static_cast<uint32_t>(hash_size)).ToLocalChecked());
+      Nan::Set(ScryptPeristentObject, Nan::New("SaltBuffer").ToLocalChecked(), info[3]);
       SaveToPersistent("ScryptPeristentObject", ScryptPeristentObject);
 
-      hash_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(ScryptPeristentObject->Get(Nan::New("HashBuffer").ToLocalChecked())));
+      hash_ptr = reinterpret_cast<uint8_t*>(node::Buffer::Data(Nan::Get(ScryptPeristentObject, Nan::New("HashBuffer").ToLocalChecked()).ToLocalChecked()));
     };
 
     void Execute();

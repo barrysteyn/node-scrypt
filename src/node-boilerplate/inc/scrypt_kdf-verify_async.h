@@ -37,8 +37,8 @@ class ScryptKDFVerifyAsyncWorker : public ScryptAsyncWorker {
       match(false)
     {
       ScryptPeristentObject = Nan::New<v8::Object>();
-      ScryptPeristentObject->Set(Nan::New("KDFBuffer").ToLocalChecked(), info[0]);
-      ScryptPeristentObject->Set(Nan::New("KeyBuffer").ToLocalChecked(), info[1]);
+      Nan::Set(ScryptPeristentObject, Nan::New("KDFBuffer").ToLocalChecked(), info[0]);
+      Nan::Set(ScryptPeristentObject, Nan::New("KeyBuffer").ToLocalChecked(), info[1]);
       SaveToPersistent("ScryptPeristentObject", ScryptPeristentObject);
     };
 

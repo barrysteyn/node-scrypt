@@ -50,7 +50,7 @@ class ScryptAsyncWorker : public Nan::AsyncWorker {
       v8::Local<v8::Value> argv[] = {
           NodeScrypt::ScryptError(result)
       };
-      callback->Call(1, argv);
+      callback->Call(1, argv, async_resource);
     }
 
     //

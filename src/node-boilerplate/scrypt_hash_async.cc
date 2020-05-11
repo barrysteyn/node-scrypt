@@ -46,10 +46,10 @@ void ScryptHashAsyncWorker::HandleOKCallback() {
 
   Local<Value> argv[] = {
     Nan::Null(),
-    GetFromPersistent("ScryptPeristentObject")->ToObject()->Get(Nan::New("HashBuffer").ToLocalChecked())
+    Nan::Get(Nan::To<v8::Object>(GetFromPersistent("ScryptPeristentObject")).ToLocalChecked(), Nan::New("HashBuffer").ToLocalChecked()).ToLocalChecked()
   };
 
-  callback->Call(2, argv);
+  callback->Call(2, argv, async_resource);
 }
 
 //

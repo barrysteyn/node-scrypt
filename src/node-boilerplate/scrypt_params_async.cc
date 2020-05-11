@@ -20,16 +20,16 @@ void ScryptParamsAsyncWorker::HandleOKCallback() {
 
   // Returned params in JSON object
   Local <Object> obj = Nan::New<Object>();
-  obj->Set(Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
-  obj->Set(Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
-  obj->Set(Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
+  Nan::Set(obj, Nan::New("N").ToLocalChecked(), Nan::New<Integer>(logN));
+  Nan::Set(obj, Nan::New("r").ToLocalChecked(), Nan::New<Integer>(r));
+  Nan::Set(obj, Nan::New("p").ToLocalChecked(), Nan::New<Integer>(p));
 
   Local<Value> argv[] = {
     Nan::Null(),
     obj
   };
 
-  callback->Call(2, argv);
+  callback->Call(2, argv, async_resource);
 }
 
 // Asynchronous access to scrypt params
