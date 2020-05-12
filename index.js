@@ -63,6 +63,10 @@ var checkScryptParametersObject = function(params) {
     var error = new TypeError("Scrypt params object 'N' property is not an integer");
   }
 
+  if (!error && !((params.N > 0) && (params.N < 256))) {
+    var error = new RangeError("Scrypt params object 'N' property is out of range");
+  }
+
   if (!error && !params.hasOwnProperty("r")) {
     var error = new TypeError("Scrypt params object does not have 'r' property present");
   }
