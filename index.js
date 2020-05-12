@@ -4,6 +4,15 @@ var scryptNative = require("./build/Release/scrypt")
   , Crypto = require("crypto")
   , Os = require("os");
 
+var argumentsToArgs = function() {
+  var len = arguments.length;
+  var args = new Array(len);
+  for (var i = 0; i < len; i++) {
+    args[i] = arguments[i];
+  }
+  return args;
+}
+
 var checkNumberOfArguments = function(args, message, numberOfArguments) {
   if (message === undefined) message = "No arguments present";
   if (numberOfArguments === undefined) numberOfArguments = 1;
@@ -251,12 +260,12 @@ var processHashArguments = function(args) {
 //
 var scrypt = {
   paramsSync: function() {
-    var args = processParamsArguments(arguments);
+    var args = processParamsArguments(argumentsToArgs.apply(null, arguments));
     return scryptNative.paramsSync(args[0], args[1], args[2], Os.totalmem());
   },
 
   params: function() {
-    var args = arguments
+    var args = argumentsToArgs.apply(null, arguments)
       , callback_index = checkAsyncArguments(args, 1, "At least one argument is needed before the callback - the maxtime");
 
     if (callback_index === undefined) {
@@ -287,12 +296,12 @@ var scrypt = {
   },
 
   kdfSync: function() {
-    var args = processKDFArguments(arguments);
+    var args = processKDFArguments(argumentsToArgs.apply(null, arguments));
     return scryptNative.kdfSync(args[0], args[1], Crypto.randomBytes(256));
   },
 
   kdf: function() {
-    var args = arguments
+    var args = argumentsToArgs.apply(null, arguments)
       , callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the call back function - the key and the Scrypt parameters object")
       , that = this;
 
@@ -327,12 +336,12 @@ var scrypt = {
   },
 
   verifyKdfSync: function() {
-    var args = processVerifyArguments(arguments);
+    var args = processVerifyArguments(argumentsToArgs.apply(null, arguments));
     return scryptNative.verifySync(args[0], args[1]);
   },
 
   verifyKdf: function() {
-    var args = arguments
+    var args = argumentsToArgs.apply(null, arguments)
       , callback_index = checkAsyncArguments(args, 2, "At least two arguments are needed before the callback function - the KDF and the key");
 
     if (callback_index === undefined) {
@@ -355,12 +364,12 @@ var scrypt = {
   },
 
   hashSync: function() {
-    var args = processHashArguments(arguments);
+    var args = processHashArguments(argumentsToArgs.apply(null, arguments));
     return scryptNative.hashSync(args[0], args[1], args[2], args[3]);
   },
 
   hash: function() {
-    var args = arguments
+    var args = argumentsToArgs.apply(null, arguments)
       , callback_index = checkAsyncArguments(args, 4, "At least four arguments are needed before the callback - the key to hash, the scrypt params object, the output length of the hash and the salt");
 
     args = processHashArguments(args);
