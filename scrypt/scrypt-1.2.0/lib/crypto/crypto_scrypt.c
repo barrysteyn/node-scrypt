@@ -218,11 +218,10 @@ selectsmix(void)
 	}
 #endif
 
-	/* If generic smix works, use it. */
-	if (!testsmix(crypto_scrypt_smix)) {
+
 		smix_func = crypto_scrypt_smix;
 		return;
-	}
+	
 	warn0("Generic scrypt code is broken - please report bug!");
 
 	/* If we get here, something really bad happened. */
